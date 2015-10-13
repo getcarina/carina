@@ -60,7 +60,7 @@ func main() {
 	}
 
 	if username == "" || apiKey == "" {
-		fmt.Println("Either set -username and -api-key or set the " +
+		fmt.Println("Either set --username and --api-key or set the " +
 			"RACKSPACE_USERNAME and RACKSPACE_APIKEY environment variables.")
 		fmt.Println()
 		usage()
