@@ -14,3 +14,8 @@ bin/carina-darwin-amd64: main.go
 
 bin/carina.exe: main.go
 	 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -tags netgo -ldflags '-w' -o bin/carina.exe .
+
+.PHONY: clean
+
+clean:
+	 rm -f bin/*

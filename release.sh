@@ -17,6 +17,7 @@ DESCRIPTION="Prototypal release of the Carina CLI"
 
 echo "Releasing '$TAG' - $NAME: $DESCRIPTION"
 
+make clean
 make cross-build
 
 github-release release \
