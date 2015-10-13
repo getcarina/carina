@@ -7,7 +7,7 @@ if [ ! -e "$( which github-release )" ]; then
   exit 2
 fi
 
-declare -xr ORG="carina"
+declare -xr ORG="rackerlabs"
 declare -xr REPO="carina"
 declare -xr BINARY=$REPO
 
