@@ -105,8 +105,8 @@ func New() *Application {
 
 	cap.PreAction(cap.Auth)
 
-	cap.Flag("username", "Rackspace username").StringVar(&ctx.Username)
-	cap.Flag("api-key", "Rackspace API Key").StringVar(&ctx.APIKey)
+	cap.Flag("username", "Rackspace username - can also set env var RACKSPACE_USERNAME").StringVar(&ctx.Username)
+	cap.Flag("api-key", "Rackspace API Key - can also set env var RACKSPACE_APIKEY").StringVar(&ctx.APIKey)
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
 
 	writer := new(tabwriter.Writer)
