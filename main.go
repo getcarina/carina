@@ -64,6 +64,12 @@ type CarinaCredentialsCommand struct {
 	Path string
 }
 
+// GrowCommand keeps context about the number of nodes to scale by
+type GrowCommand struct {
+	*CarinaClusterCommand
+	Nodes int
+}
+
 // NewCarina creates a new CarinaApplication
 func NewCarina() *CarinaApplication {
 
@@ -94,6 +100,11 @@ func NewCarina() *CarinaApplication {
 	credentialsCommand.CarinaClusterCommand = cap.NewCarinaClusterCommand(writer, "credentials", "download credentials")
 	credentialsCommand.Flag("path", "path to write credentials out to").StringVar(&credentialsCommand.Path)
 	credentialsCommand.Action(credentialsCommand.Download)
+
+	growCommand := new(GrowCommand)
+	growCommand.CarinaClusterCommand = cap.NewCarinaClusterCommand(writer, "grow", "Grow a cluster by the requested number of nodes")
+	growCommand.Flag("nodes", "number of nodes to increase the cluster by").Required().IntVar(&growCommand.Nodes)
+	growCommand.Action(growCommand.Grow)
 
 	return cap
 }
@@ -182,6 +193,16 @@ func (carina *CarinaClusterCommand) Create(pc *kingpin.ParseContext) (err error)
 		ClusterName: carina.ClusterName,
 	}
 	cluster, err := carina.ClusterClient.Create(c)
+	if err == nil {
+		writeCluster(carina.TabWriter, cluster)
+	}
+	carina.TabWriter.Flush()
+	return err
+}
+
+// Grow increase the size of the given cluster
+func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
+	cluster, err := carina.ClusterClient.Grow(carina.ClusterName, carina.Nodes)
 	if err == nil {
 		writeCluster(carina.TabWriter, cluster)
 	}
