@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
@@ -64,6 +66,21 @@ type CarinaCredentialsCommand struct {
 	Path string
 }
 
+// CarinaCreateCommand keeps context about the create command
+type CarinaCreateCommand struct {
+	*CarinaClusterCommand
+
+	Wait bool
+
+	// Options passed along to Carina itself
+	Nodes     int
+	AutoScale bool
+
+	// TODO: See if setting flavor or image makes sense, even if the API takes it
+	// Flavor    string
+	// Image     string
+}
+
 // GrowCommand keeps context about the number of nodes to scale by
 type GrowCommand struct {
 	*CarinaClusterCommand
@@ -93,7 +110,11 @@ func NewCarina() *CarinaApplication {
 	deleteCommand := cap.NewCarinaClusterCommand(writer, "delete", "delete a swarm cluster")
 	deleteCommand.Action(deleteCommand.Delete)
 
-	createCommand := cap.NewCarinaClusterCommand(writer, "create", "create a swarm cluster")
+	createCommand := new(CarinaCreateCommand)
+	createCommand.CarinaClusterCommand = cap.NewCarinaClusterCommand(writer, "create", "create a swarm cluster")
+	createCommand.Flag("wait", "wait for swarm cluster completion").BoolVar(&createCommand.Wait)
+	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
+	createCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&createCommand.AutoScale)
 	createCommand.Action(createCommand.Create)
 
 	credentialsCommand := new(CarinaCredentialsCommand)
@@ -188,11 +209,33 @@ func (carina *CarinaClusterCommand) Delete(pc *kingpin.ParseContext) (err error)
 }
 
 // Create a cluster
-func (carina *CarinaClusterCommand) Create(pc *kingpin.ParseContext) (err error) {
+func (carina *CarinaCreateCommand) Create(pc *kingpin.ParseContext) (err error) {
+	if carina.Nodes < 1 {
+		return errors.New("nodes must be >= 1")
+	}
+
+	nodes := libcarina.Number(carina.Nodes)
+
 	c := libcarina.Cluster{
 		ClusterName: carina.ClusterName,
+		Nodes:       nodes,
+		AutoScale:   carina.AutoScale,
 	}
+
 	cluster, err := carina.ClusterClient.Create(c)
+
+	// Transitions past point of "new" or "building" are assumed to be states we
+	// can stop on.
+	if carina.Wait {
+		for cluster.Status == "new" || cluster.Status == "building" {
+			time.Sleep(13 * time.Second)
+			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
+			if err != nil {
+				break
+			}
+		}
+	}
+
 	if err == nil {
 		writeCluster(carina.TabWriter, cluster)
 	}
