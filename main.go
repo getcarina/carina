@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,25 +8,22 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	carina "github.com/rackerlabs/libcarina"
-	"github.com/samalba/dockerclient"
+	"gopkg.in/alecthomas/kingpin.v2"
+
+	"github.com/rackerlabs/libcarina"
 )
 
-func dockerInfo(creds *carina.Credentials) (*dockerclient.Info, error) {
-	tlsConfig, err := creds.GetTLSConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	docker, err := dockerclient.NewDockerClient(creds.DockerHost, tlsConfig)
-	if err != nil {
-		return nil, err
-	}
-	info, err := docker.Info()
-	return info, err
+func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) {
+	s := strings.Join([]string{cluster.ClusterName,
+		cluster.Username,
+		cluster.Flavor,
+		cluster.Image,
+		fmt.Sprintf("%v", cluster.Nodes),
+		cluster.Status}, "\t")
+	w.Write([]byte(s + "\n"))
 }
 
-func writeCredentials(w *tabwriter.Writer, creds *carina.Credentials, pth string) (err error) {
+func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth string) (err error) {
 	statusFormat := "%s\t%s\n"
 	for fname, b := range creds.Files {
 		p := path.Join(pth, fname)
@@ -42,143 +37,162 @@ func writeCredentials(w *tabwriter.Writer, creds *carina.Credentials, pth string
 	return nil
 }
 
+// CarinaApplication is, our, well, application
+type CarinaApplication struct {
+	*kingpin.Application
+	TabWriter *tabwriter.Writer
+}
+
+// CarinaCommand is a command is a command needing a ClusterClient
+type CarinaCommand struct {
+	*kingpin.CmdClause
+	ClusterClient *libcarina.ClusterClient
+	TabWriter     *tabwriter.Writer
+	Username      string
+	APIKey        string
+	Endpoint      string
+}
+
+// CarinaClusterCommand is a CarinaCommand with a ClusterName set
+type CarinaClusterCommand struct {
+	*CarinaCommand
+	ClusterName string
+}
+
+// NewCarina creates a new CarinaApplication
+func NewCarina() *CarinaApplication {
+
+	app := kingpin.New("carina", "command line interface to work with Docker Swarm clusters")
+
+	cap := new(CarinaApplication)
+
+	cap.Application = app
+
+	writer := new(tabwriter.Writer)
+	writer.Init(os.Stdout, 0, 8, 1, '\t', 0)
+
+	cap.TabWriter = writer
+
+	listCommand := cap.NewCarinaCommand(writer, "list", "list swarm clusters")
+	listCommand.Action(listCommand.List)
+
+	getCommand := cap.NewCarinaClusterCommand(writer, "get", "get information about a swarm cluster")
+	getCommand.Action(getCommand.Get)
+
+	deleteCommand := cap.NewCarinaClusterCommand(writer, "delete", "delete a swarm cluster")
+	deleteCommand.Action(deleteCommand.Delete)
+
+	createCommand := cap.NewCarinaClusterCommand(writer, "create", "create a swarm cluster")
+	createCommand.Action(createCommand.Create)
+
+	downloadCommand := cap.NewCarinaClusterCommand(writer, "download", "download credentials")
+	downloadCommand.Action(downloadCommand.Download)
+
+	return cap
+}
+
+// NewCarinaCommand creates a command that relies on Auth
+func (app *CarinaApplication) NewCarinaCommand(writer *tabwriter.Writer, name, help string) *CarinaCommand {
+	carina := new(CarinaCommand)
+
+	carina.CmdClause = app.Command(name, help)
+	carina.Flag("username", "Rackspace username").Default("").OverrideDefaultFromEnvar("RACKSPACE_USERNAME").StringVar(&carina.Username)
+	carina.Flag("api-key", "Rackspace API Key").Default("").OverrideDefaultFromEnvar("RACKSPACE_APIKEY").StringVar(&carina.APIKey)
+	carina.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&carina.Endpoint)
+
+	carina.PreAction(carina.Auth)
+
+	carina.TabWriter = new(tabwriter.Writer)
+	carina.TabWriter.Init(os.Stdout, 0, 8, 1, '\t', 0)
+
+	return carina
+}
+
+// NewCarinaClusterCommand is a command that uses a cluster name
+func (app *CarinaApplication) NewCarinaClusterCommand(writer *tabwriter.Writer, name, help string) *CarinaClusterCommand {
+	cc := new(CarinaClusterCommand)
+	cc.CarinaCommand = app.NewCarinaCommand(writer, name, help)
+	cc.Arg("cluster-name", "name of the cluster").Required().StringVar(&cc.ClusterName)
+	return cc
+}
+
+// Auth does the authentication
+func (carina *CarinaCommand) Auth(pc *kingpin.ParseContext) (err error) {
+	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+	return err
+}
+
+// List the current swarm clusters
+func (carina *CarinaCommand) List(pc *kingpin.ParseContext) (err error) {
+	clusterList, err := carina.ClusterClient.List()
+	if err != nil {
+		return err
+	}
+
+	headerFields := []string{
+		"ClusterName",
+		"Username",
+		"Flavor",
+		"Image",
+		"Nodes",
+		"Status",
+	}
+	s := strings.Join(headerFields, "\t")
+
+	carina.TabWriter.Write([]byte(s + "\n"))
+
+	for _, cluster := range clusterList {
+		writeCluster(carina.TabWriter, &cluster)
+	}
+	carina.TabWriter.Flush()
+
+	return nil
+}
+
+// Get an individual cluster
+func (carina *CarinaClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
+	cluster, err := carina.ClusterClient.Get(carina.ClusterName)
+	if err == nil {
+		writeCluster(carina.TabWriter, cluster)
+	}
+	carina.TabWriter.Flush()
+	return err
+}
+
+// Delete a cluster
+func (carina *CarinaClusterCommand) Delete(pc *kingpin.ParseContext) (err error) {
+	cluster, err := carina.ClusterClient.Delete(carina.ClusterName)
+	if err == nil {
+		writeCluster(carina.TabWriter, cluster)
+	}
+	carina.TabWriter.Flush()
+	return err
+}
+
+// Create a cluster
+func (carina *CarinaClusterCommand) Create(pc *kingpin.ParseContext) (err error) {
+	c := libcarina.Cluster{
+		ClusterName: carina.ClusterName,
+	}
+	cluster, err := carina.ClusterClient.Create(c)
+	if err == nil {
+		writeCluster(carina.TabWriter, cluster)
+	}
+	carina.TabWriter.Flush()
+	return err
+}
+
+// Download credentials for a cluster
+func (carina *CarinaClusterCommand) Download(pc *kingpin.ParseContext) (err error) {
+	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
+	if err == nil {
+		writeCredentials(carina.TabWriter, credentials, ".")
+	}
+	carina.TabWriter.Flush()
+	return err
+}
+
 func main() {
-	var username, apiKey, endpoint string
-
-	flag.Usage = usage
-
-	flag.StringVar(&username, "username", "", "Rackspace username")
-	flag.StringVar(&apiKey, "api-key", "", "Rackspace API Key")
-	flag.StringVar(&endpoint, "endpoint", carina.BetaEndpoint, "carina API Endpoint")
-	flag.Parse()
-
-	if username == "" && os.Getenv("RACKSPACE_USERNAME") != "" {
-		username = os.Getenv("RACKSPACE_USERNAME")
-	}
-	if apiKey == "" && os.Getenv("RACKSPACE_APIKEY") != "" {
-		apiKey = os.Getenv("RACKSPACE_APIKEY")
-	}
-
-	if username == "" || apiKey == "" {
-		fmt.Println("Either set --username and --api-key or set the " +
-			"RACKSPACE_USERNAME and RACKSPACE_APIKEY environment variables.")
-		fmt.Println()
-		usage()
-		os.Exit(1)
-	}
-
-	var command, clusterName string
-
-	command = flag.Arg(0)
-	clusterName = flag.Arg(1)
-
-	switch {
-	case flag.NArg() < 1 || (command != "list" && flag.NArg() < 2):
-		usage()
-		os.Exit(2)
-	}
-
-	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
-
-	clusterClient, err := carina.NewClusterClient(endpoint, username, apiKey)
-	if err != nil {
-		simpleErr(w, err)
-		w.Flush()
-		os.Exit(3)
-	}
-
-	switch command {
-	case "list":
-		var clusters []carina.Cluster
-		clusters, err = clusterClient.List()
-		if err == nil {
-			for _, cluster := range clusters {
-				writeCluster(w, &cluster, err)
-			}
-		}
-	case "get":
-		cluster, err := clusterClient.Get(clusterName)
-		writeCluster(w, cluster, err)
-	case "delete":
-		cluster, err := clusterClient.Delete(clusterName)
-		writeCluster(w, cluster, err)
-	case "create":
-		c := carina.Cluster{
-			ClusterName: clusterName,
-		}
-		cluster, err := clusterClient.Create(c)
-		writeCluster(w, cluster, err)
-	case "credentials":
-		creds, err := clusterClient.GetCredentials(clusterName)
-		if err == nil {
-			err = writeCredentials(w, creds, ".")
-		}
-
-		// Snuck in as an example
-	case "docker-info":
-		creds, err := clusterClient.GetCredentials(clusterName)
-		if err != nil {
-			break
-		}
-		info, err := dockerInfo(creds)
-		fmt.Fprintf(w, "%+v\n", info)
-	default:
-		usage()
-		err = errors.New("command " + command + " not recognized")
-	}
-	exitCode := 0
-
-	if err != nil {
-		simpleErr(w, err)
-		exitCode = 4
-	}
-
-	w.Flush()
-	os.Exit(exitCode)
-}
-
-func writeCluster(w *tabwriter.Writer, cluster *carina.Cluster, err error) {
-	if err != nil {
-		return
-	}
-	s := strings.Join([]string{cluster.ClusterName,
-		cluster.Username,
-		cluster.Flavor,
-		cluster.Image,
-		fmt.Sprintf("%v", cluster.Nodes),
-		cluster.Status}, "\t")
-	w.Write([]byte(s + "\n"))
-}
-
-func simpleErr(w *tabwriter.Writer, err error) {
-	fmt.Fprintf(w, "ERROR: %v\n", err)
-}
-
-func usage() {
-	exe := os.Args[0]
-
-	fmt.Printf("NAME:\n")
-	fmt.Printf("  %s - command line interface to manage swarm clusters\n", exe)
-	fmt.Printf("USAGE:\n")
-	fmt.Printf("  %s <command> [clustername] [--username <username>] [--api-key <apiKey>] [--endpoint <endpoint>]\n", exe)
-	fmt.Println()
-	fmt.Printf("COMMANDS:\n")
-	fmt.Printf("  %s list\n", exe)
-	fmt.Printf("  %s create <clustername>      - create a new cluster\n", exe)
-	fmt.Printf("  %s get <clustername>         - get a cluster by name\n", exe)
-	fmt.Printf("  %s delete <clustername>      - delete a cluster by name\n", exe)
-	fmt.Printf("  %s credentials <clustername> - download credentials to the current directory\n", exe)
-	fmt.Println()
-	fmt.Printf("FLAGS:\n")
-	fmt.Printf("  -username string\n")
-	fmt.Printf("    Rackspace username\n")
-	fmt.Printf("  -api-key string\n")
-	fmt.Printf("    Rackspace API key\n")
-	fmt.Printf("  -endpoint string\n")
-	fmt.Printf("    carina API Endpoint (default \"https://mycluster.rackspacecloud.com\")\n")
-	fmt.Println()
-	fmt.Printf("ENVIRONMENT VARIABLES:\n")
-	fmt.Printf("  RACKSPACE_USERNAME - set instead of --username\n")
-	fmt.Printf("  RACKSPACE_APIKEY   - set instead of --api-key\n")
+	app := NewCarina()
+	kingpin.MustParse(app.Parse(os.Args[1:]))
 }
