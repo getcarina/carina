@@ -32,8 +32,11 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 			return err
 		}
 	}
-	// TODO: Handle Windows separately
-	fmt.Printf("source %v\n", path.Join(pth, "docker.env"))
+
+	// TODO: Handle Windows conditionally
+	fmt.Printf("source \"%v\"\n", path.Join(pth, "docker.env"))
+	fmt.Printf("# Run the above or use a subshell with your arguments to %v\n", os.Args[0])
+	fmt.Printf("# $( %v command... ) \n", os.Args[0])
 	return nil
 }
 
