@@ -46,8 +46,8 @@ type Application struct {
 
 // Command is a command needing a ClusterClient
 type Command struct {
+	*Context
 	*kingpin.CmdClause
-	Context *Context
 }
 
 // Context context for the  App
@@ -104,6 +104,8 @@ func New() *Application {
 	ctx := new(Context)
 	cap.Context = ctx
 
+	cap.PreAction(cap.Auth)
+
 	cap.Flag("username", "Rackspace username").StringVar(&ctx.Username)
 	cap.Flag("api-key", "Rackspace API Key").StringVar(&ctx.APIKey)
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
@@ -147,7 +149,6 @@ func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
 	carina := new(Command)
 	carina.Context = ctx
 	carina.CmdClause = app.Command(name, help)
-	carina.PreAction(app.Auth)
 	return carina
 }
 
@@ -179,7 +180,7 @@ func (app *Application) Auth(pc *kingpin.ParseContext) (err error) {
 
 // List the current swarm clusters
 func (carina *Command) List(pc *kingpin.ParseContext) (err error) {
-	clusterList, err := carina.Context.ClusterClient.List()
+	clusterList, err := carina.ClusterClient.List()
 	if err != nil {
 		return err
 	}
@@ -194,33 +195,33 @@ func (carina *Command) List(pc *kingpin.ParseContext) (err error) {
 	}
 	s := strings.Join(headerFields, "\t")
 
-	carina.Context.TabWriter.Write([]byte(s + "\n"))
+	carina.TabWriter.Write([]byte(s + "\n"))
 
 	for _, cluster := range clusterList {
-		writeCluster(carina.Context.TabWriter, &cluster)
+		writeCluster(carina.TabWriter, &cluster)
 	}
-	carina.Context.TabWriter.Flush()
+	carina.TabWriter.Flush()
 
 	return nil
 }
 
 // Get an individual cluster
 func (carina *ClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
-	cluster, err := carina.Context.ClusterClient.Get(carina.ClusterName)
+	cluster, err := carina.ClusterClient.Get(carina.ClusterName)
 	if err == nil {
-		writeCluster(carina.Context.TabWriter, cluster)
+		writeCluster(carina.TabWriter, cluster)
 	}
-	carina.Context.TabWriter.Flush()
+	carina.TabWriter.Flush()
 	return err
 }
 
 // Delete a cluster
 func (carina *ClusterCommand) Delete(pc *kingpin.ParseContext) (err error) {
-	cluster, err := carina.Context.ClusterClient.Delete(carina.ClusterName)
+	cluster, err := carina.ClusterClient.Delete(carina.ClusterName)
 	if err == nil {
-		writeCluster(carina.Context.TabWriter, cluster)
+		writeCluster(carina.TabWriter, cluster)
 	}
-	carina.Context.TabWriter.Flush()
+	carina.TabWriter.Flush()
 	return err
 }
 
@@ -238,14 +239,14 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 		AutoScale:   carina.AutoScale,
 	}
 
-	cluster, err := carina.Context.ClusterClient.Create(c)
+	cluster, err := carina.ClusterClient.Create(c)
 
 	// Transitions past point of "new" or "building" are assumed to be states we
 	// can stop on.
 	if carina.Wait {
 		for cluster.Status == "new" || cluster.Status == "building" {
 			time.Sleep(13 * time.Second)
-			cluster, err = carina.Context.ClusterClient.Get(carina.ClusterName)
+			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
 			if err != nil {
 				break
 			}
@@ -253,25 +254,25 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	}
 
 	if err == nil {
-		writeCluster(carina.Context.TabWriter, cluster)
+		writeCluster(carina.TabWriter, cluster)
 	}
-	carina.Context.TabWriter.Flush()
+	carina.TabWriter.Flush()
 	return err
 }
 
 // Grow increase the size of the given cluster
 func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
-	cluster, err := carina.Context.ClusterClient.Grow(carina.ClusterName, carina.Nodes)
+	cluster, err := carina.ClusterClient.Grow(carina.ClusterName, carina.Nodes)
 	if err == nil {
-		writeCluster(carina.Context.TabWriter, cluster)
+		writeCluster(carina.TabWriter, cluster)
 	}
-	carina.Context.TabWriter.Flush()
+	carina.TabWriter.Flush()
 	return err
 }
 
 // Download credentials for a cluster
 func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error) {
-	credentials, err := carina.Context.ClusterClient.GetCredentials(carina.ClusterName)
+	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
 
 	p := path.Clean(carina.Path)
 
@@ -283,13 +284,13 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	writeCredentials(carina.Context.TabWriter, credentials, p)
+	writeCredentials(carina.TabWriter, credentials, p)
 	// TODO: Handle Windows conditionally
 	fmt.Fprintf(os.Stdout, "source \"%v\"\n", path.Join(p, "docker.env"))
 	fmt.Fprintf(os.Stdout, "# Run the above or use a subshell with your arguments to %v\n", os.Args[0])
 	fmt.Fprintf(os.Stdout, "# $( %v command... ) \n", os.Args[0])
 
-	carina.Context.TabWriter.Flush()
+	carina.TabWriter.Flush()
 	return err
 }
 
