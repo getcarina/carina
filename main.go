@@ -105,8 +105,8 @@ func New() *Application {
 
 	cap.PreAction(cap.Auth)
 
-	cap.Flag("username", "Rackspace username - can also set env var RACKSPACE_USERNAME").StringVar(&ctx.Username)
-	cap.Flag("api-key", "Rackspace API Key - can also set env var RACKSPACE_APIKEY").StringVar(&ctx.APIKey)
+	cap.Flag("username", "Rackspace username - can also set env var RACKSPACE_USERNAME").OverrideDefaultFromEnvar("RACKSPACE_USERNAME").StringVar(&ctx.Username)
+	cap.Flag("api-key", "Rackspace API Key - can also set env var RACKSPACE_APIKEY").OverrideDefaultFromEnvar("RACKSPACE_APIKEY").PlaceHolder("RACKSPACE_APIKEY").StringVar(&ctx.APIKey)
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
 
 	writer := new(tabwriter.Writer)
@@ -162,17 +162,6 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 // Auth does the authentication
 func (app *Application) Auth(pc *kingpin.ParseContext) (err error) {
 	carina := app.Context
-
-	userEnv := os.Getenv("RACKSPACE_USERNAME")
-	if userEnv != "" {
-		carina.Username = userEnv
-	}
-
-	apiKeyEnv := os.Getenv("RACKSPACE_APIKEY")
-	if apiKeyEnv != "" {
-		carina.APIKey = apiKeyEnv
-	}
-
 	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
 	return err
 }
