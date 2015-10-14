@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
@@ -222,6 +223,19 @@ func (carina *CarinaCreateCommand) Create(pc *kingpin.ParseContext) (err error) 
 	}
 
 	cluster, err := carina.ClusterClient.Create(c)
+
+	// Transitions past point of "new" or "building" are assumed to be states we
+	// can stop on.
+	if carina.Wait {
+		for cluster.Status == "new" || cluster.Status == "building" {
+			time.Sleep(13 * time.Second)
+			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
+			if err != nil {
+				break
+			}
+		}
+	}
+
 	if err == nil {
 		writeCluster(carina.TabWriter, cluster)
 	}
