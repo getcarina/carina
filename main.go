@@ -62,8 +62,8 @@ type CarinaClusterCommand struct {
 	ClusterName string
 }
 
-// CarinaDownloadCommand keeps context about the download command
-type CarinaDownloadCommand struct {
+// CarinaCredentialsCommand keeps context about the download command
+type CarinaCredentialsCommand struct {
 	*CarinaClusterCommand
 	Path string
 }
@@ -94,10 +94,10 @@ func NewCarina() *CarinaApplication {
 	createCommand := cap.NewCarinaClusterCommand(writer, "create", "create a swarm cluster")
 	createCommand.Action(createCommand.Create)
 
-	downloadCommand := new(CarinaDownloadCommand)
-	downloadCommand.CarinaClusterCommand = cap.NewCarinaClusterCommand(writer, "download", "download credentials")
-	downloadCommand.Flag("path", "path to write credentials out to").StringVar(&downloadCommand.Path)
-	downloadCommand.Action(downloadCommand.Download)
+	credentialsCommand := new(CarinaCredentialsCommand)
+	credentialsCommand.CarinaClusterCommand = cap.NewCarinaClusterCommand(writer, "credentials", "download credentials")
+	credentialsCommand.Flag("path", "path to write credentials out to").StringVar(&credentialsCommand.Path)
+	credentialsCommand.Action(credentialsCommand.Download)
 
 	return cap
 }
@@ -194,7 +194,7 @@ func (carina *CarinaClusterCommand) Create(pc *kingpin.ParseContext) (err error)
 }
 
 // Download credentials for a cluster
-func (carina *CarinaDownloadCommand) Download(pc *kingpin.ParseContext) (err error) {
+func (carina *CarinaCredentialsCommand) Download(pc *kingpin.ParseContext) (err error) {
 	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
 
 	p := path.Clean(carina.Path)
