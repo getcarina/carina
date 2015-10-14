@@ -135,8 +135,8 @@ func (app *CarinaApplication) NewCarinaCommand(writer *tabwriter.Writer, name, h
 	carina := new(CarinaCommand)
 
 	carina.CmdClause = app.Command(name, help)
-	carina.Flag("username", "Rackspace username").Default("").OverrideDefaultFromEnvar("RACKSPACE_USERNAME").StringVar(&carina.Username)
-	carina.Flag("api-key", "Rackspace API Key").Default("").OverrideDefaultFromEnvar("RACKSPACE_APIKEY").StringVar(&carina.APIKey)
+	carina.Flag("username", "Rackspace username").StringVar(&carina.Username)
+	carina.Flag("api-key", "Rackspace API Key").StringVar(&carina.APIKey)
 	carina.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&carina.Endpoint)
 
 	carina.PreAction(carina.Auth)
@@ -157,6 +157,16 @@ func (app *CarinaApplication) NewCarinaClusterCommand(writer *tabwriter.Writer, 
 
 // Auth does the authentication
 func (carina *CarinaCommand) Auth(pc *kingpin.ParseContext) (err error) {
+	userEnv := os.Getenv("RACKSPACE_USERNAME")
+	if userEnv != "" {
+		carina.Username = userEnv
+	}
+
+	apiKeyEnv := os.Getenv("RACKSPACE_PASSWORD")
+	if apiKeyEnv != "" {
+		carina.APIKey = apiKeyEnv
+	}
+
 	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
 	return err
 }
