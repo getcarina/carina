@@ -33,10 +33,6 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 		}
 	}
 
-	// TODO: Handle Windows conditionally
-	fmt.Printf("source \"%v\"\n", path.Join(pth, "docker.env"))
-	fmt.Printf("# Run the above or use a subshell with your arguments to %v\n", os.Args[0])
-	fmt.Printf("# $( %v command... ) \n", os.Args[0])
 	return nil
 }
 
@@ -203,9 +199,16 @@ func (carina *CarinaCredentialsCommand) Download(pc *kingpin.ParseContext) (err 
 		os.MkdirAll(p, 0777)
 	}
 
-	if err == nil {
-		writeCredentials(carina.TabWriter, credentials, p)
+	if err != nil {
+		return err
 	}
+
+	writeCredentials(carina.TabWriter, credentials, p)
+	// TODO: Handle Windows conditionally
+	fmt.Fprintf(os.Stdout, "source \"%v\"\n", path.Join(p, "docker.env"))
+	fmt.Fprintf(os.Stdout, "# Run the above or use a subshell with your arguments to %v\n", os.Args[0])
+	fmt.Fprintf(os.Stdout, "# $( %v command... ) \n", os.Args[0])
+
 	carina.TabWriter.Flush()
 	return err
 }
