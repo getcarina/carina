@@ -33,10 +33,6 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 		}
 	}
 
-	// TODO: Handle Windows conditionally
-	fmt.Printf("source \"%v\"\n", path.Join(pth, "docker.env"))
-	fmt.Printf("# Run the above or use a subshell with your arguments to %v\n", os.Args[0])
-	fmt.Printf("# $( %v command... ) \n", os.Args[0])
 	return nil
 }
 
@@ -62,8 +58,8 @@ type CarinaClusterCommand struct {
 	ClusterName string
 }
 
-// CarinaDownloadCommand keeps context about the download command
-type CarinaDownloadCommand struct {
+// CarinaCredentialsCommand keeps context about the download command
+type CarinaCredentialsCommand struct {
 	*CarinaClusterCommand
 	Path string
 }
@@ -94,10 +90,10 @@ func NewCarina() *CarinaApplication {
 	createCommand := cap.NewCarinaClusterCommand(writer, "create", "create a swarm cluster")
 	createCommand.Action(createCommand.Create)
 
-	downloadCommand := new(CarinaDownloadCommand)
-	downloadCommand.CarinaClusterCommand = cap.NewCarinaClusterCommand(writer, "download", "download credentials")
-	downloadCommand.Flag("path", "path to write credentials out to").StringVar(&downloadCommand.Path)
-	downloadCommand.Action(downloadCommand.Download)
+	credentialsCommand := new(CarinaCredentialsCommand)
+	credentialsCommand.CarinaClusterCommand = cap.NewCarinaClusterCommand(writer, "credentials", "download credentials")
+	credentialsCommand.Flag("path", "path to write credentials out to").StringVar(&credentialsCommand.Path)
+	credentialsCommand.Action(credentialsCommand.Download)
 
 	return cap
 }
@@ -194,7 +190,7 @@ func (carina *CarinaClusterCommand) Create(pc *kingpin.ParseContext) (err error)
 }
 
 // Download credentials for a cluster
-func (carina *CarinaDownloadCommand) Download(pc *kingpin.ParseContext) (err error) {
+func (carina *CarinaCredentialsCommand) Download(pc *kingpin.ParseContext) (err error) {
 	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
 
 	p := path.Clean(carina.Path)
@@ -203,9 +199,16 @@ func (carina *CarinaDownloadCommand) Download(pc *kingpin.ParseContext) (err err
 		os.MkdirAll(p, 0777)
 	}
 
-	if err == nil {
-		writeCredentials(carina.TabWriter, credentials, p)
+	if err != nil {
+		return err
 	}
+
+	writeCredentials(carina.TabWriter, credentials, p)
+	// TODO: Handle Windows conditionally
+	fmt.Fprintf(os.Stdout, "source \"%v\"\n", path.Join(p, "docker.env"))
+	fmt.Fprintf(os.Stdout, "# Run the above or use a subshell with your arguments to %v\n", os.Args[0])
+	fmt.Fprintf(os.Stdout, "# $( %v command... ) \n", os.Args[0])
+
 	carina.TabWriter.Flush()
 	return err
 }

@@ -25,3 +25,9 @@ _testmain.go
 
 bin/
 carina
+
+ca-key.pem
+ca.pem
+cert.pem
+docker.env
+key.pem
