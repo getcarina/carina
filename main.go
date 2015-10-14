@@ -40,8 +40,8 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 
 // Application is, our, well, application
 type Application struct {
+	*Context
 	*kingpin.Application
-	Context *Context
 }
 
 // Command is a command needing a ClusterClient
@@ -98,10 +98,9 @@ func New() *Application {
 	app := kingpin.New("carina", "command line interface to work with Docker Swarm clusters")
 
 	cap := new(Application)
+	ctx := new(Context)
 
 	cap.Application = app
-
-	ctx := new(Context)
 	cap.Context = ctx
 
 	cap.PreAction(cap.Auth)
