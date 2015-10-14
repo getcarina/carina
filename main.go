@@ -24,16 +24,19 @@ func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) {
 }
 
 func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth string) (err error) {
-	statusFormat := "%s\t%s\n"
+	// TODO: Prompt when file already exists?
 	for fname, b := range creds.Files {
 		p := path.Join(pth, fname)
 		err = ioutil.WriteFile(p, b, 0600)
 		if err != nil {
-			fmt.Fprintf(w, statusFormat, fname, "🚫")
 			return err
 		}
-		fmt.Fprintf(w, statusFormat, fname, "✅")
 	}
+
+	// TODO: Handle Windows conditionally
+	fmt.Printf("source \"%v\"\n", path.Join(pth, "docker.env"))
+	fmt.Printf("# Run the above or use a subshell with your arguments to %v\n", os.Args[0])
+	fmt.Printf("# $( %v command... ) \n", os.Args[0])
 	return nil
 }
 
@@ -57,6 +60,12 @@ type CarinaCommand struct {
 type CarinaClusterCommand struct {
 	*CarinaCommand
 	ClusterName string
+}
+
+// CarinaDownloadCommand keeps context about the download command
+type CarinaDownloadCommand struct {
+	*CarinaClusterCommand
+	Path string
 }
 
 // NewCarina creates a new CarinaApplication
@@ -85,7 +94,9 @@ func NewCarina() *CarinaApplication {
 	createCommand := cap.NewCarinaClusterCommand(writer, "create", "create a swarm cluster")
 	createCommand.Action(createCommand.Create)
 
-	downloadCommand := cap.NewCarinaClusterCommand(writer, "download", "download credentials")
+	downloadCommand := new(CarinaDownloadCommand)
+	downloadCommand.CarinaClusterCommand = cap.NewCarinaClusterCommand(writer, "download", "download credentials")
+	downloadCommand.Flag("path", "path to write credentials out to").StringVar(&downloadCommand.Path)
 	downloadCommand.Action(downloadCommand.Download)
 
 	return cap
@@ -183,10 +194,17 @@ func (carina *CarinaClusterCommand) Create(pc *kingpin.ParseContext) (err error)
 }
 
 // Download credentials for a cluster
-func (carina *CarinaClusterCommand) Download(pc *kingpin.ParseContext) (err error) {
+func (carina *CarinaDownloadCommand) Download(pc *kingpin.ParseContext) (err error) {
 	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
+
+	p := path.Clean(carina.Path)
+
+	if p != "." {
+		os.MkdirAll(p, 0777)
+	}
+
 	if err == nil {
-		writeCredentials(carina.TabWriter, credentials, ".")
+		writeCredentials(carina.TabWriter, credentials, p)
 	}
 	carina.TabWriter.Flush()
 	return err
