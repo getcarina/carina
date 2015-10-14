@@ -102,6 +102,7 @@ func New() *Application {
 	cap.Application = app
 
 	ctx := new(Context)
+	cap.Context = ctx
 
 	cap.Flag("username", "Rackspace username").StringVar(&ctx.Username)
 	cap.Flag("api-key", "Rackspace API Key").StringVar(&ctx.APIKey)
@@ -167,7 +168,7 @@ func (app *Application) Auth(pc *kingpin.ParseContext) (err error) {
 		carina.Username = userEnv
 	}
 
-	apiKeyEnv := os.Getenv("RACKSPACE_PASSWORD")
+	apiKeyEnv := os.Getenv("RACKSPACE_APIKEY")
 	if apiKeyEnv != "" {
 		carina.APIKey = apiKeyEnv
 	}
