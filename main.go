@@ -92,6 +92,12 @@ func New() *Application {
 	writer := new(tabwriter.Writer)
 	writer.Init(os.Stdout, 0, 8, 1, '\t', 0)
 
+	// Make sure the tabwriter gets flushed at the end
+	app.Terminate(func(code int) {
+		ctx.TabWriter.Flush()
+		os.Exit(code)
+	})
+
 	ctx.TabWriter = writer
 
 	listCommand := cap.NewCommand(ctx, "list", "list swarm clusters")
