@@ -76,13 +76,13 @@ type GrowCommand struct {
 func New() *Application {
 
 	app := kingpin.New("carina", "command line interface to launch and work with Docker Swarm clusters")
+	app.Version(VersionString())
 
 	cap := new(Application)
 	ctx := new(Context)
 
 	cap.Application = app
 
-	cap.Version(version.Version)
 	cap.Context = ctx
 
 	cap.Flag("username", "Rackspace username - can also set env var RACKSPACE_USERNAME").OverrideDefaultFromEnvar("RACKSPACE_USERNAME").StringVar(&ctx.Username)
@@ -121,6 +121,14 @@ func New() *Application {
 	growCommand.Action(growCommand.Grow)
 
 	return cap
+}
+
+// VersionString returns the current version and commit of this binary (if set)
+func VersionString() string {
+	s := ""
+	s += fmt.Sprintf("Version: %s\n", version.Version)
+	s += fmt.Sprintf("Commit:  %s", version.Commit)
+	return s
 }
 
 // NewCommand creates a command wrapped with carina.Context
