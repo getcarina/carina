@@ -265,7 +265,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 	p := path.Clean(carina.Path)
 
 	if p != "." {
-		os.MkdirAll(p, 0777)
+		err = os.MkdirAll(p, 0777)
 	}
 
 	if err != nil {
