@@ -95,7 +95,7 @@ type GrowCommand struct {
 // New creates a new Application
 func New() *Application {
 
-	app := kingpin.New("carina", "command line interface to work with Docker Swarm clusters")
+	app := kingpin.New("carina", "command line interface to launch and work with Docker Swarm clusters")
 
 	cap := new(Application)
 	ctx := new(Context)
