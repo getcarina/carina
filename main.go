@@ -275,8 +275,8 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 	writeCredentials(carina.TabWriter, credentials, p)
 	// TODO: Handle Windows conditionally
 	fmt.Fprintf(os.Stdout, "source \"%v\"\n", path.Join(p, "docker.env"))
-	fmt.Fprintf(os.Stdout, "# Run the above or use a subshell with your arguments to %v\n", os.Args[0])
-	fmt.Fprintf(os.Stdout, "# $( %v command... ) \n", os.Args[0])
+	fmt.Fprintf(os.Stdout, "# Run the above or eval a subshell with your arguments to %v\n", os.Args[0])
+	fmt.Fprintf(os.Stdout, "# eval \"$( %v command... )\" \n", os.Args[0])
 
 	carina.TabWriter.Flush()
 	return err
