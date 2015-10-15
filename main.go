@@ -16,30 +16,6 @@ import (
 	"github.com/rackerlabs/libcarina"
 )
 
-func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) (err error) {
-	s := strings.Join([]string{cluster.ClusterName,
-		cluster.Username,
-		cluster.Flavor,
-		cluster.Image,
-		fmt.Sprintf("%v", cluster.Nodes),
-		cluster.Status}, "\t")
-	_, err = w.Write([]byte(s + "\n"))
-	return
-}
-
-func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth string) (err error) {
-	// TODO: Prompt when file already exists?
-	for fname, b := range creds.Files {
-		p := path.Join(pth, fname)
-		err = ioutil.WriteFile(p, b, 0600)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // Application is, our, well, application
 type Application struct {
 	*Context
@@ -81,6 +57,7 @@ type CreateCommand struct {
 	Nodes     int
 	AutoScale bool
 
+	// Whether to wait until the cluster is created (or errored)
 	Wait bool
 
 	// TODO: See if setting flavor or image makes sense, even if the API takes it
@@ -226,6 +203,13 @@ func (carina *ClusterCommand) Delete(pc *kingpin.ParseContext) (err error) {
 	return carina.clusterOp(carina.ClusterClient.Delete)
 }
 
+// Grow increases the size of the given cluster
+func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
+	return carina.clusterOp(func(clusterName string) (*libcarina.Cluster, error) {
+		return carina.ClusterClient.Grow(clusterName, carina.Nodes)
+	})
+}
+
 // Create a cluster
 func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	if carina.Nodes < 1 {
@@ -266,13 +250,6 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	return carina.TabWriter.Flush()
 }
 
-// Grow increase the size of the given cluster
-func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterOp(func(clusterName string) (*libcarina.Cluster, error) {
-		return carina.ClusterClient.Grow(clusterName, carina.Nodes)
-	})
-}
-
 // Download credentials for a cluster
 func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error) {
 	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
@@ -306,6 +283,30 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 
 	err = carina.TabWriter.Flush()
 	return err
+}
+
+func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth string) (err error) {
+	// TODO: Prompt when file already exists?
+	for fname, b := range creds.Files {
+		p := path.Join(pth, fname)
+		err = ioutil.WriteFile(p, b, 0600)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) (err error) {
+	s := strings.Join([]string{cluster.ClusterName,
+		cluster.Username,
+		cluster.Flavor,
+		cluster.Image,
+		fmt.Sprintf("%v", cluster.Nodes),
+		cluster.Status}, "\t")
+	_, err = w.Write([]byte(s + "\n"))
+	return
 }
 
 func main() {
