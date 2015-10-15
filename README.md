@@ -2,7 +2,7 @@
 
 CLI tool for Carina, the [Rackspace container service](https://mycluster.rackspacecloud.com) that's currently in Beta.
 
-![](clustergalaxy.png)
+![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
 
 There are downloads of the built binaries over on [releases](https://github.com/rackerlabs/carina/releases).
 
