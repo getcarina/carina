@@ -177,11 +177,11 @@ func (carina *Command) List(pc *kingpin.ParseContext) (err error) {
 	return err
 }
 
-type clusterFunc func(clusterName string) (*libcarina.Cluster, error)
+type clusterOp func(clusterName string) (*libcarina.Cluster, error)
 
 // Does an func against a cluster then returns the new cluster representation
-func (carina *ClusterCommand) clusterOp(clop clusterFunc) (err error) {
-	cluster, err := clop(carina.ClusterName)
+func (carina *ClusterCommand) clusterApply(op clusterOp) (err error) {
+	cluster, err := op(carina.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -195,17 +195,17 @@ func (carina *ClusterCommand) clusterOp(clop clusterFunc) (err error) {
 
 // Get an individual cluster
 func (carina *ClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterOp(carina.ClusterClient.Get)
+	return carina.clusterApply(carina.ClusterClient.Get)
 }
 
 // Delete a cluster
 func (carina *ClusterCommand) Delete(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterOp(carina.ClusterClient.Delete)
+	return carina.clusterApply(carina.ClusterClient.Delete)
 }
 
 // Grow increases the size of the given cluster
 func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterOp(func(clusterName string) (*libcarina.Cluster, error) {
+	return carina.clusterApply(func(clusterName string) (*libcarina.Cluster, error) {
 		return carina.ClusterClient.Grow(clusterName, carina.Nodes)
 	})
 }
