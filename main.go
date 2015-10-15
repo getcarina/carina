@@ -13,6 +13,7 @@ import (
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
+	"github.com/rackerlabs/carina/version"
 	"github.com/rackerlabs/libcarina"
 )
 
@@ -80,9 +81,9 @@ func New() *Application {
 	ctx := new(Context)
 
 	cap.Application = app
-	cap.Context = ctx
 
-	cap.PreAction(cap.Auth)
+	cap.Version(version.Version)
+	cap.Context = ctx
 
 	cap.Flag("username", "Rackspace username - can also set env var RACKSPACE_USERNAME").OverrideDefaultFromEnvar("RACKSPACE_USERNAME").StringVar(&ctx.Username)
 	cap.Flag("api-key", "Rackspace API Key - can also set env var RACKSPACE_APIKEY").OverrideDefaultFromEnvar("RACKSPACE_APIKEY").PlaceHolder("RACKSPACE_APIKEY").StringVar(&ctx.APIKey)
@@ -122,11 +123,12 @@ func New() *Application {
 	return cap
 }
 
-// NewCommand creates a command that relies on Auth
+// NewCommand creates a command wrapped with carina.Context
 func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
 	carina := new(Command)
 	carina.Context = ctx
 	carina.CmdClause = app.Command(name, help)
+	carina.PreAction(carina.Auth)
 	return carina
 }
 
@@ -139,8 +141,7 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 }
 
 // Auth does the authentication
-func (app *Application) Auth(pc *kingpin.ParseContext) (err error) {
-	carina := app.Context
+func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
 	return err
 }
