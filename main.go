@@ -16,14 +16,15 @@ import (
 	"github.com/rackerlabs/libcarina"
 )
 
-func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) {
+func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) (err error) {
 	s := strings.Join([]string{cluster.ClusterName,
 		cluster.Username,
 		cluster.Flavor,
 		cluster.Image,
 		fmt.Sprintf("%v", cluster.Nodes),
 		cluster.Status}, "\t")
-	w.Write([]byte(s + "\n"))
+	_, err = w.Write([]byte(s + "\n"))
+	return
 }
 
 func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth string) (err error) {
@@ -76,11 +77,11 @@ type CredentialsCommand struct {
 type CreateCommand struct {
 	*ClusterCommand
 
-	Wait bool
-
 	// Options passed along to Carina's API
 	Nodes     int
 	AutoScale bool
+
+	Wait bool
 
 	// TODO: See if setting flavor or image makes sense, even if the API takes it
 	// Flavor    string
@@ -184,34 +185,45 @@ func (carina *Command) List(pc *kingpin.ParseContext) (err error) {
 	}
 	s := strings.Join(headerFields, "\t")
 
-	carina.TabWriter.Write([]byte(s + "\n"))
+	_, err = carina.TabWriter.Write([]byte(s + "\n"))
+	if err != nil {
+		return err
+	}
 
 	for _, cluster := range clusterList {
-		writeCluster(carina.TabWriter, &cluster)
+		err = writeCluster(carina.TabWriter, &cluster)
+		if err != nil {
+			return err
+		}
 	}
-	carina.TabWriter.Flush()
+	err = carina.TabWriter.Flush()
+	return err
+}
 
-	return nil
+type clusterFunc func(clusterName string) (*libcarina.Cluster, error)
+
+// Does an func against a cluster then returns the new cluster representation
+func (carina *ClusterCommand) clusterOp(clop clusterFunc) (err error) {
+	cluster, err := clop(carina.ClusterName)
+	if err != nil {
+		return err
+	}
+
+	err = writeCluster(carina.TabWriter, cluster)
+	if err != nil {
+		return err
+	}
+	return carina.TabWriter.Flush()
 }
 
 // Get an individual cluster
 func (carina *ClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
-	cluster, err := carina.ClusterClient.Get(carina.ClusterName)
-	if err == nil {
-		writeCluster(carina.TabWriter, cluster)
-	}
-	carina.TabWriter.Flush()
-	return err
+	return carina.clusterOp(carina.ClusterClient.Get)
 }
 
 // Delete a cluster
 func (carina *ClusterCommand) Delete(pc *kingpin.ParseContext) (err error) {
-	cluster, err := carina.ClusterClient.Delete(carina.ClusterName)
-	if err == nil {
-		writeCluster(carina.TabWriter, cluster)
-	}
-	carina.TabWriter.Flush()
-	return err
+	return carina.clusterOp(carina.ClusterClient.Delete)
 }
 
 // Create a cluster
@@ -242,26 +254,31 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 		}
 	}
 
-	if err == nil {
-		writeCluster(carina.TabWriter, cluster)
+	if err != nil {
+		return err
 	}
-	carina.TabWriter.Flush()
-	return err
+
+	err = writeCluster(carina.TabWriter, cluster)
+
+	if err != nil {
+		return err
+	}
+	return carina.TabWriter.Flush()
 }
 
 // Grow increase the size of the given cluster
 func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
-	cluster, err := carina.ClusterClient.Grow(carina.ClusterName, carina.Nodes)
-	if err == nil {
-		writeCluster(carina.TabWriter, cluster)
-	}
-	carina.TabWriter.Flush()
-	return err
+	return carina.clusterOp(func(clusterName string) (*libcarina.Cluster, error) {
+		return carina.ClusterClient.Grow(clusterName, carina.Nodes)
+	})
 }
 
 // Download credentials for a cluster
 func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error) {
 	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
+	if err != nil {
+		return err
+	}
 
 	p := path.Clean(carina.Path)
 
@@ -273,7 +290,10 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	writeCredentials(carina.TabWriter, credentials, p)
+	err = writeCredentials(carina.TabWriter, credentials, p)
+	if err != nil {
+		return err
+	}
 
 	if runtime.GOOS == "windows" {
 		fmt.Fprintf(os.Stdout, "\"%v\"\n", path.Join(p, "docker.cmd"))
@@ -284,7 +304,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		fmt.Fprintf(os.Stdout, "# eval \"$( %v command... )\" \n", os.Args[0])
 	}
 
-	carina.TabWriter.Flush()
+	err = carina.TabWriter.Flush()
 	return err
 }
 
