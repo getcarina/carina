@@ -3,6 +3,9 @@ language: go
 go:
   - 1.5
 
+install:
+  - go get ./...
+
 script:
   - make cross-build
   - make carina
