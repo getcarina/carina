@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -93,7 +94,8 @@ func New() *Application {
 
 	// Make sure the tabwriter gets flushed at the end
 	app.Terminate(func(code int) {
-		ctx.TabWriter.Flush()
+		// Squish any errors from flush, since we're terminating the app anyway
+		_ = ctx.TabWriter.Flush()
 		os.Exit(code)
 	})
 
@@ -166,7 +168,10 @@ func (carina *Command) List(pc *kingpin.ParseContext) (err error) {
 		return err
 	}
 
-	writeClusterHeader(carina.TabWriter)
+	err = writeClusterHeader(carina.TabWriter)
+	if err != nil {
+		return err
+	}
 
 	for _, cluster := range clusterList {
 		err = writeCluster(carina.TabWriter, &cluster)
@@ -297,10 +302,13 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 }
 
 func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) (err error) {
-	s := strings.Join([]string{cluster.ClusterName,
+	s := strings.Join([]string{
+		cluster.ClusterName,
 		cluster.Flavor,
-		fmt.Sprintf("%v", cluster.Nodes),
-		cluster.Status}, "\t")
+		strconv.FormatInt(cluster.Nodes.Int64(), 10),
+		strconv.FormatBool(cluster.AutoScale),
+		cluster.Status,
+	}, "\t")
 	_, err = w.Write([]byte(s + "\n"))
 	return
 }
@@ -310,6 +318,7 @@ func writeClusterHeader(w *tabwriter.Writer) (err error) {
 		"ClusterName",
 		"Flavor",
 		"Nodes",
+		"AutoScale",
 		"Status",
 	}
 	s := strings.Join(headerFields, "\t")
