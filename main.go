@@ -271,6 +271,10 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
+	if carina.Path == "" {
+		carina.Path = carina.ClusterName
+	}
+
 	p := path.Clean(carina.Path)
 
 	if p != "." {
