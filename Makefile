@@ -15,7 +15,7 @@ default: carina
 get-deps:
 	go get ./...
 
-carina: get-deps $(GOFILES)
+carina: $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
 gocarina: $(GOFILES)
