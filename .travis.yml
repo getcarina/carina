@@ -1,0 +1,9 @@
+language: go
+
+go:
+  - 1.5
+
+script:
+  - make cross-build
+  - make carina
+  - make test

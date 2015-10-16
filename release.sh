@@ -11,8 +11,13 @@ declare -xr ORG="rackerlabs"
 declare -xr REPO="carina"
 declare -xr BINARY=$REPO
 
+# Pick your own leveled up tag
 TAG=${1}
+
+# Chosen from {adjective} {constellation}, where constellation comes from
+# http://www.astro.wisc.edu/~dolan/constellations/constellation_list.html
 NAME=${2}
+
 DESCRIPTION="Prototypal release of the Carina CLI"
 
 echo "Releasing '$TAG' - $NAME: $DESCRIPTION"

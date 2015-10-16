@@ -6,13 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"runtime"
 	"strings"
 	"text/tabwriter"
 	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
+	"github.com/rackerlabs/carina/version"
 	"github.com/rackerlabs/libcarina"
 )
 
@@ -75,14 +75,14 @@ type GrowCommand struct {
 func New() *Application {
 
 	app := kingpin.New("carina", "command line interface to launch and work with Docker Swarm clusters")
+	app.Version(VersionString())
 
 	cap := new(Application)
 	ctx := new(Context)
 
 	cap.Application = app
-	cap.Context = ctx
 
-	cap.PreAction(cap.Auth)
+	cap.Context = ctx
 
 	cap.Flag("username", "Rackspace username - can also set env var RACKSPACE_USERNAME").OverrideDefaultFromEnvar("RACKSPACE_USERNAME").StringVar(&ctx.Username)
 	cap.Flag("api-key", "Rackspace API Key - can also set env var RACKSPACE_APIKEY").OverrideDefaultFromEnvar("RACKSPACE_APIKEY").PlaceHolder("RACKSPACE_APIKEY").StringVar(&ctx.APIKey)
@@ -90,6 +90,12 @@ func New() *Application {
 
 	writer := new(tabwriter.Writer)
 	writer.Init(os.Stdout, 0, 8, 1, '\t', 0)
+
+	// Make sure the tabwriter gets flushed at the end
+	app.Terminate(func(code int) {
+		ctx.TabWriter.Flush()
+		os.Exit(code)
+	})
 
 	ctx.TabWriter = writer
 
@@ -122,11 +128,20 @@ func New() *Application {
 	return cap
 }
 
-// NewCommand creates a command that relies on Auth
+// VersionString returns the current version and commit of this binary (if set)
+func VersionString() string {
+	s := ""
+	s += fmt.Sprintf("Version: %s\n", version.Version)
+	s += fmt.Sprintf("Commit:  %s", version.Commit)
+	return s
+}
+
+// NewCommand creates a command wrapped with carina.Context
 func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
 	carina := new(Command)
 	carina.Context = ctx
 	carina.CmdClause = app.Command(name, help)
+	carina.PreAction(carina.Auth)
 	return carina
 }
 
@@ -139,8 +154,7 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 }
 
 // Auth does the authentication
-func (app *Application) Auth(pc *kingpin.ParseContext) (err error) {
-	carina := app.Context
+func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
 	return err
 }
@@ -272,14 +286,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	if runtime.GOOS == "windows" {
-		fmt.Fprintf(os.Stdout, "\"%v\"\n", path.Join(p, "docker.cmd"))
-		fmt.Fprintf(os.Stdout, "# Run the above to set your docker environment\n")
-	} else {
-		fmt.Fprintf(os.Stdout, "source \"%v\"\n", path.Join(p, "docker.env"))
-		fmt.Fprintf(os.Stdout, "# Run the above or eval a subshell with your arguments to %v\n", os.Args[0])
-		fmt.Fprintf(os.Stdout, "# eval \"$( %v command... )\" \n", os.Args[0])
-	}
+	fmt.Println(sourceHelpString(p, os.Args[0]))
 
 	err = carina.TabWriter.Flush()
 	return err
