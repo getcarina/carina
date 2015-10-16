@@ -10,14 +10,16 @@ GOBUILD = $(GOCMD) build -a -tags netgo -ldflags '$(LDFLAGS)'
 
 GOFILES = *.go version/*.go
 
-carina: $(GOFILES)
+default: carina
+
+get-deps:
+	go get ./...
+
+carina: get-deps $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
 gocarina: $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o ${GOPATH}/bin/carina .
-
-get-deps:
-	go get ./...
 
 cross-build: get-deps carina linux darwin windows
 
