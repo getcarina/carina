@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"runtime"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -287,14 +286,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	if runtime.GOOS == "windows" {
-		fmt.Fprintf(os.Stdout, "\"%v\"\n", path.Join(p, "docker.cmd"))
-		fmt.Fprintf(os.Stdout, "# Run the above to set your docker environment\n")
-	} else {
-		fmt.Fprintf(os.Stdout, "source \"%v\"\n", path.Join(p, "docker.env"))
-		fmt.Fprintf(os.Stdout, "# Run the above or eval a subshell with your arguments to %v\n", os.Args[0])
-		fmt.Fprintf(os.Stdout, "# eval \"$( %v command... )\" \n", os.Args[0])
-	}
+	fmt.Println(sourceHelpString(p, os.Args[0]))
 
 	err = carina.TabWriter.Flush()
 	return err
