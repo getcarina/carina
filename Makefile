@@ -13,6 +13,9 @@ GOFILES = *.go version/*.go
 carina: $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
+gocarina: $(GOFILES)
+	CGO_ENABLED=0 $(GOBUILD) -o ${GOPATH}/bin/carina .
+
 cross-build: carina linux darwin windows
 
 linux: bin/carina-linux-amd64

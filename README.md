@@ -1,17 +1,39 @@
-# carina
+# Carina
 
 CLI tool for Carina, the [Rackspace container service](https://mycluster.rackspacecloud.com) that's currently in Beta.
 
 ![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
 
-There are downloads of the built binaries over on [releases](https://github.com/rackerlabs/carina/releases).
-
 :warning: This is temporary tooling until we have integration into `rack` :warning:
 
-## Help
+## Installation
+
+There are downloads of the built binaries over in [releases](https://github.com/rackerlabs/carina/releases).
+
+After downloading the version for your system, you'll probably need to rename it,
+set it as executable, and put it on a `PATH` you have:
+
+### OS X
 
 ```
-$ carina --help-long
+$ mv carina-darwin-amd64 ~/bin/carina
+$ chmod u+x ~/bin/carina
+```
+
+### Linux
+
+```
+$ mv carina-linux-amd64 ~/bin/carina
+$ chmod u+x ~/bin/carina
+```
+
+### Windows
+
+TODO: Instructions for Windows. Care to add some?
+
+## Usage
+
+```
 usage: carina [<flags>] <command> [<args> ...]
 
 command line interface to launch and work with Docker Swarm clusters
