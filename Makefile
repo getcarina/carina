@@ -16,7 +16,10 @@ carina: $(GOFILES)
 gocarina: $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o ${GOPATH}/bin/carina .
 
-cross-build: carina linux darwin windows
+get-deps:
+	go get ./...
+
+cross-build: get-deps carina linux darwin windows
 
 linux: bin/carina-linux-amd64
 
