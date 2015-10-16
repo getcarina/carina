@@ -28,7 +28,7 @@ cross-build: get-deps carina linux darwin windows
 
 build-tagged-for-release: clean
 	-docker rm -fv carina-build
-	docker build -f Dockerfile.build -t carina-cli-build .
+	docker build -f Dockerfile.build -t carina-cli-build --no-cache=true .
 	docker run --name carina-build carina-cli-build make tagged-build TAG=$(TAG)
 	mkdir -p bin/
 	docker cp carina-build:/built/bin .

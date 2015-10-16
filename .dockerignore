@@ -1,6 +1,4 @@
 bin
-carina
-
 builds.tgz
 
 # Keep .git, so that go get ./... works nicely
