@@ -40,7 +40,7 @@ bin/carina.exe: $(GOFILES)
 
 test: carina
 	@echo "Tests are cool, we should do those."
-	carina --version
+	./carina --version
 
 .PHONY: clean
 
