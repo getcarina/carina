@@ -7,6 +7,13 @@ if [ ! -e "$( which github-release )" ]; then
   exit 2
 fi
 
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
+
+if [ "$BRANCH" != "master" ]; then
+  echo "Must release from master branch"
+  exit 1
+fi
+
 declare -xr ORG="rackerlabs"
 declare -xr REPO="carina"
 declare -xr BINARY=$REPO
