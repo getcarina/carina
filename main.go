@@ -166,20 +166,7 @@ func (carina *Command) List(pc *kingpin.ParseContext) (err error) {
 		return err
 	}
 
-	headerFields := []string{
-		"ClusterName",
-		"Username",
-		"Flavor",
-		"Image",
-		"Nodes",
-		"Status",
-	}
-	s := strings.Join(headerFields, "\t")
-
-	_, err = carina.TabWriter.Write([]byte(s + "\n"))
-	if err != nil {
-		return err
-	}
+	writeClusterHeader(carina.TabWriter)
 
 	for _, cluster := range clusterList {
 		err = writeCluster(carina.TabWriter, &cluster)
@@ -311,13 +298,24 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 
 func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) (err error) {
 	s := strings.Join([]string{cluster.ClusterName,
-		cluster.Username,
 		cluster.Flavor,
-		cluster.Image,
 		fmt.Sprintf("%v", cluster.Nodes),
 		cluster.Status}, "\t")
 	_, err = w.Write([]byte(s + "\n"))
 	return
+}
+
+func writeClusterHeader(w *tabwriter.Writer) (err error) {
+	headerFields := []string{
+		"ClusterName",
+		"Flavor",
+		"Nodes",
+		"Status",
+	}
+	s := strings.Join(headerFields, "\t")
+
+	_, err = w.Write([]byte(s + "\n"))
+	return err
 }
 
 func main() {
