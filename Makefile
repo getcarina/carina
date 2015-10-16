@@ -33,10 +33,11 @@ build-tagged-for-release: clean
 	mkdir -p bin/
 	docker cp carina-build:/built/bin .
 
-# This one is intended to be run inside the accompanying Docker container
-tagged-build:
+checkout-tag:
 	git checkout $(TAG)
-	make cross-build
+
+# This one is intended to be run inside the accompanying Docker container
+tagged-build: checkout-tag cross-build
 	./carina --version
 	mkdir -p /built/
 	cp -r bin /built/bin
@@ -60,7 +61,7 @@ test: carina
 	@echo "Tests are cool, we should do those."
 	./carina --version
 
-.PHONY: clean build-in-docker build-tagged-for-release
+.PHONY: clean build-tagged-for-release checkout tagged-build
 
 clean:
 	 rm -f bin/*
