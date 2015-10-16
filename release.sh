@@ -36,6 +36,7 @@ DESCRIPTION="Prototypal release of the Carina CLI"
 echo "Releasing '$TAG' - $NAME: $DESCRIPTION"
 
 make clean
+# Build off master to make sure all is well
 make cross-build
 
 github-release release \
@@ -45,6 +46,11 @@ github-release release \
   --pre-release \
   --name "$NAME" \
   --description "$DESCRIPTION"
+
+# Build with the tag now for actual binary shipping
+git pull release master
+git checkout "$TAG"
+make cross-build
 
 github-release upload \
   --user "$ORG" \
@@ -66,3 +72,5 @@ github-release upload \
     --tag "$TAG" \
     --name "${BINARY}.exe" \
     --file bin/${BINARY}.exe
+
+git checkout master
