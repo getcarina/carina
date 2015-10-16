@@ -2,6 +2,9 @@ COMMIT = $(shell git rev-parse --verify HEAD)
 VERSION = $(shell git describe --tags --dirty='-dev' 2> /dev/null)
 GITHUB_ORG = rackerlabs
 GITHUB_REPO = carina
+
+REPO_PATH = ${GOPATH}/src/github.com/${GITHUB_ORG}/${GITHUB_REPO}
+
 XFLAG_PRE = -X github.com/${GITHUB_ORG}/${GITHUB_REPO}
 LDFLAGS = -w ${XFLAG_PRE}/version.Commit=${COMMIT} ${XFLAG_PRE}/version.Version=${VERSION}
 
@@ -23,6 +26,22 @@ gocarina: $(GOFILES)
 
 cross-build: get-deps carina linux darwin windows
 
+build-tagged-for-release: clean
+	-docker rm -fv carina-build
+	docker build -f Dockerfile.build -t carina-cli-build .
+	docker run --name carina-build carina-cli-build make tagged-build TAG=$(TAG)
+	mkdir -p bin/
+	docker cp carina-build:/built/bin .
+
+checkout-tag:
+	git checkout $(TAG)
+
+# This one is intended to be run inside the accompanying Docker container
+tagged-build: checkout-tag cross-build
+	./carina --version
+	mkdir -p /built/
+	cp -r bin /built/bin
+
 linux: bin/carina-linux-amd64
 
 darwin: bin/carina-darwin-amd64
@@ -42,7 +61,7 @@ test: carina
 	@echo "Tests are cool, we should do those."
 	./carina --version
 
-.PHONY: clean
+.PHONY: clean build-tagged-for-release checkout tagged-build
 
 clean:
 	 rm -f bin/*
