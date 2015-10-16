@@ -1,8 +1,8 @@
-# Carina
+# Carina™ client
 
 [![Build Status](https://travis-ci.org/rackerlabs/carina.svg)](https://travis-ci.org/rackerlabs/carina)
 
-CLI tool for Carina, the [Rackspace container service](https://mycluster.rackspacecloud.com) that's currently in Beta.
+Command line client for Carina, a [container service](https://mycluster.rackspacecloud.com) that's currently in Beta.
 
 ![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
 
