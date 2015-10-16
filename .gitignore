@@ -25,6 +25,7 @@ _testmain.go
 
 bin/
 carina
+builds.tgz
 
 ca-key.pem
 ca.pem

@@ -23,6 +23,13 @@ gocarina: $(GOFILES)
 
 cross-build: get-deps carina linux darwin windows
 
+build-in-docker: Dockerfile.build
+	docker build -f Dockerfile.build -t carina-cli-build .
+	docker run --rm carina-cli-build cat /builds.tgz | tar xz
+
+builds.tgz: cross-build
+	tar -cvzf builds.tgz bin/*
+
 linux: bin/carina-linux-amd64
 
 darwin: bin/carina-darwin-amd64
