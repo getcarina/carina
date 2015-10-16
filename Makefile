@@ -33,6 +33,10 @@ bin/carina-darwin-amd64: $(GOFILES)
 bin/carina.exe: $(GOFILES)
 	 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o $@ .
 
+test: carina
+	@echo "Tests are cool, we should do those."
+	carina --version
+
 .PHONY: clean
 
 clean:
