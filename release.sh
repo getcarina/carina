@@ -37,7 +37,7 @@ echo "Releasing '$TAG' - $NAME: $DESCRIPTION"
 
 make clean
 # Build off master to make sure all is well
-make cross-build
+make build-in-docker
 
 github-release release \
   --user "$ORG" \
@@ -50,7 +50,7 @@ github-release release \
 # Build with the tag now for actual binary shipping
 git pull release master
 git checkout "$TAG"
-make cross-build
+make build-tagged-for-release TAG=$TAG
 
 github-release upload \
   --user "$ORG" \

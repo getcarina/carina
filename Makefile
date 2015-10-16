@@ -27,6 +27,14 @@ build-in-docker: Dockerfile.build
 	docker build -f Dockerfile.build -t carina-cli-build .
 	docker run --rm carina-cli-build cat /builds.tgz | tar xz
 
+tagged-build:
+	git checkout $(TAG)
+	make builds.tgz
+	cp builds.tgz /builds.tgz
+
+build-tagged-for-release:
+	docker run --rm carina-cli-build sh -c "make --quiet tagged-build TAG=${TAG} && cat /builds.tgz" | tar xz
+
 builds.tgz: cross-build
 	tar -cvzf builds.tgz bin/*
 
@@ -49,7 +57,7 @@ test: carina
 	@echo "Tests are cool, we should do those."
 	./carina --version
 
-.PHONY: clean
+.PHONY: clean build-in-docker build-tagged-for-release
 
 clean:
 	 rm -f bin/*
