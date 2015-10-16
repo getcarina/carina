@@ -37,7 +37,11 @@ echo "Releasing '$TAG' - $NAME: $DESCRIPTION"
 
 make clean
 # Build off master to make sure all is well
-make build-in-docker
+make carina
+make test
+echo "Out with the old, in with the new"
+./carina --version
+echo "---------------------------------"
 
 github-release release \
   --user "$ORG" \
