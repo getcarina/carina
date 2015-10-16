@@ -3,5 +3,4 @@ FROM golang:1.5
 ADD . $GOPATH/src/github.com/rackerlabs/carina/
 WORKDIR $GOPATH/src/github.com/rackerlabs/carina/
 
-RUN make builds.tgz
-RUN cp builds.tgz /builds.tgz
+RUN make get-deps
