@@ -49,7 +49,6 @@ github-release release \
 
 # Build with the tag now for actual binary shipping
 git pull release master
-git checkout "$TAG"
 make build-tagged-for-release TAG=$TAG
 
 github-release upload \
