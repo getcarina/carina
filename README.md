@@ -6,8 +6,6 @@ CLI tool for Carina, the [Rackspace container service](https://mycluster.rackspa
 
 ![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
 
-:warning: This is temporary tooling until we have integration into `rack` :warning:
-
 ## Installation
 
 There are downloads of the built binaries over in [releases](https://github.com/rackerlabs/carina/releases).
