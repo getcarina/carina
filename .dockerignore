@@ -1,7 +1,7 @@
-bin
-carina
-
-builds.tgz
-
 # Keep .git, so that go get ./... works nicely
 # .git
+
+# We build in the docker images for our release setup
+bin
+# We only include carina-linux when building the docker image itself
+carina

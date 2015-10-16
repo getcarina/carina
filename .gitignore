@@ -25,7 +25,7 @@ _testmain.go
 
 bin/
 carina
-builds.tgz
+carina-linux
 
 ca-key.pem
 ca.pem
@@ -34,3 +34,5 @@ key.pem
 docker.env
 docker.cmd
 docker.ps1
+
+ca-certificates.crt
