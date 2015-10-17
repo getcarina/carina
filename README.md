@@ -39,22 +39,20 @@ usage: carina [<flags>] <command> [<args> ...]
 command line interface to launch and work with Docker Swarm clusters
 
 Flags:
-  --help  Show context-sensitive help (also try --help-long and --help-man).
-  --username="jupyter"
-          Rackspace username - can also set env var RACKSPACE_USERNAME
+  --help               Show context-sensitive help (also try --help-long and --help-man).
+  --version            Show application version.
+  --username=USERNAME  Rackspace username - can also set env var RACKSPACE_USERNAME
   --api-key=RACKSPACE_APIKEY
-          Rackspace API Key - can also set env var RACKSPACE_APIKEY
+                       Rackspace API Key - can also set env var RACKSPACE_APIKEY
   --endpoint="https://mycluster.rackspacecloud.com"
-          Carina API endpoint
+                       Carina API endpoint
 
 Commands:
   help [<command>...]
     Show help.
 
-
   list
     list swarm clusters
-
 
   get <cluster-name>
     get information about a swarm cluster
@@ -63,6 +61,9 @@ Commands:
   delete <cluster-name>
     delete a swarm cluster
 
+
+  rebuild <cluster-name>
+    rebuild a swarm cluster
 
   create [<flags>] <cluster-name>
     create a swarm cluster
