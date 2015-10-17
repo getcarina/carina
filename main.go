@@ -243,7 +243,7 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 	// Transitions past point of "new" or "building" are assumed to be states we
 	// can stop on.
 	if carina.Wait {
-		for cluster.Status == "new" || cluster.Status == "building" {
+		for cluster.Status == "new" || cluster.Status == "building" || cluster.Status == "rebuilding-swarm" {
 			time.Sleep(13 * time.Second)
 			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
 			if err != nil {
@@ -265,42 +265,19 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 
 // Create a cluster
 func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
-	if carina.Nodes < 1 {
-		return errors.New("nodes must be >= 1")
-	}
-
-	nodes := libcarina.Number(carina.Nodes)
-
-	c := libcarina.Cluster{
-		ClusterName: carina.ClusterName,
-		Nodes:       nodes,
-		AutoScale:   carina.AutoScale,
-	}
-
-	cluster, err := carina.ClusterClient.Create(c)
-
-	// Transitions past point of "new" or "building" are assumed to be states we
-	// can stop on.
-	if carina.Wait {
-		for cluster.Status == "new" || cluster.Status == "building" {
-			time.Sleep(13 * time.Second)
-			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
-			if err != nil {
-				break
-			}
+	return carina.clusterApplyWait(func(clusterName string) (*libcarina.Cluster, error) {
+		if carina.Nodes < 1 {
+			return nil, errors.New("nodes must be >= 1")
 		}
-	}
+		nodes := libcarina.Number(carina.Nodes)
 
-	if err != nil {
-		return err
-	}
-
-	err = writeCluster(carina.TabWriter, cluster)
-
-	if err != nil {
-		return err
-	}
-	return carina.TabWriter.Flush()
+		c := libcarina.Cluster{
+			ClusterName: carina.ClusterName,
+			Nodes:       nodes,
+			AutoScale:   carina.AutoScale,
+		}
+		return carina.ClusterClient.Create(c)
+	})
 }
 
 // Download credentials for a cluster
