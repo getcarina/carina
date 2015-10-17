@@ -50,16 +50,20 @@ type CredentialsCommand struct {
 	Path string
 }
 
+// WaitClusterCommand is simply a ClusterCommand that waits for cluster creation
+type WaitClusterCommand struct {
+	*ClusterCommand
+	// Whether to wait until the cluster is created (or errored)
+	Wait bool
+}
+
 // CreateCommand keeps context about the create command
 type CreateCommand struct {
-	*ClusterCommand
+	*WaitClusterCommand
 
 	// Options passed along to Carina's API
 	Nodes     int
 	AutoScale bool
-
-	// Whether to wait until the cluster is created (or errored)
-	Wait bool
 
 	// TODO: See if setting flavor or image makes sense, even if the API takes it
 	// Flavor    string
@@ -104,18 +108,8 @@ func New() *Application {
 	listCommand := cap.NewCommand(ctx, "list", "list swarm clusters")
 	listCommand.Action(listCommand.List)
 
-	getCommand := cap.NewClusterCommand(ctx, "get", "get information about a swarm cluster")
-	getCommand.Action(getCommand.Get)
-
-	deleteCommand := cap.NewClusterCommand(ctx, "delete", "delete a swarm cluster")
-	deleteCommand.Action(deleteCommand.Delete)
-
-	rebuildCommand := cap.NewClusterCommand(ctx, "rebuild", "rebuild a swarm cluster")
-	rebuildCommand.Action(rebuildCommand.Rebuild)
-
 	createCommand := new(CreateCommand)
-	createCommand.ClusterCommand = cap.NewClusterCommand(ctx, "create", "create a swarm cluster")
-	createCommand.Flag("wait", "wait for swarm cluster completion").BoolVar(&createCommand.Wait)
+	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "create a swarm cluster")
 	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
 	createCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&createCommand.AutoScale)
 	createCommand.Action(createCommand.Create)
@@ -129,6 +123,15 @@ func New() *Application {
 	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of nodes")
 	growCommand.Flag("nodes", "number of nodes to increase the cluster by").Required().IntVar(&growCommand.Nodes)
 	growCommand.Action(growCommand.Grow)
+
+	getCommand := cap.NewClusterCommand(ctx, "get", "get information about a swarm cluster")
+	getCommand.Action(getCommand.Get)
+
+	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "rebuild a swarm cluster")
+	rebuildCommand.Action(rebuildCommand.Rebuild)
+
+	deleteCommand := cap.NewClusterCommand(ctx, "delete", "delete a swarm cluster")
+	deleteCommand.Action(deleteCommand.Delete)
 
 	return cap
 }
@@ -156,6 +159,15 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 	cc.Command = app.NewCommand(ctx, name, help)
 	cc.Arg("cluster-name", "name of the cluster").Required().StringVar(&cc.ClusterName)
 	return cc
+}
+
+// NewWaitClusterCommand is a command that uses a cluster name and allows the
+// user to wait for a cluster state
+func (app *Application) NewWaitClusterCommand(ctx *Context, name, help string) *WaitClusterCommand {
+	wcc := new(WaitClusterCommand)
+	wcc.ClusterCommand = app.NewClusterCommand(ctx, name, help)
+	wcc.Arg("wait", "wait for swarm cluster to come online (or error)").BoolVar(&wcc.Wait)
+	return wcc
 }
 
 // Auth does the authentication
@@ -220,8 +232,35 @@ func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
 }
 
 // Rebuild nukes your cluster and builds it over again
-func (carina *ClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApply(carina.ClusterClient.Rebuild)
+func (carina *WaitClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) {
+	return carina.clusterApplyWait(carina.ClusterClient.Rebuild)
+}
+
+// Does an func against a cluster then returns the new cluster representation
+func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
+	cluster, err := op(carina.ClusterName)
+
+	// Transitions past point of "new" or "building" are assumed to be states we
+	// can stop on.
+	if carina.Wait {
+		for cluster.Status == "new" || cluster.Status == "building" {
+			time.Sleep(13 * time.Second)
+			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
+			if err != nil {
+				break
+			}
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	err = writeCluster(carina.TabWriter, cluster)
+	if err != nil {
+		return err
+	}
+	return carina.TabWriter.Flush()
 }
 
 // Create a cluster
