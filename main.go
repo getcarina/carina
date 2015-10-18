@@ -105,27 +105,27 @@ func New() *Application {
 
 	ctx.TabWriter = writer
 
-	listCommand := cap.NewCommand(ctx, "list", "list swarm clusters")
-	listCommand.Action(listCommand.List)
-
 	createCommand := new(CreateCommand)
 	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "create a swarm cluster")
 	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
 	createCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&createCommand.AutoScale)
 	createCommand.Action(createCommand.Create)
 
-	credentialsCommand := new(CredentialsCommand)
-	credentialsCommand.ClusterCommand = cap.NewClusterCommand(ctx, "credentials", "download credentials")
-	credentialsCommand.Flag("path", "path to write credentials out to").StringVar(&credentialsCommand.Path)
-	credentialsCommand.Action(credentialsCommand.Download)
+	getCommand := cap.NewClusterCommand(ctx, "get", "get information about a swarm cluster")
+	getCommand.Action(getCommand.Get)
+
+	listCommand := cap.NewCommand(ctx, "list", "list swarm clusters")
+	listCommand.Action(listCommand.List)
 
 	growCommand := new(GrowCommand)
 	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of nodes")
 	growCommand.Flag("nodes", "number of nodes to increase the cluster by").Required().IntVar(&growCommand.Nodes)
 	growCommand.Action(growCommand.Grow)
 
-	getCommand := cap.NewClusterCommand(ctx, "get", "get information about a swarm cluster")
-	getCommand.Action(getCommand.Get)
+	credentialsCommand := new(CredentialsCommand)
+	credentialsCommand.ClusterCommand = cap.NewClusterCommand(ctx, "credentials", "download credentials")
+	credentialsCommand.Flag("path", "path to write credentials out to").StringVar(&credentialsCommand.Path)
+	credentialsCommand.Action(credentialsCommand.Download)
 
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "rebuild a swarm cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
