@@ -83,7 +83,7 @@ github-release release \
   --description "$DESCRIPTION"
 
 # Build with the tag now for actual binary shipping
-git pull release master
+git fetch --tags release
 make build-tagged-for-release TAG=$TAG
 
 github-release upload \
