@@ -236,15 +236,28 @@ func (carina *WaitClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) 
 	return carina.clusterApplyWait(carina.ClusterClient.Rebuild)
 }
 
+const startupFudgeFactor = 40 * time.Second
+const waitBetween = 10 * time.Second
+
+// Cluster status when new
+const StatusNew = "new"
+
+// Cluster status when building
+const StatusBuilding = "building"
+
+// Cluster status when rebuilding swarm
+const StatusRebuildingSwarm = "rebuilding-swarm"
+
 // Does an func against a cluster then returns the new cluster representation
 func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 	cluster, err := op(carina.ClusterName)
 
-	// Transitions past point of "new" or "building" are assumed to be states we
-	// can stop on.
 	if carina.Wait {
-		for cluster.Status == "new" || cluster.Status == "building" || cluster.Status == "rebuilding-swarm" {
-			time.Sleep(13 * time.Second)
+		time.Sleep(startupFudgeFactor)
+		// Transitions past point of "new" or "building" are assumed to be states we
+		// can stop on.
+		for cluster.Status == StatusNew || cluster.Status == StatusBuilding || cluster.Status == StatusRebuildingSwarm {
+			time.Sleep(waitBetween)
 			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
 			if err != nil {
 				break
@@ -306,7 +319,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	fmt.Println(sourceHelpString(p, os.Args[0]))
+	fmt.Fprintln(os.Stdout, sourceHelpString(p, os.Args[0]))
 
 	err = carina.TabWriter.Flush()
 	return err
