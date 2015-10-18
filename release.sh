@@ -24,6 +24,33 @@ declare -xr ORG="rackerlabs"
 declare -xr REPO="carina"
 declare -xr BINARY=$REPO
 
+REMOTE="release"
+REMOTE_URL="git@github.com:${ORG}/${REPO}.git"
+
+#
+# Confirm that we have a remote named "Release"
+#
+
+git remote show ${REMOTE} &> /dev/null
+
+rc=$?
+
+if [[ $rc != 0 ]]; then
+  echo "Remote \"${REMOTE}\" not found. Exiting."
+  exit 4
+fi
+
+#
+# Now confirm that we've got the proper remote URL
+#
+
+REMOTE_ACTUAL_URL=$(git remote show release | grep Push | cut -d ":" -f2- | xargs)
+
+if [ "$REMOTE_URL" != "$REMOTE_ACTUAL_URL" ]; then
+  echo -e "Remote \"${REMOTE}\" PUSH url incorrect.\nShould be ${REMOTE_URL}. Exiting."
+  exit 5
+fi
+
 # Pick your own leveled up tag
 TAG=${1}
 
@@ -75,5 +102,3 @@ github-release upload \
     --tag "$TAG" \
     --name "${BINARY}.exe" \
     --file bin/${BINARY}.exe
-
-git checkout master
