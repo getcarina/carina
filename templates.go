@@ -22,9 +22,9 @@ __kingpin_commands ()
   current_word="${COMP_WORDS[COMP_CWORD]}"
 
   COMMANDS='\
-    {{range .FlattenedCommands}}\
+    {{range .App.FlattenedCommands}}\
     {{if not .Hidden}}\
-      {{.FullCommand}}\
+{{.Name}}\
     {{end}}\
     {{end}}\
     '
