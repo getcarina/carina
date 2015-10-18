@@ -124,7 +124,7 @@ func New() *Application {
 
 	credentialsCommand := new(CredentialsCommand)
 	credentialsCommand.ClusterCommand = cap.NewClusterCommand(ctx, "credentials", "download credentials")
-	credentialsCommand.Flag("path", "path to write credentials out to").StringVar(&credentialsCommand.Path)
+	credentialsCommand.Flag("path", "path to write credentials out to").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
 	credentialsCommand.Action(credentialsCommand.Download)
 
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "rebuild a swarm cluster")
