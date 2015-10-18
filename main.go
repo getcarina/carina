@@ -110,6 +110,9 @@ func New() *Application {
 	deleteCommand := cap.NewClusterCommand(ctx, "delete", "delete a swarm cluster")
 	deleteCommand.Action(deleteCommand.Delete)
 
+	rebuildCommand := cap.NewClusterCommand(ctx, "rebuild", "rebuild a swarm cluster")
+	rebuildCommand.Action(rebuildCommand.Rebuild)
+
 	createCommand := new(CreateCommand)
 	createCommand.ClusterCommand = cap.NewClusterCommand(ctx, "create", "create a swarm cluster")
 	createCommand.Flag("wait", "wait for swarm cluster completion").BoolVar(&createCommand.Wait)
@@ -214,6 +217,11 @@ func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
 	return carina.clusterApply(func(clusterName string) (*libcarina.Cluster, error) {
 		return carina.ClusterClient.Grow(clusterName, carina.Nodes)
 	})
+}
+
+// Rebuild nukes your cluster and builds it over again
+func (carina *ClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) {
+	return carina.clusterApply(carina.ClusterClient.Rebuild)
 }
 
 // Create a cluster
