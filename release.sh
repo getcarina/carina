@@ -14,11 +14,13 @@ if [ "$BRANCH" != "master" ]; then
   exit 2
 fi
 
+set +e
 git diff --exit-code > /dev/null
 if [ $? != 0 ]; then
   echo "Workspace is not clean. Exiting"
   exit 3
 fi
+set -e
 
 declare -xr ORG="rackerlabs"
 declare -xr REPO="carina"
@@ -31,6 +33,7 @@ REMOTE_URL="git@github.com:${ORG}/${REPO}.git"
 # Confirm that we have a remote named "Release"
 #
 
+set +e
 git remote show ${REMOTE} &> /dev/null
 
 rc=$?
@@ -39,6 +42,7 @@ if [[ $rc != 0 ]]; then
   echo "Remote \"${REMOTE}\" not found. Exiting."
   exit 4
 fi
+set -e
 
 #
 # Now confirm that we've got the proper remote URL
