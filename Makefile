@@ -18,8 +18,6 @@ default: carina
 get-deps:
 	go get ./...
 
-carina: $(GOFILES)
-	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
 carina-linux: linux
 	cp bin/carina-linux-amd64 carina-linux
@@ -33,20 +31,19 @@ gocarina: $(GOFILES)
 
 cross-build: get-deps carina linux darwin windows
 
-linux: bin/carina-linux-amd64
+carina: $(GOFILES)
+	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
-darwin: bin/carina-darwin-amd64
+linux: $(GOFILES)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o bin/carina-linux-amd64 .
 
-windows: bin/carina.exe
+darwin: $(GOFILES)
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) -o bin/carina-darwin-amd64 .
 
-bin/carina-linux-amd64: $(GOFILES)
- CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $@ .
+windows: $(GOFILES)
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o bin/carina.exe .
 
-bin/carina-darwin-amd64: $(GOFILES)
- CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) -o $@ .
 
-bin/carina.exe: $(GOFILES)
- CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o $@ .
 
 ############################ RELEASE TARGETS ############################
 
@@ -79,4 +76,7 @@ carina/cli: ca-certificates.crt carina-linux
 .PHONY: clean build-tagged-for-release checkout tagged-build
 
 clean:
-	 rm -f bin/*
+	 -rm -f bin/*
+	 -rm carina
+	 -rm carina-linux
+	 -rm ca-certificates.crt

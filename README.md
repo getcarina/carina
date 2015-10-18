@@ -1,6 +1,7 @@
 # Carina™ client
 
 [![Build Status](https://travis-ci.org/rackerlabs/carina.svg)](https://travis-ci.org/rackerlabs/carina)
+[![Build Status](https://ci.appveyor.com/api/projects/status/8qjckvi0cvfgf1qr?svg=true)](https://ci.appveyor.com/project/rgbkrk/carina)
 
 Command line client for Carina, a [container service](https://mycluster.rackspacecloud.com) that's currently in Beta.
 
