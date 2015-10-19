@@ -166,7 +166,7 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 func (app *Application) NewWaitClusterCommand(ctx *Context, name, help string) *WaitClusterCommand {
 	wcc := new(WaitClusterCommand)
 	wcc.ClusterCommand = app.NewClusterCommand(ctx, name, help)
-	wcc.Arg("wait", "wait for swarm cluster to come online (or error)").BoolVar(&wcc.Wait)
+	wcc.Flag("wait", "wait for swarm cluster to come online (or error)").BoolVar(&wcc.Wait)
 	return wcc
 }
 
