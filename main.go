@@ -319,10 +319,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	// HACK: extract this out of the args, do escaping of paths
-	command := fmt.Sprintf("%s %s %s --path \"%s\" ", os.Args[0], pc.String(), carina.ClusterName, p)
-
-	fmt.Fprintln(os.Stdout, sourceHelpString(p, command))
+	fmt.Fprintln(os.Stdout, sourceHelpString(p))
 
 	err = carina.TabWriter.Flush()
 	return err
