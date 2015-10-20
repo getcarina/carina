@@ -24,7 +24,7 @@ carina-linux: linux
 
 test: carina
 	@echo "Tests are cool, we should do those."
-	./carina --bash-completion
+	eval "$( ./carina --bash-completion )"
 	./carina --version
 
 gocarina: $(GOFILES)
