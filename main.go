@@ -76,6 +76,12 @@ type GrowCommand struct {
 	Nodes int
 }
 
+// UserNameEnvKey is the name of the env var accepted for the username
+const UserNameEnvVar = "CARINA_USERNAME"
+
+// APIKeyEnvVar is the name of the env var accepted for the API key
+const APIKeyEnvVar = "CARINA_APIKEY"
+
 // New creates a new Application
 func New() *Application {
 
@@ -89,8 +95,8 @@ func New() *Application {
 
 	cap.Context = ctx
 
-	cap.Flag("username", "Rackspace username - can also set env var RACKSPACE_USERNAME").OverrideDefaultFromEnvar("RACKSPACE_USERNAME").StringVar(&ctx.Username)
-	cap.Flag("api-key", "Rackspace API Key - can also set env var RACKSPACE_APIKEY").OverrideDefaultFromEnvar("RACKSPACE_APIKEY").PlaceHolder("RACKSPACE_APIKEY").StringVar(&ctx.APIKey)
+	cap.Flag("username", "Carina username - can also set env var "+UserNameEnvVar).OverrideDefaultFromEnvar(UserNameEnvVar).StringVar(&ctx.Username)
+	cap.Flag("api-key", "Carina API Key - can also set env var "+APIKeyEnvVar).OverrideDefaultFromEnvar(APIKeyEnvVar).PlaceHolder(APIKeyEnvVar).StringVar(&ctx.APIKey)
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
 
 	writer := new(tabwriter.Writer)
@@ -170,8 +176,23 @@ func (app *Application) NewWaitClusterCommand(ctx *Context, name, help string) *
 	return wcc
 }
 
+const rackspaceUserNameEnvVar = "RACKSPACE_USERNAME"
+const rackspaceAPIKeyEnvVar = "RACKSPACE_APIKEY"
+
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
+
+	if carina.Username == "" || carina.APIKey == "" {
+		// Backwards compatibility for prior releases, to be deprecated
+		// Check on RACKSPACE_USERNAME
+		if os.Getenv(rackspaceUserNameEnvVar) != "" && os.Getenv(rackspaceAPIKeyEnvVar) != "" {
+			fmt.Fprintf(os.Stderr, "Warning: use of %s and %s environment variables is deprecated.\n", rackspaceUserNameEnvVar, rackspaceAPIKeyEnvVar)
+			fmt.Fprintf(os.Stderr, "Please use %s and %s instead.\n", UserNameEnvVar, APIKeyEnvVar)
+			carina.Username = os.Getenv(rackspaceUserNameEnvVar)
+			carina.APIKey = os.Getenv(rackspaceAPIKeyEnvVar)
+		}
+	}
+
 	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
 	return err
 }
