@@ -125,15 +125,17 @@ func New() *Application {
 	listCommand := cap.NewCommand(ctx, "list", "List swarm clusters")
 	listCommand.Action(listCommand.List)
 
-	credentialsCommand := new(CredentialsCommand)
-	credentialsCommand.ClusterCommand = cap.NewClusterCommand(ctx, "credentials", "Download credentials for a swarm cluster")
-	credentialsCommand.Flag("path", "path to write credentials out to").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
-	credentialsCommand.Action(credentialsCommand.Download)
-
 	growCommand := new(GrowCommand)
 	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of nodes")
 	growCommand.Flag("nodes", "number of nodes to increase the cluster by").Required().IntVar(&growCommand.Nodes)
 	growCommand.Action(growCommand.Grow)
+
+	credentialsCommand := cap.NewCredentialsCommand(ctx, "credentials", "download credentials")
+	credentialsCommand.Action(credentialsCommand.Download)
+
+	// Hidden shorthand
+	credsCommand := cap.NewCredentialsCommand(ctx, "creds", "download credentials")
+	credsCommand.Action(credsCommand.Download).Hidden()
 
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a swarm cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
@@ -167,6 +169,14 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 	cc.Command = app.NewCommand(ctx, name, help)
 	cc.Arg("cluster-name", "name of the cluster").Required().StringVar(&cc.ClusterName)
 	return cc
+}
+
+// NewCredentialsCommand is a command that dumps out credentials to a path
+func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *CredentialsCommand {
+	credentialsCommand := new(CredentialsCommand)
+	credentialsCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
+	credentialsCommand.Flag("path", "path to write credentials out to").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
+	return credentialsCommand
 }
 
 // NewWaitClusterCommand is a command that uses a cluster name and allows the
