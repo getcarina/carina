@@ -109,6 +109,8 @@ func New() *Application {
 		os.Exit(code)
 	})
 
+	cap.Flag("bash-completion", "Generate bash completion").Action(cap.generateBashCompletion).Hidden().Bool()
+
 	ctx.TabWriter = writer
 
 	createCommand := new(CreateCommand)
@@ -383,6 +385,15 @@ func writeClusterHeader(w *tabwriter.Writer) (err error) {
 
 	_, err = w.Write([]byte(s + "\n"))
 	return err
+}
+
+func (app *Application) generateBashCompletion(c *kingpin.ParseContext) error {
+	app.Writer(os.Stdout)
+	if err := app.UsageForContextWithTemplate(c, 2, BashCompletionTemplate); err != nil {
+		return err
+	}
+	os.Exit(0)
+	return nil
 }
 
 func main() {
