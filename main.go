@@ -319,7 +319,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	fmt.Fprintln(os.Stdout, sourceHelpString(p, os.Args[0]))
+	fmt.Fprintln(os.Stdout, sourceHelpString(p))
 
 	err = carina.TabWriter.Flush()
 	return err
