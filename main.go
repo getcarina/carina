@@ -176,8 +176,23 @@ func (app *Application) NewWaitClusterCommand(ctx *Context, name, help string) *
 	return wcc
 }
 
+const rackspaceUserNameEnvVar = "RACKSPACE_USERNAME"
+const rackspaceAPIKeyEnvVar = "RACKSPACE_APIKEY"
+
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
+
+	if carina.Username == "" || carina.APIKey == "" {
+		// Backwards compatibility for prior releases, to be deprecated
+		// Check on RACKSPACE_USERNAME
+		if os.Getenv(rackspaceUserNameEnvVar) != "" && os.Getenv(rackspaceAPIKeyEnvVar) != "" {
+			fmt.Fprintf(os.Stderr, "Warning: use of %s and %s environment variables is deprecated.\n", rackspaceUserNameEnvVar, rackspaceAPIKeyEnvVar)
+			fmt.Fprintf(os.Stderr, "Please use %s and %s instead.\n", UserNameEnvVar, APIKeyEnvVar)
+			carina.Username = os.Getenv(rackspaceUserNameEnvVar)
+			carina.APIKey = os.Getenv(rackspaceAPIKeyEnvVar)
+		}
+	}
+
 	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
 	return err
 }
