@@ -6,62 +6,37 @@ var BashCompletionTemplate = `
 
 # bash completion for kingpin programs
 
-__kingpin_generate_completion()
+__kingpin_{{.App.Name}}()
 {
-  declare current_word
-  current_word="${COMP_WORDS[COMP_CWORD]}"
-  COMPREPLY=($(compgen -W "$1" -- "$current_word"))
-  return 0
-}
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-__kingpin_commands ()
-{
-  declare current_word
-  declare command
+  local subcommands flags globalflags
 
-  current_word="${COMP_WORDS[COMP_CWORD]}"
+  # We only go one deep, plus flags
+  subcommands='{{range .App.FlattenedCommands}}{{if not .Hidden}}\
+{{.Name}} {{end}}{{end}}'
 
-  COMMANDS='\
-    {{range .App.FlattenedCommands}}\
-    {{if not .Hidden}}\
-{{.Name}}\
-    {{end}}\
-    {{end}}\
-    '
+  globalflags='{{range .App.Flags}}{{if not .Hidden}}\
+--{{.Name}} {{end}}{{end}}'
 
-    if [ ${#COMP_WORDS[@]} == 4 ]; then
+  if [ "$prev" == "{{.App.Name}}" ]; then
+    opts="$subcommands $globalflags"
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+  fi
 
-      command="${COMP_WORDS[COMP_CWORD-2]}"
-      case "${command}" in
-      # If commands have subcommands
-      esac
-
-    else
-
-      case "${current_word}" in
-      -*)     __kingpin_options ;;
-      *)      __kingpin_generate_completion "$COMMANDS" ;;
-      esac
-
-    fi
-}
-
-__kingpin_options ()
-{
-  OPTIONS=''
-  __kingpin_generate_completion "$OPTIONS"
-}
-
-__kingpin ()
-{
-  declare previous_word
-  previous_word="${COMP_WORDS[COMP_CWORD-1]}"
-
-  case "$previous_word" in
-  *)              __kingpin_commands ;;
+  case $prev in
+{{range .App.FlattenedCommands}}\
+  "{{.Name}}")
+    flags='{{range .Flags}}{{if not .Hidden}} --{{.Name}}{{end}}{{end}}'
+    opts="$flags $globalflags"
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+    ;;
+{{end}}\
   esac
-
-  return 0
 }
 
 # complete is a bash builtin, but recent versions of ZSH come with a function
@@ -71,5 +46,5 @@ if [[ -n ${ZSH_VERSION-} ]]; then
 	autoload -U +X bashcompinit && bashcompinit
 fi
 
-complete -o default -o nospace -F __kingpin {{.App.Name}}
+complete -o default -o nospace -F __kingpin_{{.App.Name}} {{.App.Name}}
 `
