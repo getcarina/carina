@@ -76,6 +76,12 @@ type GrowCommand struct {
 	Nodes int
 }
 
+// UserNameEnvKey is the name of the env var accepted for the username
+const UserNameEnvVar = "CARINA_USERNAME"
+
+// APIKeyEnvVar is the name of the env var accepted for the API key
+const APIKeyEnvVar = "CARINA_APIKEY"
+
 // New creates a new Application
 func New() *Application {
 
@@ -89,8 +95,8 @@ func New() *Application {
 
 	cap.Context = ctx
 
-	cap.Flag("username", "Rackspace username - can also set env var RACKSPACE_USERNAME").OverrideDefaultFromEnvar("RACKSPACE_USERNAME").StringVar(&ctx.Username)
-	cap.Flag("api-key", "Rackspace API Key - can also set env var RACKSPACE_APIKEY").OverrideDefaultFromEnvar("RACKSPACE_APIKEY").PlaceHolder("RACKSPACE_APIKEY").StringVar(&ctx.APIKey)
+	cap.Flag("username", "Carina username - can also set env var "+UserNameEnvVar).OverrideDefaultFromEnvar(UserNameEnvVar).StringVar(&ctx.Username)
+	cap.Flag("api-key", "Carina API Key - can also set env var "+APIKeyEnvVar).OverrideDefaultFromEnvar(APIKeyEnvVar).PlaceHolder(APIKeyEnvVar).StringVar(&ctx.APIKey)
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
 
 	writer := new(tabwriter.Writer)
