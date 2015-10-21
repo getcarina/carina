@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path"
 	"strconv"
 	"strings"
@@ -309,6 +310,17 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 	return carina.TabWriter.Flush()
 }
 
+const defaultDotDir = ".carina"
+
+// CarinaCredentialsBaseDir get the current base directory for carina credentials
+func CarinaCredentialsBaseDir() (string, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return path.Join(currentUser.HomeDir, defaultDotDir), nil
+}
+
 // Create a cluster
 func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	return carina.clusterApplyWait(func(clusterName string) (*libcarina.Cluster, error) {
@@ -334,7 +346,11 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 	}
 
 	if carina.Path == "" {
-		carina.Path = carina.ClusterName
+		baseDir, err := CarinaCredentialsBaseDir()
+		if err != nil {
+			return err
+		}
+		carina.Path = path.Join(baseDir, carina.Username, carina.ClusterName)
 	}
 
 	p := path.Clean(carina.Path)
