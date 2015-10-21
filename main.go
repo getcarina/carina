@@ -315,10 +315,17 @@ const defaultDotDir = ".carina"
 // CredentialsBaseDirEnvVar environment variable name for where credentials are downloaded to by default
 const CredentialsBaseDirEnvVar = "CARINA_CREDENTIALS_DIR"
 
+const xdgDataHomeEnvVar = "XDG_DATA_HOME"
+
 // CarinaCredentialsBaseDir get the current base directory for carina credentials
 func CarinaCredentialsBaseDir() (string, error) {
 	if os.Getenv(CredentialsBaseDirEnvVar) != "" {
 		return os.Getenv(CredentialsBaseDirEnvVar), nil
+	}
+
+	// Support XDG
+	if os.Getenv(xdgDataHomeEnvVar) != "" {
+		return path.Join(os.Getenv(xdgDataHomeEnvVar), "carina"), nil
 	}
 
 	currentUser, err := user.Current()
