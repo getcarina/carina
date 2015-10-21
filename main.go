@@ -312,8 +312,15 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 
 const defaultDotDir = ".carina"
 
+// CredentialsBaseDirEnvVar environment variable name for where credentials are downloaded to by default
+const CredentialsBaseDirEnvVar = "CARINA_CREDENTIALS_DIR"
+
 // CarinaCredentialsBaseDir get the current base directory for carina credentials
 func CarinaCredentialsBaseDir() (string, error) {
+	if os.Getenv(CredentialsBaseDirEnvVar) != "" {
+		return os.Getenv(CredentialsBaseDirEnvVar), nil
+	}
+
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", err
