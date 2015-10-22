@@ -18,6 +18,7 @@ func sourceHelpString(basepath string) string {
 	return s
 }
 
+const defaultDotDir = ".carina"
 const xdgDataHomeEnvVar = "XDG_DATA_HOME"
 
 func userHomeDir() (string, error) {

@@ -309,8 +309,6 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 	return carina.TabWriter.Flush()
 }
 
-const defaultDotDir = ".carina"
-
 // CredentialsBaseDirEnvVar environment variable name for where credentials are downloaded to by default
 const CredentialsBaseDirEnvVar = "CARINA_CREDENTIALS_DIR"
 
