@@ -329,6 +329,8 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	})
 }
 
+const clusterDirName = "clusters"
+
 // Download credentials for a cluster
 func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error) {
 	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
@@ -341,7 +343,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		if err != nil {
 			return err
 		}
-		carina.Path = path.Join(baseDir, carina.Username, carina.ClusterName)
+		carina.Path = path.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
 	}
 
 	p := path.Clean(carina.Path)

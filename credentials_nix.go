@@ -19,6 +19,7 @@ func sourceHelpString(basepath string) string {
 }
 
 const defaultDotDir = ".carina"
+const defaultNonDotDir = "carina"
 const xdgDataHomeEnvVar = "XDG_DATA_HOME"
 
 func userHomeDir() (string, error) {
@@ -40,7 +41,7 @@ func CarinaCredentialsBaseDir() (string, error) {
 
 	// Support XDG
 	if os.Getenv(xdgDataHomeEnvVar) != "" {
-		return path.Join(os.Getenv(xdgDataHomeEnvVar), "carina"), nil
+		return path.Join(os.Getenv(xdgDataHomeEnvVar), defaultNonDotDir), nil
 	}
 
 	homeDir, err := userHomeDir()
