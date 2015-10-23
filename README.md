@@ -32,6 +32,40 @@ $ chmod u+x ~/bin/carina
 
 TODO: Instructions for Windows. Care to add some?
 
+## Getting started
+
+```
+$ export CARINA_USERNAME=trythingsout
+$ export CARINA_APIKEY=$RACKSPACE_APIKEY
+$ carina list
+ClusterName Flavor        Nodes AutoScale Status
+mycluster   container1-4G 1     false     active
+$ carina create newone
+newone      container1-4G 1     false     new
+$ carina create another --wait --autoscale
+another     container1-4G 1     true      active
+$ carina list
+ClusterName Flavor        Nodes AutoScale Status
+mycluster   container1-4G 1     false     active
+newone      container1-4G 1     false     active
+another     container1-4G 1     true      active
+$ carina credentials another
+#
+# Credentials written to "/Users/rgbkrk/.carina/clusters/trythingsout/another"
+#
+source "/Users/rgbkrk/.carina/clusters/trythingsout/another/docker.env"
+# Run the command above to get your Docker environment variables set
+
+$ eval "$( carina credentials another )"
+$ docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+$ docker run -d --name whoa -p 8080:8080 whoa/tiny
+0e857826144194fd089310279915b1a052de9fb878d6d4f61420a0c64ee06c53
+$ curl $( docker port whoa 8080 )
+👊  I know kung fu  👊
+```
+
+
 ## Usage
 
 ```
