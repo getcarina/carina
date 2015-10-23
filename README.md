@@ -1,7 +1,8 @@
 # Carina™ client
 
-[![Build Status](https://travis-ci.org/getcarina/carina.svg)](https://travis-ci.org/getcarina/carina)
-[![Build Status](https://ci.appveyor.com/api/projects/status/8qjckvi0cvfgf1qr?svg=true)](https://ci.appveyor.com/project/rgbkrk/carina)
+[![Travis Build Status](https://travis-ci.org/getcarina/carina.svg)](https://travis-ci.org/getcarina/carina)
+[![Circle CI Build Status](https://circleci.com/gh/getcarina/carina.svg?style=svg)](https://circleci.com/gh/getcarina/carina)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/8qjckvi0cvfgf1qr?svg=true)](https://ci.appveyor.com/project/rgbkrk/carina)
 
 Command line client for [Carina by Rackspace](https://getcarina.com), a container service that's currently in Beta.
 
