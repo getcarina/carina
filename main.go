@@ -309,6 +309,9 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 	return carina.TabWriter.Flush()
 }
 
+// CredentialsBaseDirEnvVar environment variable name for where credentials are downloaded to by default
+const CredentialsBaseDirEnvVar = "CARINA_CREDENTIALS_DIR"
+
 // Create a cluster
 func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	return carina.clusterApplyWait(func(clusterName string) (*libcarina.Cluster, error) {
@@ -326,6 +329,8 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	})
 }
 
+const clusterDirName = "clusters"
+
 // Download credentials for a cluster
 func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error) {
 	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
@@ -334,7 +339,11 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 	}
 
 	if carina.Path == "" {
-		carina.Path = carina.ClusterName
+		baseDir, err := CarinaCredentialsBaseDir()
+		if err != nil {
+			return err
+		}
+		carina.Path = path.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
 	}
 
 	p := path.Clean(carina.Path)
