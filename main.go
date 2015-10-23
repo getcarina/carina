@@ -13,8 +13,8 @@ import (
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
-	"github.com/rackerlabs/carina/version"
-	"github.com/rackerlabs/libcarina"
+	"github.com/getcarina/carina/version"
+	"github.com/getcarina/libcarina"
 )
 
 // Application is, our, well, application

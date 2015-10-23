@@ -1,15 +1,15 @@
 # Carina™ client
 
-[![Build Status](https://travis-ci.org/rackerlabs/carina.svg)](https://travis-ci.org/rackerlabs/carina)
+[![Build Status](https://travis-ci.org/getcarina/carina.svg)](https://travis-ci.org/getcarina/carina)
 [![Build Status](https://ci.appveyor.com/api/projects/status/8qjckvi0cvfgf1qr?svg=true)](https://ci.appveyor.com/project/rgbkrk/carina)
 
-Command line client for Carina, a [container service](https://mycluster.rackspacecloud.com) that's currently in Beta.
+Command line client for [Carina by Rackspace](https://getcarina.com), a container service that's currently in Beta.
 
 ![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
 
 ## Installation
 
-There are downloads of the built binaries over in [releases](https://github.com/rackerlabs/carina/releases).
+There are downloads of the built binaries over in [releases](https://github.com/getcarina/carina/releases).
 
 After downloading the version for your system, you'll probably need to rename it,
 set it as executable, and put it on a `PATH` you have:
@@ -42,9 +42,9 @@ command line interface to launch and work with Docker Swarm clusters
 Flags:
   --help               Show context-sensitive help (also try --help-long and --help-man).
   --version            Show application version.
-  --username=USERNAME  Rackspace username - can also set env var RACKSPACE_USERNAME
-  --api-key=RACKSPACE_APIKEY
-                       Rackspace API Key - can also set env var RACKSPACE_APIKEY
+  --username=USERNAME  Carina username - can also set env var CARINA_USERNAME
+  --api-key=CARINA_APIKEY
+                       Carina API Key - can also set env var CARINA_APIKEY
   --endpoint="https://mycluster.rackspacecloud.com"
                        Carina API endpoint
 
@@ -52,37 +52,37 @@ Commands:
   help [<command>...]
     Show help.
 
-  list
-    list swarm clusters
-
-  get <cluster-name>
-    get information about a swarm cluster
-
-
-  delete <cluster-name>
-    delete a swarm cluster
-
-
-  rebuild <cluster-name>
-    rebuild a swarm cluster
-
   create [<flags>] <cluster-name>
-    create a swarm cluster
+    Create a swarm cluster
 
-    --wait       wait for swarm cluster completion
+    --wait       wait for swarm cluster to come online (or error)
     --nodes=1    number of nodes for the initial cluster
     --autoscale  whether autoscale is on or off
 
-  credentials [<flags>] <cluster-name>
-    download credentials
+  get <cluster-name>
+    Get information about a swarm cluster
 
-    --path=PATH  path to write credentials out to
+  list
+    List swarm clusters
 
   grow --nodes=NODES <cluster-name>
     Grow a cluster by the requested number of nodes
 
     --nodes=NODES  number of nodes to increase the cluster by
 
+  credentials [<flags>] <cluster-name>
+    download credentials
+
+    --path=<cluster-name>
+      path to write credentials out to
+
+  rebuild [<flags>] <cluster-name>
+    Rebuild a swarm cluster
+
+    --wait  wait for swarm cluster to come online (or error)
+
+  delete <cluster-name>
+    Delete a swarm cluster
 ```
 
 ## Building

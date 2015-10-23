@@ -22,7 +22,7 @@ if [ $? != 0 ]; then
 fi
 set -e
 
-declare -xr ORG="rackerlabs"
+declare -xr ORG="getcarina"
 declare -xr REPO="carina"
 declare -xr BINARY=$REPO
 

@@ -1,6 +1,6 @@
 COMMIT = $(shell git rev-parse --verify HEAD)
 VERSION = $(shell git describe --tags --dirty='-dev' 2> /dev/null)
-GITHUB_ORG = rackerlabs
+GITHUB_ORG = getcarina
 GITHUB_REPO = carina
 
 REPO_PATH = ${GOPATH}/src/github.com/${GITHUB_ORG}/${GITHUB_REPO}
