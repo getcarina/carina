@@ -11,7 +11,7 @@ LDFLAGS = -w ${XFLAG_PRE}/version.Commit=${COMMIT} ${XFLAG_PRE}/version.Version=
 GOCMD = go
 GOBUILD = $(GOCMD) build -a -tags netgo -ldflags '$(LDFLAGS)'
 
-GOFILES = *.go version/*.go
+GOFILES = main.go version/*.go
 
 default: carina
 
