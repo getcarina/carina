@@ -16,21 +16,23 @@ set it as executable, and put it on a `PATH` you have:
 
 ### OS X
 
-```
+```bash
 $ mv carina-darwin-amd64 ~/bin/carina
 $ chmod u+x ~/bin/carina
 ```
 
 ### Linux
 
-```
+```bash
 $ mv carina-linux-amd64 ~/bin/carina
 $ chmod u+x ~/bin/carina
 ```
 
 ### Windows
 
-TODO: Instructions for Windows. Care to add some?
+```
+> carina.exe
+```
 
 ## Getting started
 
