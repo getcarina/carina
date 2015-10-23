@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>carina</id>
+    <title>Carina Command Line Interface</title>
+    <version>$version$</version>
+    <authors>Rackspace</authors>
+    <owners>carolynvs</owners>
+    <summary>Distributes carina.exe</summary>
+    <description>Command line client for Carina by Rackspace (https://getcarina.com/)</description>
+    <projectUrl>https://github.com/getcarina/carina</projectUrl>
+    <packageSourceUrl>https://github.com/getcarina/carina/script/chocolatey</packageSourceUrl>
+    <projectSourceUrl>https://github.com/getcarina/carina</projectSourceUrl>
+    <docsUrl>https://github.com/getcarina/carina/</docsUrl>
+    <bugTrackerUrl>https://github.com/getcarina/carina/issues</bugTrackerUrl>
+    <tags>carina cli rackspace</tags>
+    <copyright>Copyright © 2015 Rackspace, Inc.</copyright>
+    <licenseUrl>https://github.com/getcarina/carina/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <iconUrl>https://github.com/getcarina/carina/master/script/chocolatey/rackspace-logo.png</iconUrl>
+    <releaseNotes>https://github.com/getcarina/carina/releases</releaseNotes>
+  </metadata>
+  <files>
+    <file src="carina.exe" />
+  </files>
+</package>
