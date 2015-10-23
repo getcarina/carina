@@ -82,7 +82,7 @@ Flags:
   --username=USERNAME  Carina username - can also set env var CARINA_USERNAME
   --api-key=CARINA_APIKEY
                        Carina API Key - can also set env var CARINA_APIKEY
-  --endpoint="https://mycluster.rackspacecloud.com"
+  --endpoint="https://app.getcarina.com"
                        Carina API endpoint
 
 Commands:
