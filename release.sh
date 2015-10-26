@@ -78,7 +78,6 @@ github-release release \
   --user "$ORG" \
   --repo "$REPO" \
   --tag "$TAG" \
-  --pre-release \
   --name "$NAME" \
   --description "$DESCRIPTION"
 
