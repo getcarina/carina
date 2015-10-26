@@ -13,6 +13,7 @@ import (
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
+	"github.com/blang/semver"
 	"github.com/getcarina/carina/version"
 	"github.com/getcarina/libcarina"
 )
@@ -92,6 +93,8 @@ func New() *Application {
 	ctx := new(Context)
 
 	cap.Application = app
+
+	cap.PreAction(informLatest)
 
 	cap.Context = ctx
 
@@ -190,6 +193,34 @@ func (app *Application) NewWaitClusterCommand(ctx *Context, name, help string) *
 
 const rackspaceUserNameEnvVar = "RACKSPACE_USERNAME"
 const rackspaceAPIKeyEnvVar = "RACKSPACE_APIKEY"
+
+func informLatest(pc *kingpin.ParseContext) error {
+	if strings.Contains(version.Version, "-dev") || version.Version == "" {
+		fmt.Fprintln(os.Stderr, "Assuming we're in dev mode, not checking for latest release")
+		return nil
+	}
+	fmt.Println(version.Version)
+
+	rel, err := version.LatestRelease()
+	if err != nil {
+		return fmt.Errorf("Unable to fetch information about the latest release of %s\n", os.Args[0])
+	}
+	fmt.Fprintf(os.Stderr, "Latest release: %s\n", *rel.TagName)
+
+	latest, err := semver.Make(*rel.TagName)
+	if err != nil {
+		return fmt.Errorf("Trouble parsing latest tag: %v\n", rel.TagName)
+	}
+	current, err := semver.Make(version.Version)
+	if err != nil {
+		return fmt.Errorf("Trouble parsing current tag: %v\n", version.Version)
+	}
+
+	fmt.Fprintf(os.Stderr, "%v\n", current)
+	fmt.Fprintf(os.Stderr, "%v\n", latest)
+
+	return nil
+}
 
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {

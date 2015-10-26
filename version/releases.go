@@ -14,7 +14,7 @@ func LatestRelease() (*github.RepositoryRelease, error) {
 func latestRelease(owner, repo string) (*github.RepositoryRelease, error) {
 	client := github.NewClient(nil)
 
-	rel, resp, err := client.Repositories.GetLatestRelease(owner, repo)
+	rel, _, err := client.Repositories.GetLatestRelease(owner, repo)
 
 	if err != nil {
 		return nil, err
