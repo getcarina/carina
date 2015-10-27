@@ -270,9 +270,9 @@ func informLatest(pc *kingpin.ParseContext) error {
 		fmt.Fprintf(os.Stderr, "# Unable to fetch information about the latest release of %s\n. Continuing on.", os.Args[0])
 	}
 
-	latest, err := extractSemver(*rel.TagName)
+	latest, err := extractSemver(rel.TagName)
 	if err != nil {
-		return fmt.Errorf("Trouble parsing latest tag (%v): %s\n", *rel.TagName, err)
+		return fmt.Errorf("Trouble parsing latest tag (%v): %s\n", rel.TagName, err)
 	}
 	current, err := extractSemver(version.Version)
 	if err != nil {
