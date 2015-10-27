@@ -101,7 +101,7 @@ func New() *Application {
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
 
 	writer := new(tabwriter.Writer)
-	writer.Init(os.Stdout, 0, 8, 1, '\t', 0)
+	writer.Init(os.Stdout, 20, 1, 3, ' ', 0)
 
 	// Make sure the tabwriter gets flushed at the end
 	app.Terminate(func(code int) {
