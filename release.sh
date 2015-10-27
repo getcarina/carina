@@ -121,4 +121,4 @@ function push_binaries {
       --file bin/${BINARY}.exe
 }
 
-main
+main $1 $2
