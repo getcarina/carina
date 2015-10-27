@@ -114,12 +114,13 @@ function push_binaries {
     --name "${BINARY}-darwin-amd64" \
     --file bin/${BINARY}-darwin-amd64
 
-    github-release upload \
-      --user "$ORG" \
-      --repo "$REPO" \
-      --tag "$TAG" \
-      --name "${BINARY}.exe" \
-      --file bin/${BINARY}.exe
+  github-release upload \
+    --user "$ORG" \
+    --repo "$REPO" \
+    --tag "$TAG" \
+    --name "${BINARY}.exe" \
+    --file bin/${BINARY}.exe
 }
 
-main $1 $2
+main "$1" "$2"
+
