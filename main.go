@@ -261,22 +261,25 @@ func (s *semver) String() string {
 
 func informLatest(pc *kingpin.ParseContext) error {
 	if strings.Contains(version.Version, "-dev") || version.Version == "" {
-		fmt.Fprintln(os.Stderr, "# Assuming we're in dev mode, not checking for latest release")
+		fmt.Fprintln(os.Stderr, "# [WARN] In dev mode, not checking for latest release")
 		return nil
 	}
 
 	rel, err := version.LatestRelease()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "# Unable to fetch information about the latest release of %s\n. Continuing on.", os.Args[0])
+		fmt.Fprintf(os.Stderr, "# [WARN] Unable to fetch information about the latest release of %s. %s\n.", os.Args[0], err)
+		return nil
 	}
 
-	latest, err := extractSemver(*rel.TagName)
+	latest, err := extractSemver(rel.TagName)
 	if err != nil {
-		return fmt.Errorf("Trouble parsing latest tag (%v): %s\n", *rel.TagName, err)
+		fmt.Fprintf(os.Stderr, "# [WARN] Trouble parsing latest tag (%v): %s\n", rel.TagName, err)
+		return nil
 	}
 	current, err := extractSemver(version.Version)
 	if err != nil {
-		return fmt.Errorf("Trouble parsing current tag (%v): %s\n", version.Version, err)
+		fmt.Fprintf(os.Stderr, "# [WARN] Trouble parsing current tag (%v): %s\n", version.Version, err)
+		return nil
 	}
 
 	if latest.Greater(current) {
