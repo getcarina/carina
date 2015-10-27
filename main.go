@@ -269,7 +269,7 @@ func informLatest(pc *kingpin.ParseContext) error {
 
 	rel, err := version.LatestRelease()
 	if err != nil {
-		return fmt.Errorf("Unable to fetch information about the latest release of %s\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "# Unable to fetch information about the latest release of %s\n. Continuing on.", os.Args[0])
 	}
 
 	latest, err := extractSemver(*rel.TagName)
@@ -282,9 +282,9 @@ func informLatest(pc *kingpin.ParseContext) error {
 	}
 
 	if latest.Greater(current) {
-		fmt.Fprintln(os.Stderr, "# A new version of the Carina client is out, go get it")
+		fmt.Fprintf(os.Stderr, "# A new version of the Carina client is out, go get it\n")
 		fmt.Fprintf(os.Stderr, "# You're on %v and the latest is %v\n", current, latest)
-		fmt.Fprintln(os.Stderr, "# https://github.com/getcarina/carina/releases ")
+		fmt.Fprintf(os.Stderr, "# https://github.com/getcarina/carina/releases\n")
 	}
 
 	return nil
