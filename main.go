@@ -94,8 +94,6 @@ func New() *Application {
 
 	cap.Application = app
 
-	cap.PreAction(informLatest)
-
 	cap.Context = ctx
 
 	cap.Flag("username", "Carina username - can also set env var "+UserNameEnvVar).OverrideDefaultFromEnvar(UserNameEnvVar).StringVar(&ctx.Username)
@@ -292,6 +290,9 @@ func informLatest(pc *kingpin.ParseContext) error {
 
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
+
+	// Check for the latest release.
+	informLatest(pc)
 
 	if carina.Username == "" || carina.APIKey == "" {
 		// Backwards compatibility for prior releases, to be deprecated
