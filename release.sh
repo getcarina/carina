@@ -4,6 +4,7 @@ set -euo pipefail
 declare -xr ORG="getcarina"
 declare -xr REPO="carina"
 declare -xr BINARY=$REPO
+declare -xr DESCRIPTION="The Carina Command Line Client"
 
 function usage {
   echo 'usage: release.sh "v{major}.{minor}.{patch}" "Adjective Constellation"'
@@ -22,9 +23,9 @@ function main {
     exit 5
   fi
 
+
   echo "Releasing '$TAG' - $NAME: $DESCRIPTION"
 
-  DESCRIPTION="Prototypal release of the Carina CLI"
 
   if [ ! -e "$( which github-release )" ]; then
     echo "You need github-release installed."
