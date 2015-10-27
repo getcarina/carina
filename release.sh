@@ -18,7 +18,7 @@ function main {
   # http://www.astro.wisc.edu/~dolan/constellations/constellation_list.html
   NAME=${2:-}
 
-  if [ "$TAG" == "" ] || [ "$NAME" == "" ] ; then
+  if [ "$TAG" == "" ] || [ "$NAME" == "" ] || [ "${TAG:0:1}" != "v" ]; then
     usage
     exit 5
   fi
