@@ -10,6 +10,7 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+	"unicode"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
@@ -92,6 +93,8 @@ func New() *Application {
 	ctx := new(Context)
 
 	cap.Application = app
+
+	cap.PreAction(informLatest)
 
 	cap.Context = ctx
 
@@ -190,6 +193,102 @@ func (app *Application) NewWaitClusterCommand(ctx *Context, name, help string) *
 
 const rackspaceUserNameEnvVar = "RACKSPACE_USERNAME"
 const rackspaceAPIKeyEnvVar = "RACKSPACE_APIKEY"
+
+type semver struct {
+	Major    int
+	Minor    int
+	Patch    int
+	Leftover string
+}
+
+func extractSemver(semi string) (*semver, error) {
+	var err error
+
+	if len(semi) < 5 { // 1.3.5
+		return nil, errors.New("Invalid semver")
+	}
+	// Allow a v in front
+	if semi[0] == 'v' {
+		semi = semi[1:]
+	}
+	semVerStrings := strings.SplitN(semi, ".", 3)
+
+	if len(semVerStrings) < 3 {
+		return nil, errors.New("Could not parse semver")
+	}
+
+	parsedSemver := new(semver)
+
+	digitError := errors.New("Could not parse digits of semver")
+	if parsedSemver.Major, err = strconv.Atoi(semVerStrings[0]); err != nil {
+		return nil, digitError
+	}
+	if parsedSemver.Minor, err = strconv.Atoi(semVerStrings[1]); err != nil {
+		return nil, digitError
+	}
+
+	var ps []rune
+
+	// Now to extract the patch and any follow on
+	for i, char := range semVerStrings[2] {
+		if !unicode.IsDigit(char) {
+			parsedSemver.Leftover = semVerStrings[2][i:]
+			break
+		}
+		ps = append(ps, char)
+	}
+
+	if parsedSemver.Patch, err = strconv.Atoi(string(ps)); err != nil {
+		return nil, digitError
+	}
+
+	return parsedSemver, nil
+
+}
+
+func (s *semver) Greater(s2 *semver) bool {
+	switch {
+	case s.Major == s2.Major && s.Minor == s2.Minor:
+		return s.Patch > s2.Patch
+	case s.Major == s2.Major:
+		return s.Minor > s2.Minor
+	}
+
+	return s.Major > s2.Major
+}
+
+func (s *semver) String() string {
+	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
+}
+
+func informLatest(pc *kingpin.ParseContext) error {
+	if strings.Contains(version.Version, "-dev") || version.Version == "" {
+		fmt.Fprintln(os.Stderr, "# Assuming we're in dev mode, not checking for latest release")
+		return nil
+	}
+
+	rel, err := version.LatestRelease()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "# Unable to fetch information about the latest release of %s\n. Continuing on.", os.Args[0])
+	}
+
+	latest, err := extractSemver(*rel.TagName)
+	if err != nil {
+		return fmt.Errorf("Trouble parsing latest tag (%v): %s\n", *rel.TagName, err)
+	}
+	current, err := extractSemver(version.Version)
+	if err != nil {
+		return fmt.Errorf("Trouble parsing current tag (%v): %s\n", version.Version, err)
+	}
+
+	if latest.Greater(current) {
+		fmt.Fprintf(os.Stderr, "# A new version of the Carina client is out, go get it\n")
+		fmt.Fprintf(os.Stderr, "# You're on %v and the latest is %v\n", current, latest)
+		fmt.Fprintf(os.Stderr, "# https://github.com/getcarina/carina/releases\n")
+	}
+
+	return nil
+}
 
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
