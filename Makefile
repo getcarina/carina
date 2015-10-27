@@ -18,7 +18,6 @@ default: carina
 get-deps:
 	go get ./...
 
-
 carina-linux: linux
 	cp bin/carina-linux-amd64 carina-linux
 
@@ -32,7 +31,7 @@ gocarina: $(GOFILES)
 
 cross-build: get-deps carina linux darwin windows
 
-carina: $(GOFILES)
+carina: get-deps $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
 linux: $(GOFILES)
