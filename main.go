@@ -126,6 +126,9 @@ func New() *Application {
 	listCommand := cap.NewCommand(ctx, "list", "List swarm clusters")
 	listCommand.Action(listCommand.List)
 
+	lsCommand := cap.NewCommand(ctx, "ls", "List swarm clusters")
+	lsCommand.Action(lsCommand.List).Hidden()
+
 	growCommand := new(GrowCommand)
 	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of nodes")
 	growCommand.Flag("nodes", "number of nodes to increase the cluster by").Required().IntVar(&growCommand.Nodes)
