@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
 // Release is the minimal set of release data carina needs from the GitHub API
@@ -54,7 +55,7 @@ func LatestRelease() (*Release, error) {
 
 // Get the latest release currently
 func latestRelease(owner, repo string) (*Release, error) {
-	rel, err := latestReleaseAPI(owner, repo, "")
+	rel, err := latestReleaseAPI(owner, repo, os.Getenv("GITHUB_TOKEN"))
 
 	if err != nil {
 		return nil, err
