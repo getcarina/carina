@@ -14,6 +14,7 @@ import (
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
+	"github.com/boltdb/bolt"
 	"github.com/getcarina/carina/version"
 	"github.com/getcarina/libcarina"
 )
@@ -262,7 +263,69 @@ func (s *semver) String() string {
 	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
 }
 
+var carinaBoltBucket = []byte("carina")
+var lastCheckKey = []byte("last-check")
+
+func carinaDB() (*bolt.DB, error) {
+	bd, err := CarinaCredentialsBaseDir()
+	if err != nil {
+		return nil, err
+	}
+	boltDB := path.Join(bd, "carina.db")
+	db, err := bolt.Open(boltDB, 0600, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists(carinaBoltBucket)
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
+		return nil
+	})
+
+	return db, err
+}
+
 func informLatest(pc *kingpin.ParseContext) error {
+	db, err := carinaDB()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	var lastCheck time.Time
+
+	err = db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(carinaBoltBucket)
+		return lastCheck.UnmarshalText(bucket.Get(lastCheckKey))
+	})
+	if err != nil {
+		// TODO: Delete the old database, clean it up?
+		return err
+	}
+
+	// If we last checked < 12 hours ago, don't check again
+	if lastCheck.Add(12 * time.Hour).After(time.Now()) {
+		return nil
+	}
+
+	lastCheck = time.Now()
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(carinaBoltBucket)
+		byteTime, err := lastCheck.MarshalText()
+		if err != nil {
+			return err
+		}
+		err = bucket.Put(lastCheckKey, byteTime)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
 	if strings.Contains(version.Version, "-dev") || version.Version == "" {
 		fmt.Fprintln(os.Stderr, "# [WARN] In dev mode, not checking for latest release")
 		return nil
