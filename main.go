@@ -280,6 +280,11 @@ func (s *semver) String() string {
 }
 
 func informLatest(pc *kingpin.ParseContext) error {
+	check, err := shouldCheckLatest()
+	if !check || err != nil {
+		return err
+	}
+
 	if strings.Contains(version.Version, "-dev") || version.Version == "" {
 		fmt.Fprintln(os.Stderr, "# [WARN] In dev mode, not checking for latest release")
 		return nil
@@ -315,7 +320,9 @@ func informLatest(pc *kingpin.ParseContext) error {
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 
 	// Check for the latest release.
-	informLatest(pc)
+	if err = informLatest(pc); err != nil {
+		// Do nothing if the latest version couldn't be checked
+	}
 
 	if carina.Username == "" || carina.APIKey == "" {
 		// Backwards compatibility for prior releases, to be deprecated
@@ -462,7 +469,8 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 	}
 
 	if carina.Path == "" {
-		baseDir, err := CarinaCredentialsBaseDir()
+		var baseDir string
+		baseDir, err = CarinaCredentialsBaseDir()
 		if err != nil {
 			return err
 		}
