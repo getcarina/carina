@@ -53,7 +53,8 @@ type CredentialsCommand struct {
 
 // EnvCommand keeps context about the cluster
 type EnvCommand struct {
-	*ClusterCommand
+	*Command
+	ClusterName string
 	Path string
 }
 
@@ -196,7 +197,10 @@ func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *
 // NewEnvCommand is a command that dumps out credentials to stdout
 func (app *Application) NewEnvCommand(ctx *Context, name, help string) *EnvCommand {
 	envCommand := new(EnvCommand)
-	envCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
+	envCommand.Command = new(Command)
+	envCommand.Command.Context = ctx
+	envCommand.Command.CmdClause = app.Command(name, help)
+	envCommand.Arg("cluster-name", "name of the cluster").Required().StringVar(&envCommand.ClusterName)
 	return envCommand
 }
 
