@@ -51,6 +51,12 @@ type CredentialsCommand struct {
 	Path string
 }
 
+// EnvCommand keeps context about the cluster
+type EnvCommand struct {
+	*ClusterCommand
+	Path string
+}
+
 // WaitClusterCommand is simply a ClusterCommand that waits for cluster creation
 type WaitClusterCommand struct {
 	*ClusterCommand
@@ -141,6 +147,10 @@ func New() *Application {
 	credsCommand := cap.NewCredentialsCommand(ctx, "creds", "download credentials")
 	credsCommand.Action(credsCommand.Download).Hidden()
 
+	envCommand := cap.NewEnvCommand(ctx, "env", "show source command for setting credential environment."+
+		" Use with: eval `carina env <cluster-name>`")
+	envCommand.Action(envCommand.Show)
+
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a swarm cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
 
@@ -181,6 +191,13 @@ func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *
 	credentialsCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
 	credentialsCommand.Flag("path", "path to write credentials out to").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
 	return credentialsCommand
+}
+
+// NewEnvCommand is a command that dumps out credentials to stdout
+func (app *Application) NewEnvCommand(ctx *Context, name, help string) *EnvCommand {
+	envCommand := new(EnvCommand)
+	envCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
+	return envCommand
 }
 
 // NewWaitClusterCommand is a command that uses a cluster name and allows the
@@ -484,6 +501,30 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 	}
 
 	return nil
+}
+
+// Echo source command, for eval `carina env <name>`
+func (carina *EnvCommand) Show(pc *kingpin.ParseContext) (err error) {
+	if carina.Path == "" {
+		baseDir, err := CarinaCredentialsBaseDir()
+		if err != nil {
+			return err
+		}
+		carina.Path = path.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
+	}
+	
+	env_path := path.Join(carina.Path, "docker.env")
+	_, err = os.Stat(env_path)
+	if os.IsNotExist(err) {
+		// FIXME: try to download the credentials if missing
+		fmt.Fprintf(os.Stderr, "Env file missing '%v'\n", env_path)
+		fmt.Fprintf(os.Stderr, "Run `carina credentials %v` first.\n", carina.ClusterName)
+		return err
+	}
+	fmt.Fprintf(os.Stdout, "source '%v'\n", env_path)
+
+	err = carina.TabWriter.Flush()
+	return err
 }
 
 func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) (err error) {
