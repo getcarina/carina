@@ -55,7 +55,7 @@ type CredentialsCommand struct {
 type EnvCommand struct {
 	*Command
 	ClusterName string
-	Path string
+	Path        string
 }
 
 // WaitClusterCommand is simply a ClusterCommand that waits for cluster creation
@@ -507,7 +507,7 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 	return nil
 }
 
-// Echo source command, for eval `carina env <name>`
+// Show echos the source command, for eval `carina env <name>`
 func (carina *EnvCommand) Show(pc *kingpin.ParseContext) (err error) {
 	if carina.Path == "" {
 		baseDir, err := CarinaCredentialsBaseDir()
@@ -516,16 +516,16 @@ func (carina *EnvCommand) Show(pc *kingpin.ParseContext) (err error) {
 		}
 		carina.Path = path.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
 	}
-	
-	env_path := path.Join(carina.Path, "docker.env")
-	_, err = os.Stat(env_path)
+
+	envPath := path.Join(carina.Path, "docker.env")
+	_, err = os.Stat(envPath)
 	if os.IsNotExist(err) {
 		// FIXME: try to download the credentials if missing
-		fmt.Fprintf(os.Stderr, "Env file missing '%v'\n", env_path)
+		fmt.Fprintf(os.Stderr, "Env file missing '%v'\n", envPath)
 		fmt.Fprintf(os.Stderr, "Run `carina credentials %v` first.\n", carina.ClusterName)
 		return err
 	}
-	fmt.Fprintf(os.Stdout, "source '%v'\n", env_path)
+	fmt.Fprintf(os.Stdout, "source '%v'\n", envPath)
 
 	err = carina.TabWriter.Flush()
 	return err
