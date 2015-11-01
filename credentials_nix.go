@@ -9,11 +9,11 @@ import (
 	"path"
 )
 
-func sourceHelpString(basepath string) string {
+func sourceHelpString(basepath string, name string) string {
 	s := "#\n"
 	s += fmt.Sprintf("# Credentials written to \"%s\"\n", basepath)
 	s += "#\n"
-	s += fmt.Sprintf("source \"%v\"\n", path.Join(basepath, "docker.env"))
+	s += fmt.Sprintf("eval `carina env %v`\n", name)
 	s += fmt.Sprintf("# Run the command above to get your Docker environment variables set\n")
 	return s
 }
