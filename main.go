@@ -183,7 +183,7 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *CredentialsCommand {
 	credentialsCommand := new(CredentialsCommand)
 	credentialsCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
-	credentialsCommand.Flag("path", "path to write credentials out to").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
+	credentialsCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
 	return credentialsCommand
 }
 
