@@ -32,6 +32,7 @@ func (cache *Cache) read() error {
 	}
 	err = json.NewDecoder(f).Decode(cache)
 	if err != nil {
+		_ = f.Close()
 		return err
 	}
 	err = f.Close()
@@ -45,8 +46,10 @@ func (cache *Cache) write() error {
 	if err != nil {
 		return err
 	}
+
 	err = json.NewEncoder(f).Encode(cache)
 	if err != nil {
+		_ = f.Close()
 		return err
 	}
 	err = f.Close()
