@@ -37,6 +37,7 @@ type Context struct {
 	Username      string
 	APIKey        string
 	Endpoint      string
+	CacheEnabled  bool
 }
 
 // ClusterCommand is a Command with a ClusterName set
@@ -99,6 +100,7 @@ func New() *Application {
 	cap.Flag("username", "Carina username - can also set env var "+UserNameEnvVar).OverrideDefaultFromEnvar(UserNameEnvVar).StringVar(&ctx.Username)
 	cap.Flag("api-key", "Carina API Key - can also set env var "+APIKeyEnvVar).OverrideDefaultFromEnvar(APIKeyEnvVar).PlaceHolder(APIKeyEnvVar).StringVar(&ctx.APIKey)
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
+	cap.Flag("cache", "Cache API tokens and update times").Default("false").BoolVar(&ctx.CacheEnabled)
 
 	writer := new(tabwriter.Writer)
 	writer.Init(os.Stdout, 20, 1, 3, ' ', 0)
@@ -310,7 +312,11 @@ func shouldCheckForUpdate() (bool, error) {
 	return true, nil
 }
 
-func informLatest(pc *kingpin.ParseContext) error {
+func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
+	if !carina.CacheEnabled {
+		return nil
+	}
+
 	ok, err := shouldCheckForUpdate()
 	if !ok {
 		return err
@@ -346,7 +352,7 @@ func informLatest(pc *kingpin.ParseContext) error {
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 
 	// Check for the latest release.
-	if err = informLatest(pc); err != nil {
+	if err = carina.informLatest(pc); err != nil {
 		// Do nothing if the latest version couldn't be checked
 	}
 
