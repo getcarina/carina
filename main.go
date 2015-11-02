@@ -529,7 +529,7 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 }
 
 // Show echos the source command, for eval `carina env <name>`
-func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) (err error) {
+func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) error {
 	if carina.Path == "" {
 		baseDir, err := CarinaCredentialsBaseDir()
 		if err != nil {
@@ -539,7 +539,7 @@ func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) (err error) {
 	}
 
 	envPath := path.Join(carina.Path, "docker.env")
-	_, err = os.Stat(envPath)
+	_, err := os.Stat(envPath)
 	if os.IsNotExist(err) {
 		// Show is a NoAuth command, so we'll auth first for a download
 		err := carina.Auth(pc)

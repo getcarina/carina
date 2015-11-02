@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 	"path"
 	"time"
@@ -23,9 +22,6 @@ func defaultCacheFilename() (string, error) {
 	}
 	return path.Join(bd, "cache.json"), nil
 }
-
-// ErrCacheNotExist informs about if the cache does not exist
-var ErrCacheNotExist = errors.New("Cache does not exist")
 
 // Read the on disk cache
 func (cache *Cache) read() error {

@@ -30,19 +30,17 @@ func randomName() string {
 
 func TestLoadCache(t *testing.T) {
 
-	noCache := fmt.Sprintf("carina-temp-cache-%s.json", randomName())
+	filename := fmt.Sprintf("carina-temp-cache-%s.json", randomName())
 
-	cache, err := loadCache(noCache)
-	if err != nil {
-		t.Errorf("Expected nil, got %v\n", err)
-	}
-	if cache.filename != noCache {
-		t.Errorf("Expected %v, got %v\n", noCache, cache.filename)
-	}
+	// Try to clean up as best we can
+	defer func() {
+		err := os.Remove(filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to remove temporary cache: %v\n", err)
+		}
+	}()
 
-	filename := noCache
-
-	cache, err = loadCache(filename)
+	cache, err := loadCache(filename)
 
 	if err != nil {
 		t.Errorf("Expected nil, got %v\n", err)
@@ -61,10 +59,8 @@ func TestLoadCache(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	if updateTime != newCache.LastUpdateCheck {
+	if !updateTime.Equal(newCache.LastUpdateCheck) {
 		t.Errorf("Expected %v, got %v\n", updateTime, newCache.LastUpdateCheck)
 	}
-
-	os.Remove(filename)
 
 }
