@@ -141,10 +141,9 @@ func New() *Application {
 	credsCommand := cap.NewCredentialsCommand(ctx, "creds", "download credentials")
 	credsCommand.Action(credsCommand.Download).Hidden()
 
-	envCommand := cap.NewCredentialsCommand(ctx, "env", "show source command for setting credential environment."+
+	envCommand := cap.NewEnvCommand(ctx, "env", "show source command for setting credential environment."+
 		" Use with: eval `carina env <cluster-name>`")
 	envCommand.Action(envCommand.Show)
-	envCommand.PreAction(envCommand.NoAuth)
 
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a swarm cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
@@ -186,6 +185,19 @@ func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *
 	credentialsCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
 	credentialsCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
 	return credentialsCommand
+}
+
+// NewEnvCommand initializes a `carina env` command
+func (app *Application) NewEnvCommand(ctx *Context, name, help string) *CredentialsCommand {
+	envCommand := new(CredentialsCommand)
+	envCommand.ClusterCommand = new(ClusterCommand)
+	envCommand.Command = new(Command)
+	envCommand.Context = ctx
+	envCommand.CmdClause = app.Command(name, help)
+
+	envCommand.Arg("cluster-name", "name of the cluster").Required().StringVar(&envCommand.ClusterName)
+	envCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&envCommand.Path)
+	return envCommand
 }
 
 // NewWaitClusterCommand is a command that uses a cluster name and allows the
