@@ -394,9 +394,38 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 			Token:    token,
 			Endpoint: carina.Endpoint,
 		}
+
+		if dummyRequest(carina.ClusterClient) != nil {
+			carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+			if err != nil {
+				return err
+			}
+			carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
+		}
 	}
 
 	return err
+}
+
+func dummyRequest(c *libcarina.ClusterClient) error {
+	req, err := http.NewRequest("HEAD", c.Endpoint+"/clusters/"+c.Username, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("User-Agent", "carina dummy request")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("X-Auth-Token", c.Token)
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Invalid HEAD on %s", "/clusters"+c.Username)
+	}
+
+	return nil
 }
 
 // List the current swarm clusters
