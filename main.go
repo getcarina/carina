@@ -381,13 +381,8 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 	}
 
 	token, ok := carina.Cache.Tokens[carina.Username]
-	if !ok {
-		carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
-		if err != nil {
-			return err
-		}
-		carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
-	} else {
+
+	if ok {
 		carina.ClusterClient = &libcarina.ClusterClient{
 			Client:   &http.Client{},
 			Username: carina.Username,
@@ -395,14 +390,17 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 			Endpoint: carina.Endpoint,
 		}
 
-		if dummyRequest(carina.ClusterClient) != nil {
-			carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
-			if err != nil {
-				return err
-			}
-			carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
+		if dummyRequest(carina.ClusterClient) == nil {
+			return nil
 		}
+		// Otherwise we fall through and authenticate again
 	}
+
+	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+	if err != nil {
+		return err
+	}
+	carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
 
 	return err
 }
