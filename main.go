@@ -144,6 +144,7 @@ func New() *Application {
 	envCommand := cap.NewCredentialsCommand(ctx, "env", "show source command for setting credential environment."+
 		" Use with: eval `carina env <cluster-name>`")
 	envCommand.Action(envCommand.Show)
+	envCommand.PreAction(envCommand.NoAuth)
 
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a swarm cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
@@ -317,6 +318,11 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 
 	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
 	return err
+}
+
+// NoAuth allows for overriding a PreAction to prevent auth when not necessary
+func (carina *Command) NoAuth(pc *kingpin.ParseContext) (err error) {
+	return
 }
 
 // List the current swarm clusters
@@ -503,6 +509,11 @@ func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) (err error) {
 	envPath := path.Join(carina.Path, "docker.env")
 	_, err = os.Stat(envPath)
 	if os.IsNotExist(err) {
+		// Show is a NoAuth command, so we'll auth first for a download
+		err := carina.Auth(pc)
+		if err != nil {
+			return err
+		}
 		return carina.Download(pc)
 	}
 	fmt.Fprintf(os.Stdout, "source '%v'\n", envPath)
