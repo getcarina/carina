@@ -22,7 +22,7 @@ carina-linux: linux
 	cp bin/carina-linux-amd64 carina-linux
 
 test: carina
-	@echo "Tests are cool, we should do those."
+	go test -v
 	eval "$( ./carina --bash-completion )"
 	./carina --version
 

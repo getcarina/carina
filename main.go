@@ -280,7 +280,13 @@ func (s *semver) String() string {
 }
 
 func informLatest(pc *kingpin.ParseContext) error {
-	check, err := shouldCheckLatest()
+	cacheName, err := defaultCacheFilename()
+	if err != nil {
+		return err
+	}
+	cache, err := loadCache(cacheName)
+
+	check, err := cache.shouldCheckLatest()
 	if !check || err != nil {
 		return err
 	}

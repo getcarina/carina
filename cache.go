@@ -25,8 +25,22 @@ func defaultCacheFilename() (string, error) {
 // ErrCacheNotExist informs about if the cache does not exist
 var ErrCacheNotExist = errors.New("Cache does not exist")
 
-// LoadCache fetches the current state of the on disk cache
-func LoadCache(filename string) (cache *Cache, err error) {
+// write will put the current version of the cache on disk at cache.filename
+// creating it if it does not exist
+func (cache *Cache) write() error {
+	f, err := os.OpenFile(cache.filename, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	err = json.NewEncoder(f).Encode(cache)
+	if err != nil {
+		return err
+	}
+	err = f.Close()
+	return err
+}
+
+func loadCache(filename string) (cache *Cache, err error) {
 	cache = new(Cache)
 
 	cache.filename = filename
@@ -37,7 +51,7 @@ func LoadCache(filename string) (cache *Cache, err error) {
 	_, err = os.Stat(cache.filename)
 
 	if os.IsNotExist(err) {
-		return cache, ErrCacheNotExist
+		return cache, cache.write()
 	} else if err != nil {
 		return nil, err
 	}
@@ -57,43 +71,15 @@ func LoadCache(filename string) (cache *Cache, err error) {
 
 func (cache *Cache) updateLastCheck(t time.Time) error {
 	cache.LastUpdateCheck = t
-	f, err := os.OpenFile(cache.filename, os.O_WRONLY, 0666)
-	if err != nil {
-		return err
-	}
-	err = json.NewEncoder(f).Encode(cache)
-	if err != nil {
-		return err
-	}
-	err = f.Close()
-	return err
+	return cache.write()
 }
 
-func shouldCheckLatest() (bool, error) {
-	cacheName, err := defaultCacheFilename()
-	if err != nil {
-		return false, err
-	}
+func (cache *Cache) shouldCheckLatest() (check bool, err error) {
+	lastCheck := cache.LastUpdateCheck
 
-	cache, err := LoadCache(cacheName)
-	if err == ErrCacheNotExist {
-		var f *os.File
-		f, err = os.Create(cacheName)
-		if err != nil {
-			return false, err
-		}
-		if err = f.Close(); err != nil {
-			return false, err
-		}
-	} else if err != nil {
-		return false, err
-	} else {
-		lastCheck := cache.LastUpdateCheck
-
-		// If we last checked `delay` ago, don't check again
-		if lastCheck.Add(12 * time.Hour).After(time.Now()) {
-			return false, nil
-		}
+	// If we last checked `delay` ago, don't check again
+	if lastCheck.Add(12 * time.Hour).After(time.Now()) {
+		return false, nil
 	}
 
 	err = cache.updateLastCheck(time.Now())

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -29,11 +30,11 @@ func randomName() string {
 
 func TestLoadCache(t *testing.T) {
 
-	noCache := randomName()
+	noCache := fmt.Sprintf("carina-temp-cache-%s.json", randomName())
 
-	cache, err := LoadCache(noCache)
-	if err != ErrCacheNotExist {
-		t.Errorf("Expected ErrCacheNotExist, got %v\n", err)
+	cache, err := loadCache(noCache)
+	if err != nil {
+		t.Errorf("Expected nil, got %v\n", err)
 	}
 	if cache.filename != noCache {
 		t.Errorf("Expected %v, got %v\n", noCache, cache.filename)
@@ -41,21 +42,29 @@ func TestLoadCache(t *testing.T) {
 
 	filename := noCache
 
-	cache, err = LoadCache(filename)
+	cache, err = loadCache(filename)
 
-	if err != ErrCacheNotExist {
-		t.Errorf("Expected ErrCacheNotExist, got %v\n", err)
+	if err != nil {
+		t.Errorf("Expected nil, got %v\n", err)
 	}
-	if cache.filename != filename {
+	if filename != cache.filename {
 		t.Errorf("Expected %v, got %v\n", filename, cache.filename)
 	}
 
 	updateTime := time.Now()
 
-	cache.updateLastCheck(updateTime)
-	newCache, err := LoadCache(filename)
-	if newCache.LastUpdateCheck != updateTime {
+	err = cache.updateLastCheck(updateTime)
+	if err != nil {
+		t.Fail()
+	}
+	newCache, err := loadCache(filename)
+	if err != nil {
+		t.Fail()
+	}
+	if updateTime != newCache.LastUpdateCheck {
 		t.Errorf("Expected %v, got %v\n", updateTime, newCache.LastUpdateCheck)
 	}
+
+	os.Remove(filename)
 
 }
