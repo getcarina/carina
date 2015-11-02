@@ -51,13 +51,6 @@ type CredentialsCommand struct {
 	Path string
 }
 
-// EnvCommand keeps context about the cluster
-type EnvCommand struct {
-	*Command
-	ClusterName string
-	Path        string
-}
-
 // WaitClusterCommand is simply a ClusterCommand that waits for cluster creation
 type WaitClusterCommand struct {
 	*ClusterCommand
@@ -190,17 +183,20 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *CredentialsCommand {
 	credentialsCommand := new(CredentialsCommand)
 	credentialsCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
-	credentialsCommand.Flag("path", "path to write credentials out to").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
+	credentialsCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
 	return credentialsCommand
 }
 
-// NewEnvCommand is a command that dumps out credentials to stdout
-func (app *Application) NewEnvCommand(ctx *Context, name, help string) *EnvCommand {
-	envCommand := new(EnvCommand)
+// NewEnvCommand initializes a `carina env` command
+func (app *Application) NewEnvCommand(ctx *Context, name, help string) *CredentialsCommand {
+	envCommand := new(CredentialsCommand)
+	envCommand.ClusterCommand = new(ClusterCommand)
 	envCommand.Command = new(Command)
-	envCommand.Command.Context = ctx
-	envCommand.Command.CmdClause = app.Command(name, help)
+	envCommand.Context = ctx
+	envCommand.CmdClause = app.Command(name, help)
+
 	envCommand.Arg("cluster-name", "name of the cluster").Required().StringVar(&envCommand.ClusterName)
+	envCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&envCommand.Path)
 	return envCommand
 }
 
@@ -508,7 +504,7 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 }
 
 // Show echos the source command, for eval `carina env <name>`
-func (carina *EnvCommand) Show(pc *kingpin.ParseContext) (err error) {
+func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) (err error) {
 	if carina.Path == "" {
 		baseDir, err := CarinaCredentialsBaseDir()
 		if err != nil {
@@ -520,10 +516,12 @@ func (carina *EnvCommand) Show(pc *kingpin.ParseContext) (err error) {
 	envPath := path.Join(carina.Path, "docker.env")
 	_, err = os.Stat(envPath)
 	if os.IsNotExist(err) {
-		// FIXME: try to download the credentials if missing
-		fmt.Fprintf(os.Stderr, "Env file missing '%v'\n", envPath)
-		fmt.Fprintf(os.Stderr, "Run `carina credentials %v` first.\n", carina.ClusterName)
-		return err
+		// Show is a NoAuth command, so we'll auth first for a download
+		err := carina.Auth(pc)
+		if err != nil {
+			return err
+		}
+		return carina.Download(pc)
 	}
 	fmt.Fprintf(os.Stdout, "source '%v'\n", envPath)
 
