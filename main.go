@@ -420,7 +420,7 @@ func dummyRequest(c *libcarina.ClusterClient) error {
 	resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Invalid HEAD on %s", "/clusters"+c.Username)
+		return fmt.Errorf("Unable to auth on %s", "/clusters"+c.Username)
 	}
 
 	return nil
