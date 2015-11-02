@@ -285,9 +285,20 @@ func informLatest(pc *kingpin.ParseContext) error {
 		return err
 	}
 	cache, err := loadCache(cacheName)
+	if err != nil {
+		// TODO: If we fail, log it and keep on going
+		return nil
+	}
+	lastCheck := cache.LastUpdateCheck
 
-	check, err := cache.shouldCheckLatest()
-	if !check || err != nil {
+	// If we last checked `delay` ago, don't check again
+	if lastCheck.Add(12 * time.Hour).After(time.Now()) {
+		return nil
+	}
+
+	err = cache.updateLastCheck(time.Now())
+
+	if err != nil {
 		return err
 	}
 

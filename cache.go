@@ -9,6 +9,8 @@ import (
 )
 
 // Cache keeps track of last-check, also intended to cache tokens in the future
+// This is *NOT* thread safe and does not use any file locks
+// FIXME: Use locks for the library
 type Cache struct {
 	filename        string
 	LastUpdateCheck time.Time `json:"last-check"`
@@ -24,6 +26,20 @@ func defaultCacheFilename() (string, error) {
 
 // ErrCacheNotExist informs about if the cache does not exist
 var ErrCacheNotExist = errors.New("Cache does not exist")
+
+// Read the on disk cache
+func (cache *Cache) read() error {
+	f, err := os.OpenFile(cache.filename, os.O_RDONLY, 0666)
+	if err != nil {
+		return err
+	}
+	err = json.NewDecoder(f).Decode(cache)
+	if err != nil {
+		return err
+	}
+	err = f.Close()
+	return err
+}
 
 // write will put the current version of the cache on disk at cache.filename
 // creating it if it does not exist
@@ -56,32 +72,14 @@ func loadCache(filename string) (cache *Cache, err error) {
 		return nil, err
 	}
 
-	f, err := os.OpenFile(cache.filename, os.O_RDONLY, 0666)
-	if err != nil {
-		return nil, err
-	}
-	err = json.NewDecoder(f).Decode(cache)
-	if err != nil {
-		return nil, err
-	}
-	err = f.Close()
-	return cache, err
-
+	return cache, cache.read()
 }
 
 func (cache *Cache) updateLastCheck(t time.Time) error {
+	err := cache.read()
+	if err != nil {
+		return err
+	}
 	cache.LastUpdateCheck = t
 	return cache.write()
-}
-
-func (cache *Cache) shouldCheckLatest() (check bool, err error) {
-	lastCheck := cache.LastUpdateCheck
-
-	// If we last checked `delay` ago, don't check again
-	if lastCheck.Add(12 * time.Hour).After(time.Now()) {
-		return false, nil
-	}
-
-	err = cache.updateLastCheck(time.Now())
-	return true, err
 }
