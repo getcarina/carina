@@ -409,8 +409,7 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 	if err != nil {
 		return err
 	}
-	carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
-
+	err = carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
 	return err
 }
 
@@ -426,7 +425,7 @@ func dummyRequest(c *libcarina.ClusterClient) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Unable to auth on %s", "/clusters"+c.Username)
