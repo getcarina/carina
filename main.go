@@ -279,10 +279,41 @@ func (s *semver) String() string {
 	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
 }
 
-func informLatest(pc *kingpin.ParseContext) error {
+func shouldCheckForUpdate() (bool, error) {
+	cacheName, err := defaultCacheFilename()
+	if err != nil {
+		return false, err
+	}
+	cache, err := LoadCache(cacheName)
+	if err != nil {
+		// TODO: If we fail, log it and keep on going
+		return false, nil
+	}
+	lastCheck := cache.LastUpdateCheck
+
+	// If we last checked `delay` ago, don't check again
+	if lastCheck.Add(12 * time.Hour).After(time.Now()) {
+		return false, nil
+	}
+
+	err = cache.UpdateLastCheck(time.Now())
+
+	if err != nil {
+		return false, err
+	}
+
 	if strings.Contains(version.Version, "-dev") || version.Version == "" {
 		fmt.Fprintln(os.Stderr, "# [WARN] In dev mode, not checking for latest release")
-		return nil
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func informLatest(pc *kingpin.ParseContext) error {
+	ok, err := shouldCheckForUpdate()
+	if !ok {
+		return err
 	}
 
 	rel, err := version.LatestRelease()
@@ -315,7 +346,9 @@ func informLatest(pc *kingpin.ParseContext) error {
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 
 	// Check for the latest release.
-	informLatest(pc)
+	if err = informLatest(pc); err != nil {
+		// Do nothing if the latest version couldn't be checked
+	}
 
 	if carina.Username == "" || carina.APIKey == "" {
 		// Backwards compatibility for prior releases, to be deprecated
@@ -462,7 +495,8 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 	}
 
 	if carina.Path == "" {
-		baseDir, err := CarinaCredentialsBaseDir()
+		var baseDir string
+		baseDir, err = CarinaCredentialsBaseDir()
 		if err != nil {
 			return err
 		}
@@ -504,7 +538,7 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 }
 
 // Show echos the source command, for eval `carina env <name>`
-func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) (err error) {
+func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) error {
 	if carina.Path == "" {
 		baseDir, err := CarinaCredentialsBaseDir()
 		if err != nil {
@@ -514,7 +548,7 @@ func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) (err error) {
 	}
 
 	envPath := path.Join(carina.Path, "docker.env")
-	_, err = os.Stat(envPath)
+	_, err := os.Stat(envPath)
 	if os.IsNotExist(err) {
 		// Show is a NoAuth command, so we'll auth first for a download
 		err := carina.Auth(pc)
