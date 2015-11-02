@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strconv"
@@ -38,6 +39,7 @@ type Context struct {
 	APIKey        string
 	Endpoint      string
 	CacheEnabled  bool
+	Cache         *Cache
 }
 
 // ClusterCommand is a Command with a ClusterName set
@@ -100,7 +102,9 @@ func New() *Application {
 	cap.Flag("username", "Carina username - can also set env var "+UserNameEnvVar).OverrideDefaultFromEnvar(UserNameEnvVar).StringVar(&ctx.Username)
 	cap.Flag("api-key", "Carina API Key - can also set env var "+APIKeyEnvVar).OverrideDefaultFromEnvar(APIKeyEnvVar).PlaceHolder(APIKeyEnvVar).StringVar(&ctx.APIKey)
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
-	cap.Flag("cache", "Cache API tokens and update times").Default("false").BoolVar(&ctx.CacheEnabled)
+	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
+
+	cap.PreAction(cap.InitCache)
 
 	writer := new(tabwriter.Writer)
 	writer.Init(os.Stdout, 20, 1, 3, ' ', 0)
@@ -162,6 +166,28 @@ func VersionString() string {
 	s += fmt.Sprintf("Version: %s\n", version.Version)
 	s += fmt.Sprintf("Commit:  %s", version.Commit)
 	return s
+}
+
+// InitCache sets up the cache for carina
+func (app *Application) InitCache(pc *kingpin.ParseContext) error {
+	if app.CacheEnabled {
+		bd, err := CarinaCredentialsBaseDir()
+		if err != nil {
+			return err
+		}
+		err = os.MkdirAll(bd, 0777)
+		if err != nil {
+			return err
+		}
+
+		cacheName, err := defaultCacheFilename()
+		if err != nil {
+			return err
+		}
+		app.Cache, err = LoadCache(cacheName)
+		return err
+	}
+	return nil
 }
 
 // NewCommand creates a command wrapped with carina.Context
@@ -281,24 +307,15 @@ func (s *semver) String() string {
 	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
 }
 
-func shouldCheckForUpdate() (bool, error) {
-	cacheName, err := defaultCacheFilename()
-	if err != nil {
-		return false, err
-	}
-	cache, err := LoadCache(cacheName)
-	if err != nil {
-		// TODO: If we fail, log it and keep on going
-		return false, nil
-	}
-	lastCheck := cache.LastUpdateCheck
+func (carina *Command) shouldCheckForUpdate() (bool, error) {
+	lastCheck := carina.Cache.LastUpdateCheck
 
 	// If we last checked `delay` ago, don't check again
 	if lastCheck.Add(12 * time.Hour).After(time.Now()) {
 		return false, nil
 	}
 
-	err = cache.UpdateLastCheck(time.Now())
+	err := carina.Cache.UpdateLastCheck(time.Now())
 
 	if err != nil {
 		return false, err
@@ -317,7 +334,7 @@ func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
 		return nil
 	}
 
-	ok, err := shouldCheckForUpdate()
+	ok, err := carina.shouldCheckForUpdate()
 	if !ok {
 		return err
 	}
@@ -367,8 +384,54 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 		}
 	}
 
+	if !carina.CacheEnabled {
+		carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+		return err
+	}
+
+	token, ok := carina.Cache.Tokens[carina.Username]
+
+	if ok {
+		carina.ClusterClient = &libcarina.ClusterClient{
+			Client:   &http.Client{},
+			Username: carina.Username,
+			Token:    token,
+			Endpoint: carina.Endpoint,
+		}
+
+		if dummyRequest(carina.ClusterClient) == nil {
+			return nil
+		}
+		// Otherwise we fall through and authenticate again
+	}
+
 	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+	if err != nil {
+		return err
+	}
+	err = carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
 	return err
+}
+
+func dummyRequest(c *libcarina.ClusterClient) error {
+	req, err := http.NewRequest("HEAD", c.Endpoint+"/clusters/"+c.Username, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("User-Agent", "getcarina/carina dummy request")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("X-Auth-Token", c.Token)
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return err
+	}
+	_ = resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Unable to auth on %s", "/clusters"+c.Username)
+	}
+
+	return nil
 }
 
 // List the current swarm clusters
