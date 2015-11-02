@@ -13,7 +13,8 @@ import (
 type Cache struct {
 	sync.Mutex
 	filename        string
-	LastUpdateCheck time.Time `json:"last-check"`
+	LastUpdateCheck time.Time         `json:"last-check"`
+	Tokens          map[string]string `json:"tokens"`
 }
 
 func defaultCacheFilename() (string, error) {
@@ -59,6 +60,7 @@ func (cache *Cache) write() error {
 // LoadCache retrieves the on disk cache and returns a cache struct
 func LoadCache(filename string) (cache *Cache, err error) {
 	cache = new(Cache)
+	cache.Tokens = make(map[string]string)
 
 	cache.filename = filename
 	if err != nil {
@@ -86,5 +88,19 @@ func (cache *Cache) UpdateLastCheck(t time.Time) error {
 		return err
 	}
 	cache.LastUpdateCheck = t
+	return cache.write()
+}
+
+// SetToken sets the API token for a username in the cache
+func (cache *Cache) SetToken(username, token string) error {
+	cache.Lock()
+	defer cache.Unlock()
+
+	err := cache.read()
+	if err != nil {
+		return err
+	}
+
+	cache.Tokens[username] = token
 	return cache.write()
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strconv"
@@ -38,6 +39,7 @@ type Context struct {
 	APIKey        string
 	Endpoint      string
 	CacheEnabled  bool
+	Cache         *Cache
 }
 
 // ClusterCommand is a Command with a ClusterName set
@@ -102,6 +104,8 @@ func New() *Application {
 	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
 	cap.Flag("cache", "Cache API tokens and update times").Default("false").BoolVar(&ctx.CacheEnabled)
 
+	cap.PreAction(cap.InitCache)
+
 	writer := new(tabwriter.Writer)
 	writer.Init(os.Stdout, 20, 1, 3, ' ', 0)
 
@@ -162,6 +166,19 @@ func VersionString() string {
 	s += fmt.Sprintf("Version: %s\n", version.Version)
 	s += fmt.Sprintf("Commit:  %s", version.Commit)
 	return s
+}
+
+// InitCache sets up the cache for carina
+func (app *Application) InitCache(pc *kingpin.ParseContext) error {
+	if app.CacheEnabled {
+		cacheName, err := defaultCacheFilename()
+		if err != nil {
+			return err
+		}
+		app.Cache, err = LoadCache(cacheName)
+		return err
+	}
+	return nil
 }
 
 // NewCommand creates a command wrapped with carina.Context
@@ -281,24 +298,15 @@ func (s *semver) String() string {
 	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
 }
 
-func shouldCheckForUpdate() (bool, error) {
-	cacheName, err := defaultCacheFilename()
-	if err != nil {
-		return false, err
-	}
-	cache, err := LoadCache(cacheName)
-	if err != nil {
-		// TODO: If we fail, log it and keep on going
-		return false, nil
-	}
-	lastCheck := cache.LastUpdateCheck
+func (carina *Command) shouldCheckForUpdate() (bool, error) {
+	lastCheck := carina.Cache.LastUpdateCheck
 
 	// If we last checked `delay` ago, don't check again
 	if lastCheck.Add(12 * time.Hour).After(time.Now()) {
 		return false, nil
 	}
 
-	err = cache.UpdateLastCheck(time.Now())
+	err := carina.Cache.UpdateLastCheck(time.Now())
 
 	if err != nil {
 		return false, err
@@ -317,7 +325,7 @@ func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
 		return nil
 	}
 
-	ok, err := shouldCheckForUpdate()
+	ok, err := carina.shouldCheckForUpdate()
 	if !ok {
 		return err
 	}
@@ -367,7 +375,27 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 		}
 	}
 
-	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+	if !carina.CacheEnabled {
+		carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+		return err
+	}
+
+	token, ok := carina.Cache.Tokens[carina.Username]
+	if !ok {
+		carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+		if err != nil {
+			return err
+		}
+		carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
+	} else {
+		carina.ClusterClient = &libcarina.ClusterClient{
+			Client:   &http.Client{},
+			Username: carina.Username,
+			Token:    token,
+			Endpoint: carina.Endpoint,
+		}
+	}
+
 	return err
 }
 
