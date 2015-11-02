@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"sync"
 	"time"
 )
 
 // Cache keeps track of last-check, also intended to cache tokens in the future
-// This is *NOT* thread safe and does not use any file locks
-// FIXME: Use locks for the library
+// Not all methods are thread safe and it does not use any file locks
 type Cache struct {
+	sync.Mutex
 	filename        string
 	LastUpdateCheck time.Time `json:"last-check"`
 }
@@ -72,6 +73,9 @@ func loadCache(filename string) (cache *Cache, err error) {
 }
 
 func (cache *Cache) updateLastCheck(t time.Time) error {
+	cache.Lock()
+	defer cache.Unlock()
+
 	err := cache.read()
 	if err != nil {
 		return err
