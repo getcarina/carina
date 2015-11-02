@@ -410,7 +410,7 @@ func dummyRequest(c *libcarina.ClusterClient) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "carina dummy request")
+	req.Header.Set("User-Agent", "getcarina/carina dummy request")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-Auth-Token", c.Token)
 	resp, err := c.Client.Do(req)
