@@ -171,6 +171,15 @@ func VersionString() string {
 // InitCache sets up the cache for carina
 func (app *Application) InitCache(pc *kingpin.ParseContext) error {
 	if app.CacheEnabled {
+		bd, err := CarinaCredentialsBaseDir()
+		if err != nil {
+			return err
+		}
+		err = os.MkdirAll(bd, 0777)
+		if err != nil {
+			return err
+		}
+
 		cacheName, err := defaultCacheFilename()
 		if err != nil {
 			return err
