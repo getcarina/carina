@@ -284,7 +284,7 @@ func shouldCheckForUpdate() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	cache, err := loadCache(cacheName)
+	cache, err := LoadCache(cacheName)
 	if err != nil {
 		// TODO: If we fail, log it and keep on going
 		return false, nil
@@ -296,7 +296,7 @@ func shouldCheckForUpdate() (bool, error) {
 		return false, nil
 	}
 
-	err = cache.updateLastCheck(time.Now())
+	err = cache.UpdateLastCheck(time.Now())
 
 	if err != nil {
 		return false, err

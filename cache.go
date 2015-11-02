@@ -56,7 +56,8 @@ func (cache *Cache) write() error {
 	return err
 }
 
-func loadCache(filename string) (cache *Cache, err error) {
+// LoadCache retrieves the on disk cache and returns a cache struct
+func LoadCache(filename string) (cache *Cache, err error) {
 	cache = new(Cache)
 
 	cache.filename = filename
@@ -75,7 +76,8 @@ func loadCache(filename string) (cache *Cache, err error) {
 	return cache, cache.read()
 }
 
-func (cache *Cache) updateLastCheck(t time.Time) error {
+// UpdateLastCheck sets the last update time to t
+func (cache *Cache) UpdateLastCheck(t time.Time) error {
 	cache.Lock()
 	defer cache.Unlock()
 

@@ -40,7 +40,7 @@ func TestLoadCache(t *testing.T) {
 		}
 	}()
 
-	cache, err := loadCache(filename)
+	cache, err := LoadCache(filename)
 
 	if err != nil {
 		t.Errorf("Expected nil, got %v\n", err)
@@ -51,11 +51,11 @@ func TestLoadCache(t *testing.T) {
 
 	updateTime := time.Now()
 
-	err = cache.updateLastCheck(updateTime)
+	err = cache.UpdateLastCheck(updateTime)
 	if err != nil {
 		t.Fail()
 	}
-	newCache, err := loadCache(filename)
+	newCache, err := LoadCache(filename)
 	if err != nil {
 		t.Fail()
 	}
