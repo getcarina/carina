@@ -332,11 +332,6 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 	return err
 }
 
-// NoAuth allows for overriding a PreAction to prevent auth when not necessary
-func (carina *Command) NoAuth(pc *kingpin.ParseContext) (err error) {
-	return
-}
-
 // List the current swarm clusters
 func (carina *Command) List(pc *kingpin.ParseContext) (err error) {
 	clusterList, err := carina.ClusterClient.List()
