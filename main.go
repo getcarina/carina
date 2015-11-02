@@ -279,32 +279,41 @@ func (s *semver) String() string {
 	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
 }
 
-func informLatest(pc *kingpin.ParseContext) error {
+func shouldCheckForUpdate() (bool, error) {
 	cacheName, err := defaultCacheFilename()
 	if err != nil {
-		return err
+		return false, err
 	}
 	cache, err := loadCache(cacheName)
 	if err != nil {
 		// TODO: If we fail, log it and keep on going
-		return nil
+		return false, nil
 	}
 	lastCheck := cache.LastUpdateCheck
 
 	// If we last checked `delay` ago, don't check again
 	if lastCheck.Add(12 * time.Hour).After(time.Now()) {
-		return nil
+		return false, nil
 	}
 
 	err = cache.updateLastCheck(time.Now())
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if strings.Contains(version.Version, "-dev") || version.Version == "" {
 		fmt.Fprintln(os.Stderr, "# [WARN] In dev mode, not checking for latest release")
-		return nil
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func informLatest(pc *kingpin.ParseContext) error {
+	ok, err := shouldCheckForUpdate()
+	if !ok {
+		return err
 	}
 
 	rel, err := version.LatestRelease()
