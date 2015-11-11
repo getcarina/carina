@@ -515,17 +515,30 @@ const StatusRebuildingSwarm = "rebuilding-swarm"
 // Does an func against a cluster then returns the new cluster representation
 func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 	cluster, err := op(carina.ClusterName)
+	if err != nil {
+		return err
+	}
 
 	if carina.Wait {
+		var status string
+
+		status = cluster.Status
+
 		time.Sleep(startupFudgeFactor)
 		// Transitions past point of "new" or "building" are assumed to be states we
 		// can stop on.
-		for cluster.Status == StatusNew || cluster.Status == StatusBuilding || cluster.Status == StatusRebuildingSwarm {
+		for status == StatusNew || status == StatusBuilding || status == StatusRebuildingSwarm {
 			time.Sleep(waitBetween)
 			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
-			if err != nil {
-				break
+			if err != nil || cluster == nil {
+				// Assume we should reauth
+				carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+				if err != nil {
+					break
+				}
+				continue
 			}
+			status = cluster.Status
 		}
 	}
 
@@ -556,7 +569,8 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 			Nodes:       nodes,
 			AutoScale:   carina.AutoScale,
 		}
-		return carina.ClusterClient.Create(c)
+		cluster, err := carina.ClusterClient.Create(c)
+		return cluster, err
 	})
 }
 
