@@ -365,7 +365,7 @@ func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
 	return nil
 }
 
-const httpTimeout = time.Second * 45
+const httpTimeout = time.Second * 15
 
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
@@ -520,19 +520,25 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 	}
 
 	if carina.Wait {
-		var status string
-
-		status = cluster.Status
-
 		time.Sleep(startupFudgeFactor)
+
+		carina.ClusterClient.Client = &http.Client{Timeout: httpTimeout}
+		cluster, err = carina.ClusterClient.Get(carina.ClusterName)
+		if err != nil {
+			return err
+		}
+
+		status := cluster.Status
+
 		// Transitions past point of "new" or "building" are assumed to be states we
 		// can stop on.
 		for status == StatusNew || status == StatusBuilding || status == StatusRebuildingSwarm {
 			time.Sleep(waitBetween)
+			// Assume go has held this connection live long enough
+			carina.ClusterClient.Client = &http.Client{Timeout: httpTimeout}
 			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
 			if err != nil || cluster == nil {
 				// Assume we should reauth
-				carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
 				if err != nil {
 					break
 				}
