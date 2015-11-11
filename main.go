@@ -365,6 +365,8 @@ func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
 	return nil
 }
 
+const httpTimeout = time.Second * 15
+
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 
@@ -384,8 +386,12 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 		}
 	}
 
+	// Short circuit if the cache is not enabled
 	if !carina.CacheEnabled {
 		carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+		if err != nil {
+			carina.ClusterClient.Client.Timeout = httpTimeout
+		}
 		return err
 	}
 
@@ -393,7 +399,7 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 
 	if ok {
 		carina.ClusterClient = &libcarina.ClusterClient{
-			Client:   &http.Client{},
+			Client:   &http.Client{Timeout: httpTimeout},
 			Username: carina.Username,
 			Token:    token,
 			Endpoint: carina.Endpoint,
@@ -509,17 +515,36 @@ const StatusRebuildingSwarm = "rebuilding-swarm"
 // Does an func against a cluster then returns the new cluster representation
 func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 	cluster, err := op(carina.ClusterName)
+	if err != nil {
+		return err
+	}
 
 	if carina.Wait {
 		time.Sleep(startupFudgeFactor)
+
+		carina.ClusterClient.Client = &http.Client{Timeout: httpTimeout}
+		cluster, err = carina.ClusterClient.Get(carina.ClusterName)
+		if err != nil {
+			return err
+		}
+
+		status := cluster.Status
+
 		// Transitions past point of "new" or "building" are assumed to be states we
 		// can stop on.
-		for cluster.Status == StatusNew || cluster.Status == StatusBuilding || cluster.Status == StatusRebuildingSwarm {
+		for status == StatusNew || status == StatusBuilding || status == StatusRebuildingSwarm {
 			time.Sleep(waitBetween)
+			// Assume go has held this connection live long enough
+			carina.ClusterClient.Client = &http.Client{Timeout: httpTimeout}
 			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
-			if err != nil {
-				break
+			if err != nil || cluster == nil {
+				// Assume we should reauth
+				if err != nil {
+					break
+				}
+				continue
 			}
+			status = cluster.Status
 		}
 	}
 
@@ -550,7 +575,8 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 			Nodes:       nodes,
 			AutoScale:   carina.AutoScale,
 		}
-		return carina.ClusterClient.Create(c)
+		cluster, err := carina.ClusterClient.Create(c)
+		return cluster, err
 	})
 }
 
