@@ -365,6 +365,8 @@ func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
 	return nil
 }
 
+const httpTimeout = time.Second * 10
+
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 
@@ -384,8 +386,12 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 		}
 	}
 
+	// Short circuit if the cache is not enabled
 	if !carina.CacheEnabled {
 		carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+		if err != nil {
+			carina.ClusterClient.Client.Timeout = httpTimeout
+		}
 		return err
 	}
 
@@ -393,7 +399,7 @@ func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
 
 	if ok {
 		carina.ClusterClient = &libcarina.ClusterClient{
-			Client:   &http.Client{},
+			Client:   &http.Client{Timeout: httpTimeout},
 			Username: carina.Username,
 			Token:    token,
 			Endpoint: carina.Endpoint,
