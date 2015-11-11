@@ -365,7 +365,7 @@ func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
 	return nil
 }
 
-const httpTimeout = time.Second * 10
+const httpTimeout = time.Second * 45
 
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
