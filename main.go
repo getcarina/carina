@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -154,8 +155,10 @@ func New() *Application {
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a swarm cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
 
-	deleteCommand := cap.NewClusterCommand(ctx, "delete", "Delete a swarm cluster")
+	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a swarm cluster")
 	deleteCommand.Action(deleteCommand.Delete)
+	rmCommand := cap.NewCredentialsCommand(ctx, "rm", "Remove a swarm cluster")
+	rmCommand.Action(rmCommand.Delete)
 
 	return cap
 }
@@ -484,8 +487,38 @@ func (carina *ClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
 }
 
 // Delete a cluster
-func (carina *ClusterCommand) Delete(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApply(carina.ClusterClient.Delete)
+func (carina *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
+	err = carina.clusterApply(carina.ClusterClient.Delete)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Unable to delete cluster, not deleting credentials on disk")
+		return err
+	}
+	p, err := carina.clusterPath()
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to locate carina config path, not deleteing credentials on disk\n")
+		return err
+	}
+
+	p = filepath.Clean(p)
+	if p == "" || p == "." || p == "/" {
+		return errors.New("Path to cluster is empty, the current directory, or a root path, not deleting")
+	}
+
+	_, statErr := os.Stat(p)
+	if os.IsNotExist(statErr) {
+		// Assume credentials were never on disk
+		return nil
+	}
+
+	// If the path exists but not the actual credentials, inform user
+	_, statErr = os.Stat(path.Join(p, "ca.pem"))
+	if os.IsNotExist(statErr) {
+		return errors.New("Path to cluster credentials exists but not the ca.pem, not deleting. Remove by hand.")
+	}
+
+	err = os.RemoveAll(p)
+	return err
 }
 
 // Grow increases the size of the given cluster
@@ -580,6 +613,20 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	})
 }
 
+func (carina *CredentialsCommand) clusterPath() (p string, err error) {
+	if carina.Path == "" {
+		var baseDir string
+		baseDir, err = CarinaCredentialsBaseDir()
+		if err != nil {
+			return "", err
+		}
+		carina.Path = path.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
+	}
+
+	p = path.Clean(carina.Path)
+	return p, err
+}
+
 const clusterDirName = "clusters"
 
 // Download credentials for a cluster
@@ -589,16 +636,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	if carina.Path == "" {
-		var baseDir string
-		baseDir, err = CarinaCredentialsBaseDir()
-		if err != nil {
-			return err
-		}
-		carina.Path = path.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
-	}
-
-	p := path.Clean(carina.Path)
+	p, err := carina.clusterPath()
 
 	if p != "." {
 		err = os.MkdirAll(p, 0777)
