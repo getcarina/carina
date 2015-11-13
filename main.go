@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -499,9 +500,9 @@ func (carina *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
 		return err
 	}
 
-	// TODO: Any other failsafes we should check here?
-	if p == "" || p == "/" {
-		return errors.New("Path to cluster is empty or a root path, not deleting")
+	p = filepath.Clean(p)
+	if p == "" || p == "." || p == "/" {
+		return errors.New("Path to cluster is empty, the current directory, or a root path, not deleting")
 	}
 
 	_, statErr := os.Stat(p)
