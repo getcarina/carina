@@ -504,7 +504,17 @@ func (carina *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
 		return errors.New("Path to cluster is empty or a root path, not deleting")
 	}
 
-	// TODO: Check that the path exists along with the docker.env
+	_, statErr := os.Stat(p)
+	if os.IsNotExist(statErr) {
+		// Assume credentials were never on disk
+		return nil
+	}
+
+	// If the path exists but not the actual credentials, inform user
+	_, statErr = os.Stat(path.Join(p, "ca.pem"))
+	if os.IsNotExist(statErr) {
+		return errors.New("Path to cluster credentials exists but not the ca.pem, not deleting. Remove by hand.")
+	}
 
 	err = os.RemoveAll(p)
 	return err
