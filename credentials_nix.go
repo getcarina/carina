@@ -35,6 +35,9 @@ func userHomeDir() (string, error) {
 
 // CarinaCredentialsBaseDir get the current base directory for carina credentials
 func CarinaCredentialsBaseDir() (string, error) {
+	if os.Getenv(CarinaHomeDirEnvVar) != "" {
+		return os.Getenv(CarinaHomeDirEnvVar), nil
+	}
 	if os.Getenv(CredentialsBaseDirEnvVar) != "" {
 		return os.Getenv(CredentialsBaseDirEnvVar), nil
 	}

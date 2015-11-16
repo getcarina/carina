@@ -595,6 +595,9 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 // CredentialsBaseDirEnvVar environment variable name for where credentials are downloaded to by default
 const CredentialsBaseDirEnvVar = "CARINA_CREDENTIALS_DIR"
 
+// CarinaHomeDirEnvVar is the environment variable name for carina data, config, etc.
+const CarinaHomeDirEnvVar = "CARINA_HOME"
+
 // Create a cluster
 func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	return carina.clusterApplyWait(func(clusterName string) (*libcarina.Cluster, error) {
