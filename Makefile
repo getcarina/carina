@@ -13,7 +13,7 @@ GOBUILD = $(GOCMD) build -a -tags netgo -ldflags '$(LDFLAGS)'
 
 GOFILES = main.go version/*.go
 
-BINDIR = bin
+BINDIR = bin/carina/$(VERSION)
 
 default: carina
 
