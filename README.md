@@ -10,19 +10,28 @@ Command line client for [Carina by Rackspace](https://getcarina.com), a containe
 
 ## Installation
 
-There are downloads of the built binaries over in [releases](https://github.com/getcarina/carina/releases).
-
-After downloading the version for your system, you'll probably need to rename it,
-set it as executable, and put it on a `PATH` you have:
 
 ### OS X
 
+If you're using `brew`:
+
 ```bash
-$ mv carina-darwin-amd64 ~/bin/carina
+$ brew install carina
+```
+
+Otherwise you can grab a download from the links in [releases](https://github.com/getcarina/carina/releases), move it to somewhere on your `$PATH`, and make it executable.
+
+```bash
+$ mv carina ~/bin/carina
 $ chmod u+x ~/bin/carina
 ```
 
 ### Linux
+
+There are links to built binaries over in [releases](https://github.com/getcarina/carina/releases).
+
+After downloading the version for your system, you'll probably need to rename it,
+set it as executable, and put it on a `PATH` you have:
 
 ```bash
 $ mv carina-linux-amd64 ~/bin/carina
@@ -30,6 +39,8 @@ $ chmod u+x ~/bin/carina
 ```
 
 ### Windows
+
+There are links to built binaries over in [releases](https://github.com/getcarina/carina/releases). It runs as a console client, so open up your favorite PowerShell or cmd.exe and run `carina`:
 
 ```
 > carina.exe
@@ -145,7 +156,7 @@ The release script relies on [github-release](https://github.com/aktau/github-re
 Make sure you're on `master` then run `release.sh` with the next tag and release name.
 
 ```bash
-./release.sh 0.2.0 "Acute Aquarius"
+./release.sh v0.2.0 "Acute Aquarius"
 ```
 
 How do you pick the release name?
