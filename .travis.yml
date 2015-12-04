@@ -1,12 +1,23 @@
 language: go
-
 go:
-  - 1.5
-
+- 1.5
 install:
-  - go get ./...
-
+- go get ./...
 script:
-  - make cross-build
-  - make carina
-  - make test
+- make carina
+- make test
+- make cross-build
+before_deploy:
+  - cd bin
+deploy:
+  matrix:
+  - provider: cloudfiles
+    username: getcarina-drgsites
+    api-key:
+      secure: zSDRiiCvSAAqjRU9/rXmQdBTQkjsBd4jg0gIChlbPdY+xep7/ijnUoXH48H7Jbzq45kB/agupNrvkk1YQJabReh8l87TUYDie+FaHjFhmtg3GPSpHFJZdiOEilUhY/juBUZ8Gu23K/8yaG8ri7feAFsgDF+RaG0ZikOaSqYCPyqoUYdJDnHDQt2TbxwIs2eL6X0iqlO2B1sGbpP2oH9NS1qV8qDa3lhovsHMZAa8PQMdSAcxUZt1HwvUuvvtGrxP5KY/SK0dqOWC9g8Tvj5VGQGWNJuaSH/yKQrplj0SQmPehfaZv2P5lqQsXtaNTBhpLfbwXdc4Bc1p9OBODyevrKeVNrY+Dh/fQwP43DGJlcm6xGwpRbxwCmAiQK3Yohm8huBFuozN3CZGmjQ3+h4GQCsRLXknhrcm83vtz4QzsyeqlgRZKjCOrRKPlXttvajGEGS6qBqlgK/galyIJ6T2HG4iaIUYHY139v1vkV4h1+4qfJrFAe/ON4zAKIEH382vPQ231C2QKrxHo1Rl4uC4+zddISYh9Ga1JwXYOrHs7RJaby2jnWMJzYz/s57t00KZn7h73qpkENRpRwdp0zx0VsuyuqeVgTV8dS2vpNDr+ldTHQzsT+cs1tXUkCllTtrgiVDKS6qskP5phFDXL4IkwKWKYbneAygO48SGCGbrOVk=
+    region: IAD
+    container: carina-downloads
+    skip_cleanup: true
+    on:
+      repo: getcarina/carina
+      tags: true

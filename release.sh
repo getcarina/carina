@@ -92,11 +92,10 @@ function main {
     --name "$NAME" \
     --description "$DESCRIPTION"
 
-  # Build with the tag now for actual binary shipping
   git fetch --tags release
-  make build-tagged-for-release TAG=$TAG
+  # make build-tagged-for-release TAG=$TAG
 
-  push_binaries
+  # push_binaries
 }
 
 function push_binaries {

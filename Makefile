@@ -13,6 +13,8 @@ GOBUILD = $(GOCMD) build -a -tags netgo -ldflags '$(LDFLAGS)'
 
 GOFILES = main.go version/*.go
 
+BINDIR = bin/carina/$(VERSION)
+
 default: carina
 
 get-deps:
@@ -35,15 +37,13 @@ carina: get-deps $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
 linux: $(GOFILES)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o bin/carina-linux-amd64 .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINDIR)/Linux/x86_64/carina .
 
 darwin: $(GOFILES)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) -o bin/carina-darwin-amd64 .
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) -o $(BINDIR)/Darwin/x86_64/carina .
 
 windows: $(GOFILES)
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o bin/carina.exe .
-
-
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o $(BINDIR)/Windows/x86_64/carina.exe .
 
 ############################ RELEASE TARGETS ############################
 
