@@ -10,7 +10,6 @@ script:
 before_deploy:
   - cd bin
 deploy:
-  matrix:
   - provider: cloudfiles
     username: getcarina-drgsites
     api-key:
