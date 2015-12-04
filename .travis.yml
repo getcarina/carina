@@ -7,6 +7,17 @@ install:
   - go get ./...
 
 script:
-  - make cross-build
   - make carina
   - make test
+  - make cross-build
+
+deploy:
+  - provider: cloudfiles
+    username: getcarina-drgsites
+    api_key: test
+    region: IAD
+    container: carina-downloads
+    skip_cleanup: true
+    on:
+      repo: getcarina/dvm
+      tags: true
