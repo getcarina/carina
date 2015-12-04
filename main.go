@@ -127,7 +127,7 @@ func New() *Application {
 	createCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&createCommand.AutoScale)
 	createCommand.Action(createCommand.Create)
 
-	getCommand := cap.NewClusterCommand(ctx, "get", "Get information about a swarm cluster")
+	getCommand := cap.NewWaitClusterCommand(ctx, "get", "Get information about a swarm cluster")
 	getCommand.Action(getCommand.Get)
 
 	listCommand := cap.NewCommand(ctx, "list", "List swarm clusters")
@@ -482,8 +482,8 @@ func (carina *ClusterCommand) clusterApply(op clusterOp) (err error) {
 }
 
 // Get an individual cluster
-func (carina *ClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApply(carina.ClusterClient.Get)
+func (carina *WaitClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
+	return carina.clusterApplyWait(carina.ClusterClient.Get)
 }
 
 // Delete a cluster
