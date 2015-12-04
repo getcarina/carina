@@ -130,11 +130,14 @@ func New() *Application {
 	getCommand := cap.NewWaitClusterCommand(ctx, "get", "Get information about a swarm cluster")
 	getCommand.Action(getCommand.Get)
 
-	listCommand := cap.NewCommand(ctx, "list", "List swarm clusters")
-	listCommand.Action(listCommand.List)
+	inspectCommand := cap.NewWaitClusterCommand(ctx, "inspect", "Get information about a swarm cluster")
+	inspectCommand.Action(inspectCommand.Get).Hidden()
 
 	lsCommand := cap.NewCommand(ctx, "ls", "List swarm clusters")
-	lsCommand.Action(lsCommand.List).Hidden()
+	lsCommand.Action(lsCommand.List)
+
+	listCommand := cap.NewCommand(ctx, "list", "List swarm clusters")
+	listCommand.Action(listCommand.List).Hidden()
 
 	growCommand := new(GrowCommand)
 	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of nodes")
@@ -149,16 +152,17 @@ func New() *Application {
 	credsCommand.Action(credsCommand.Download).Hidden()
 
 	envCommand := cap.NewEnvCommand(ctx, "env", "show source command for setting credential environment."+
-		" Use with: eval `carina env <cluster-name>`")
+		" Use with: eval \"$( carina env <cluster-name> )\"")
 	envCommand.Action(envCommand.Show)
 
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a swarm cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
 
-	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a swarm cluster")
-	deleteCommand.Action(deleteCommand.Delete)
 	rmCommand := cap.NewCredentialsCommand(ctx, "rm", "Remove a swarm cluster")
 	rmCommand.Action(rmCommand.Delete)
+
+	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a swarm cluster")
+	deleteCommand.Action(deleteCommand.Delete).Hidden()
 
 	return cap
 }
