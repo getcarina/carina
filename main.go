@@ -141,7 +141,7 @@ func New() *Application {
 
 	growCommand := new(GrowCommand)
 	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of nodes")
-	growCommand.Flag("nodes", "number of nodes to increase the cluster by").Required().IntVar(&growCommand.Nodes)
+	growCommand.Flag("by", "number of nodes to increase the cluster by").Required().IntVar(&growCommand.Nodes)
 	growCommand.Action(growCommand.Grow)
 
 	credentialsCommand := cap.NewCredentialsCommand(ctx, "credentials", "download credentials")
