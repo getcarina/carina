@@ -11,7 +11,7 @@ import (
 )
 
 func credentialsNextStepsString(clusterName string) string {
-	return fmt.Sprintf("To see how to connect to your cluster, run: carina env %s --shell cmd|powershell|bash\n", clusterName)
+	return fmt.Sprintf("# To see how to connect to your cluster, run: carina env %s --shell cmd|powershell|bash\n", clusterName)
 }
 
 func getCredentialFilePath(basepath string, shell string) string {

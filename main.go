@@ -660,10 +660,10 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 	}
 
 	if !carina.Silent {
-		fmt.Println("")
-		fmt.Printf("Credentials written to \"%s\"\n", p)
+		fmt.Println("#")
+		fmt.Printf("# Credentials written to \"%s\"\n", p)
 		fmt.Print(credentialsNextStepsString(carina.ClusterName))
-		fmt.Println("")
+		fmt.Println("#")
 	}
 
 	err = carina.TabWriter.Flush()
