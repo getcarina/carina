@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
-	"path"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -22,7 +22,7 @@ func defaultCacheFilename() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return path.Join(bd, "cache.json"), nil
+	return filepath.Join(bd, "cache.json"), nil
 }
 
 // Read the on disk cache

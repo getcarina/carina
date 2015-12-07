@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -52,7 +51,14 @@ type ClusterCommand struct {
 // CredentialsCommand keeps context about the download command
 type CredentialsCommand struct {
 	*ClusterCommand
-	Path string
+	Path   string
+	Silent bool
+}
+
+// ShellCommand keeps context about the currently executing shell
+type ShellCommand struct {
+	*CredentialsCommand
+	Shell string
 }
 
 // WaitClusterCommand is simply a ClusterCommand that waits for cluster creation
@@ -151,8 +157,7 @@ func New() *Application {
 	credsCommand := cap.NewCredentialsCommand(ctx, "creds", "download credentials")
 	credsCommand.Action(credsCommand.Download).Hidden()
 
-	envCommand := cap.NewEnvCommand(ctx, "env", "show source command for setting credential environment."+
-		" Use with: eval \"$( carina env <cluster-name> )\"")
+	envCommand := cap.NewEnvCommand(ctx, "env", "show source command for setting credential environment")
 	envCommand.Action(envCommand.Show)
 
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a swarm cluster")
@@ -219,19 +224,15 @@ func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *
 	credentialsCommand := new(CredentialsCommand)
 	credentialsCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
 	credentialsCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
+	credentialsCommand.Flag("silent", "Do not print to stdout").Hidden().BoolVar(&credentialsCommand.Silent)
 	return credentialsCommand
 }
 
 // NewEnvCommand initializes a `carina env` command
-func (app *Application) NewEnvCommand(ctx *Context, name, help string) *CredentialsCommand {
-	envCommand := new(CredentialsCommand)
-	envCommand.ClusterCommand = new(ClusterCommand)
-	envCommand.Command = new(Command)
-	envCommand.Context = ctx
-	envCommand.CmdClause = app.Command(name, help)
-
-	envCommand.Arg("cluster-name", "name of the cluster").Required().StringVar(&envCommand.ClusterName)
-	envCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&envCommand.Path)
+func (app *Application) NewEnvCommand(ctx *Context, name, help string) *ShellCommand {
+	envCommand := new(ShellCommand)
+	envCommand.CredentialsCommand = app.NewCredentialsCommand(ctx, name, help)
+	envCommand.Flag("shell", "Force environment to be configured for specified shell").StringVar(&envCommand.Shell)
 	return envCommand
 }
 
@@ -516,7 +517,7 @@ func (carina *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
 	}
 
 	// If the path exists but not the actual credentials, inform user
-	_, statErr = os.Stat(path.Join(p, "ca.pem"))
+	_, statErr = os.Stat(filepath.Join(p, "ca.pem"))
 	if os.IsNotExist(statErr) {
 		return errors.New("Path to cluster credentials exists but not the ca.pem, not deleting. Remove by hand.")
 	}
@@ -627,10 +628,10 @@ func (carina *CredentialsCommand) clusterPath() (p string, err error) {
 		if err != nil {
 			return "", err
 		}
-		carina.Path = path.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
+		carina.Path = filepath.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
 	}
 
-	p = path.Clean(carina.Path)
+	p = filepath.Clean(carina.Path)
 	return p, err
 }
 
@@ -658,7 +659,12 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	fmt.Fprintln(os.Stdout, sourceHelpString(p, carina.ClusterName))
+	if !carina.Silent {
+		fmt.Println("#")
+		fmt.Printf("# Credentials written to \"%s\"\n", p)
+		fmt.Print(credentialsNextStepsString(carina.ClusterName))
+		fmt.Println("#")
+	}
 
 	err = carina.TabWriter.Flush()
 	return err
@@ -667,7 +673,7 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth string) (err error) {
 	// TODO: Prompt when file already exists?
 	for fname, b := range creds.Files {
-		p := path.Join(pth, fname)
+		p := filepath.Join(pth, fname)
 		err = ioutil.WriteFile(p, b, 0600)
 		if err != nil {
 			return err
@@ -678,16 +684,16 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 }
 
 // Show echos the source command, for eval `carina env <name>`
-func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) error {
+func (carina *ShellCommand) Show(pc *kingpin.ParseContext) error {
 	if carina.Path == "" {
 		baseDir, err := CarinaCredentialsBaseDir()
 		if err != nil {
 			return err
 		}
-		carina.Path = path.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
+		carina.Path = filepath.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
 	}
 
-	envPath := path.Join(carina.Path, "docker.env")
+	envPath := getCredentialFilePath(carina.Path, carina.Shell)
 	_, err := os.Stat(envPath)
 	if os.IsNotExist(err) {
 		// Show is a NoAuth command, so we'll auth first for a download
@@ -695,9 +701,14 @@ func (carina *CredentialsCommand) Show(pc *kingpin.ParseContext) error {
 		if err != nil {
 			return err
 		}
-		return carina.Download(pc)
+		carina.Silent = true // hack to force `carina credentials` to be quiet when called from `carina env`
+		err = carina.Download(pc)
+		if err != nil {
+			return err
+		}
 	}
-	fmt.Fprintf(os.Stdout, "source '%v'\n", envPath)
+
+	fmt.Fprintln(os.Stdout, sourceHelpString(envPath, carina.ClusterName, carina.Shell))
 
 	err = carina.TabWriter.Flush()
 	return err
