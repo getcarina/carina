@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path"
+	"path/filepath"
 )
 
-func sourceHelpString(basepath string, name string) string {
-	s := "#\n"
-	s += fmt.Sprintf("# Credentials written to \"%s\"\n", basepath)
-	s += "#\n"
-	s += fmt.Sprintf("eval `carina env %v`\n", name)
-	s += fmt.Sprintf("# Run the command above to get your Docker environment variables set\n")
+func getCredentialFilePath(basepath string, shell string) string {
+	return filepath.Join(basepath, "docker.env")
+}
+
+func sourceHelpString(credentialFile string, clusterName string, shell string) string {
+	s := fmt.Sprintf("source %s\n", credentialFile)
+	s += fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
+	s += fmt.Sprintf("# eval $(carina env %s)", clusterName)
 	return s
 }
 
@@ -44,12 +46,12 @@ func CarinaCredentialsBaseDir() (string, error) {
 
 	// Support XDG
 	if os.Getenv(xdgDataHomeEnvVar) != "" {
-		return path.Join(os.Getenv(xdgDataHomeEnvVar), defaultNonDotDir), nil
+		return filepath.Join(os.Getenv(xdgDataHomeEnvVar), defaultNonDotDir), nil
 	}
 
 	homeDir, err := userHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return path.Join(homeDir, defaultDotDir), nil
+	return filepath.Join(homeDir, defaultDotDir), nil
 }

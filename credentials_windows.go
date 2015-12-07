@@ -6,21 +6,43 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 )
 
-func sourceHelpString(basepath string, name string) string {
-	s := "#\n"
-	s += fmt.Sprintf("# Credentials written to %s/\n", basepath)
-	s += "#\n"
-	s += fmt.Sprintf("\"%v\"\n", path.Join(basepath, "docker.cmd"))
-	s += fmt.Sprintf("# Run the command above to set your docker environment")
-	return s
+func getCredentialFilePath(basepath string, shell string) string {
+	switch shell {
+	case "powershell":
+		return filepath.Join(basepath, "docker.ps1")
+	case "cmd":
+		return filepath.Join(basepath, "docker.cmd")
+	default:
+		return filepath.Join(basepath, "docker.env")
+	}
+}
+
+func sourceHelpString(credentialFile string, clusterName string, shell string) string {
+	switch shell {
+	case "powershell":
+		s := fmt.Sprintf(". %s\n", credentialFile)
+		s += fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
+		s += fmt.Sprintf("# carina env %s --shell powershell | iex", clusterName) // PowerShell bombs if you have an empty line, leaving out
+		return s
+	case "cmd":
+		s := fmt.Sprintf("CALL %s\n", credentialFile)
+		s += fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
+		s += fmt.Sprint("# copy and paste the above command into your command prompt\n")
+		return s
+	default:
+		s := fmt.Sprintf("source %s\n", credentialFile)
+		s += fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
+		s += fmt.Sprintf("# eval $(carina env %s)\n", clusterName)
+		return s
+	}
 }
 
 func userHomeDir() (string, error) {
 	if os.Getenv("HOMEDRIVE") != "" && os.Getenv("HOMEPATH") != "" {
-		return path.Join(os.Getenv("HOMEDRIVE"), os.Getenv("HOMEPATH")), nil
+		return filepath.Join(os.Getenv("HOMEDRIVE"), os.Getenv("HOMEPATH")), nil
 	}
 	if os.Getenv("HOME") != "" {
 		return os.Getenv("HOME"), nil
@@ -42,5 +64,5 @@ func CarinaCredentialsBaseDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return path.Join(homeDir, "carina"), nil
+	return filepath.Join(homeDir, "carina"), nil
 }
