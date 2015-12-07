@@ -41,9 +41,8 @@ func sourceHelpString(credentialFile string, clusterName string, shell string) s
 		s += fmt.Sprintf("# carina env %s --shell powershell | iex", clusterName) // PowerShell bombs if you have an empty line, leaving out
 		return s
 	case "cmd":
-		s := fmt.Sprintf("CALL %s\n", credentialFile)
-		s += fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
-		s += fmt.Sprint("# copy and paste the above command into your command prompt\n")
+		s := fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
+		s += fmt.Sprintf("CALL %s\n", credentialFile)
 		return s
 	default: // Windows Bash
 		s := fmt.Sprintf("source %s\n", forceUnixPath(credentialFile))
