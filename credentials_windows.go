@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func credentialsNextStepsString(clusterName string) string {
@@ -19,9 +20,17 @@ func getCredentialFilePath(basepath string, shell string) string {
 		return filepath.Join(basepath, "docker.ps1")
 	case "cmd":
 		return filepath.Join(basepath, "docker.cmd")
-	default:
+	default: // Windows Bash
 		return filepath.Join(basepath, "docker.env")
 	}
+}
+
+func forceUnixPath(winPath string) string {
+	// Convert C:/ --> /C/
+	unixPath := "/" + strings.Replace(winPath, ":\\", "/", 1)
+	// Replace path seperators
+	unixPath = strings.Replace(unixPath, "\\", "/", -1)
+	return unixPath
 }
 
 func sourceHelpString(credentialFile string, clusterName string, shell string) string {
@@ -36,8 +45,8 @@ func sourceHelpString(credentialFile string, clusterName string, shell string) s
 		s += fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
 		s += fmt.Sprint("# copy and paste the above command into your command prompt\n")
 		return s
-	default:
-		s := fmt.Sprintf("source %s\n", credentialFile)
+	default: // Windows Bash
+		s := fmt.Sprintf("source %s\n", forceUnixPath(credentialFile))
 		s += fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
 		s += fmt.Sprintf("# eval $(carina env %s)\n", clusterName)
 		return s

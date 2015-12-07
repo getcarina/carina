@@ -51,7 +51,8 @@ type ClusterCommand struct {
 // CredentialsCommand keeps context about the download command
 type CredentialsCommand struct {
 	*ClusterCommand
-	Path string
+	Path   string
+	Silent bool
 }
 
 // ShellCommand keeps context about the currently executing shell
@@ -223,6 +224,7 @@ func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *
 	credentialsCommand := new(CredentialsCommand)
 	credentialsCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
 	credentialsCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
+	credentialsCommand.Flag("silent", "Do not print to stdout").Hidden().BoolVar(&credentialsCommand.Silent)
 	return credentialsCommand
 }
 
@@ -657,9 +659,12 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	fmt.Println("")
-	fmt.Printf("Credentials written to \"%s\"\n", p)
-	fmt.Println(credentialsNextStepsString(carina.ClusterName))
+	if !carina.Silent {
+		fmt.Println("")
+		fmt.Printf("Credentials written to \"%s\"\n", p)
+		fmt.Print(credentialsNextStepsString(carina.ClusterName))
+		fmt.Println("")
+	}
 
 	err = carina.TabWriter.Flush()
 	return err
@@ -696,7 +701,11 @@ func (carina *ShellCommand) Show(pc *kingpin.ParseContext) error {
 		if err != nil {
 			return err
 		}
-		return carina.Download(pc)
+		carina.Silent = true // hack to force `carina credentials` to be quiet when called from `carina env`
+		err = carina.Download(pc)
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Fprintln(os.Stdout, sourceHelpString(envPath, carina.ClusterName, carina.Shell))
