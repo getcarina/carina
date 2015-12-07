@@ -657,11 +657,10 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		return err
 	}
 
-	fmt.Println("#")
-	fmt.Printf("# Credentials written to \"%s\"\n", p)
-	fmt.Println("#")
-	envPath := getCredentialFilePath(carina.Path)
-	fmt.Println(sourceHelpString(envPath, carina.ClusterName))
+	fmt.Println("")
+	fmt.Printf("Credentials written to \"%s\"\n", p)
+	fmt.Printf("To see how to connect to your cluster, run: carina env %s\n", carina.ClusterName)
+	fmt.Println("")
 
 	err = carina.TabWriter.Flush()
 	return err
