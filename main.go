@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -706,6 +708,68 @@ func (carina *ShellCommand) Show(pc *kingpin.ParseContext) error {
 		if err != nil {
 			return err
 		}
+	} else { // verify credentials
+		ca, err := ioutil.ReadFile(filepath.Join(carina.Path, "ca.pem"))
+		if err != nil {
+			return err
+		}
+		caKey, err := ioutil.ReadFile(filepath.Join(carina.Path, "ca-key.pem"))
+		if err != nil {
+			return err
+		}
+		dockerEnv, err := ioutil.ReadFile(filepath.Join(carina.Path, "docker.env"))
+		if err != nil {
+			return err
+		}
+		cert, err := ioutil.ReadFile(filepath.Join(carina.Path, "cert.pem"))
+		if err != nil {
+			return err
+		}
+		key, err := ioutil.ReadFile(filepath.Join(carina.Path, "key.pem"))
+		if err != nil {
+			return err
+		}
+
+		creds := libcarina.Credentials{
+			CA:        ca,
+			CAKey:     caKey,
+			DockerEnv: dockerEnv,
+			Cert:      cert,
+			Key:       key,
+		}
+
+		tlsConfig, err := creds.GetTLSConfig()
+		if err != nil {
+			return err
+		}
+
+		sourceLines := strings.Split(string(creds.DockerEnv), "\n")
+		for _, line := range sourceLines {
+			if strings.Index(line, "export ") == 0 {
+				varDecl := strings.TrimRight(line[7:], "\n")
+				eqLocation := strings.Index(varDecl, "=")
+
+				varName := varDecl[:eqLocation]
+				varValue := varDecl[eqLocation+1:]
+
+				switch varName {
+				case "DOCKER_HOST":
+					creds.DockerHost = varValue
+				}
+
+			}
+		}
+
+		u, err := url.Parse(creds.DockerHost)
+		if err != nil {
+			return err
+		}
+
+		conn, err := tls.Dial("tcp", u.Host, tlsConfig)
+		if err != nil {
+			return err
+		}
+		conn.Close()
 	}
 
 	fmt.Fprintln(os.Stdout, sourceHelpString(envPath, carina.ClusterName, carina.Shell))
