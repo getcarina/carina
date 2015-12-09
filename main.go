@@ -101,6 +101,17 @@ func New() *Application {
 	app := kingpin.New("carina", "command line interface to launch and work with Docker Swarm clusters")
 	app.Version(VersionString())
 
+	baseDir, err := CarinaCredentialsBaseDir()
+	if err != nil {
+		panic(err)
+	}
+	envHelp := fmt.Sprintf(`Environment Variables:
+  CARINA_HOME
+    directory that stores your cluster tokens and credentials
+    current setting: %s
+`, baseDir)
+	app.UsageTemplate(kingpin.DefaultUsageTemplate + envHelp)
+
 	cap := new(Application)
 	ctx := new(Context)
 
