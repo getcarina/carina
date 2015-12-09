@@ -481,6 +481,7 @@ func (carina *ClusterCommand) clusterApply(op clusterOp) (err error) {
 		return err
 	}
 
+	writeClusterHeader(carina.TabWriter)
 	err = writeCluster(carina.TabWriter, cluster)
 	if err != nil {
 		return err
@@ -592,6 +593,7 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
 		return err
 	}
 
+	writeClusterHeader(carina.TabWriter)
 	err = writeCluster(carina.TabWriter, cluster)
 	if err != nil {
 		return err
