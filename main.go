@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -683,6 +685,71 @@ func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth str
 	return nil
 }
 
+func verifyCredentials(path string) error {
+	ca, err := ioutil.ReadFile(filepath.Join(path, "ca.pem"))
+	if err != nil {
+		return err
+	}
+	caKey, err := ioutil.ReadFile(filepath.Join(path, "ca-key.pem"))
+	if err != nil {
+		return err
+	}
+	dockerEnv, err := ioutil.ReadFile(filepath.Join(path, "docker.env"))
+	if err != nil {
+		return err
+	}
+	cert, err := ioutil.ReadFile(filepath.Join(path, "cert.pem"))
+	if err != nil {
+		return err
+	}
+	key, err := ioutil.ReadFile(filepath.Join(path, "key.pem"))
+	if err != nil {
+		return err
+	}
+
+	creds := libcarina.Credentials{
+		CA:        ca,
+		CAKey:     caKey,
+		DockerEnv: dockerEnv,
+		Cert:      cert,
+		Key:       key,
+	}
+
+	tlsConfig, err := creds.GetTLSConfig()
+	if err != nil {
+		return err
+	}
+
+	sourceLines := strings.Split(string(creds.DockerEnv), "\n")
+	for _, line := range sourceLines {
+		if strings.Index(line, "export ") == 0 {
+			varDecl := strings.TrimRight(line[7:], "\n")
+			eqLocation := strings.Index(varDecl, "=")
+
+			varName := varDecl[:eqLocation]
+			varValue := varDecl[eqLocation+1:]
+
+			switch varName {
+			case "DOCKER_HOST":
+				creds.DockerHost = varValue
+			}
+
+		}
+	}
+
+	u, err := url.Parse(creds.DockerHost)
+	if err != nil {
+		return err
+	}
+
+	conn, err := tls.Dial("tcp", u.Host, tlsConfig)
+	if err != nil {
+		return err
+	}
+	conn.Close()
+	return nil
+}
+
 // Show echos the source command, for eval `carina env <name>`
 func (carina *ShellCommand) Show(pc *kingpin.ParseContext) error {
 	if carina.Path == "" {
@@ -695,7 +762,9 @@ func (carina *ShellCommand) Show(pc *kingpin.ParseContext) error {
 
 	envPath := getCredentialFilePath(carina.Path, carina.Shell)
 	_, err := os.Stat(envPath)
-	if os.IsNotExist(err) {
+
+	// Either the credentials aren't there or they're wrong
+	if os.IsNotExist(err) || verifyCredentials(carina.Path) != nil {
 		// Show is a NoAuth command, so we'll auth first for a download
 		err := carina.Auth(pc)
 		if err != nil {
