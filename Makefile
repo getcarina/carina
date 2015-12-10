@@ -32,6 +32,7 @@ gocarina: $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o ${GOPATH}/bin/carina .
 
 cross-build: get-deps carina linux darwin windows
+	cp -R $(BINDIR) bin/carina/latest
 
 carina: get-deps $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
