@@ -11,9 +11,9 @@
     <Exec Command="choco push carina.$(NuGetVersion).nupkg --api-key %25BAMBOO_CHOCOLATEY_PASSWORD%25" />
   </Target>
 
-  <Target Name="Package">
+  <Target Name="Package" DependsOnTargets="RetrieveLatestVersion">
     <PropertyGroup>
-      <Url>https://github.com/getcarina/carina/releases/download/$(Version)/carina.exe</Url>
+      <Url>https://download.getcarina.com/carina/$(Version)/Windows/x86_64/carina.exe</Url>
     </PropertyGroup>
     <Exec Command="@powershell -NoProfile -ExecutionPolicy unrestricted -Command &quot;$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest '$(Url)' -OutFile carina.exe&quot;" />
     <Exec Command="choco pack carina.nuspec --Version $(NuGetVersion)"/>
