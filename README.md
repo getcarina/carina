@@ -34,10 +34,10 @@ $ chmod u+x ~/bin/carina
 There are links to built binaries over in [releases](https://github.com/getcarina/carina/releases). For a quick install, open up Powershell and run:
 
 ```
-> iex (wget https://download.getcarina.com/carina/latest/Windows/x86_64/carina)
+> wget https://download.getcarina.com/carina/latest/Windows/x86_64/carina.exe -OutFile carina.exe
 ```
 
-You'll want to move carina to somewhere on your `%PATH%`.
+You'll want to move `carina.exe` to somewhere on your `%PATH%`.
 
 ## Getting started
 
