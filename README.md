@@ -11,7 +11,7 @@ Command line client for [Carina by Rackspace](https://getcarina.com), a containe
 ## Installation
 
 
-### OS X
+### OS X with homebrew
 
 If you're using `brew`:
 
@@ -19,32 +19,25 @@ If you're using `brew`:
 $ brew install carina
 ```
 
-Otherwise you can grab a download from the links in [releases](https://github.com/getcarina/carina/releases), move it to somewhere on your `$PATH`, and make it executable.
+### Linux and OS X (non-homebrew)
+
+Download a copy of `carina` straight from latest or via the links in [releases](https://github.com/getcarina/carina/releases), move it somewhere on your `$PATH`, and make it executable:
 
 ```bash
+$ curl -L https://download.getcarina.com/carina/latest/$(uname -s)/$(uname -m)/carina -o carina
 $ mv carina ~/bin/carina
-$ chmod u+x ~/bin/carina
-```
-
-### Linux
-
-There are links to built binaries over in [releases](https://github.com/getcarina/carina/releases).
-
-After downloading the version for your system, you'll probably need to rename it,
-set it as executable, and put it on a `PATH` you have:
-
-```bash
-$ mv carina-linux-amd64 ~/bin/carina
 $ chmod u+x ~/bin/carina
 ```
 
 ### Windows
 
-There are links to built binaries over in [releases](https://github.com/getcarina/carina/releases). It runs as a console client, so open up your favorite PowerShell or cmd.exe and run `carina`:
+There are links to built binaries over in [releases](https://github.com/getcarina/carina/releases). For a quick install, open up Powershell and run:
 
 ```
-> carina.exe
+> iex (wget https://download.getcarina.com/carina/latest/Windows/x86_64/carina)
 ```
+
+You'll want to move carina to somewhere on your `%PATH%`.
 
 ## Getting started
 
