@@ -21,7 +21,7 @@ $ brew install carina
 
 ### Linux and OS X (non-homebrew)
 
-Download a copy of `carina` straight from latest or via the links in [releases](https://github.com/getcarina/carina/releases), move it somewhere on your `$PATH`, and make it executable:
+Downloads for the latest release of `carina` are available in [releases](https://github.com/getcarina/carina/releases/latest) for 64-bit Linux and OS X. You can `curl` the binary, move it somewhere on your `$PATH`, and make it executable:
 
 ```bash
 $ curl -L https://download.getcarina.com/carina/latest/$(uname -s)/$(uname -m)/carina -o carina
