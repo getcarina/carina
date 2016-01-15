@@ -20,7 +20,7 @@ If you're using [Homebrew](http://brew.sh/), run the following command:
 $ brew install carina
 ```
 
-#### Linux and OS X (not Homebrew)
+#### Linux and OS X (without Homebrew)
 
 Downloads for the latest release of `carina` are available in [releases](https://github.com/getcarina/carina/releases/latest) for 64-bit Linux and OS X. You can use `curl` to download the binary, move it to a directory on your `$PATH`, and make it executable:
 
@@ -30,12 +30,20 @@ $ mv carina ~/bin/carina
 $ chmod u+x ~/bin/carina
 ```
 
-#### Windows
+#### Windows with Chocolatey
+
+If you are using [Chocolatey](http://chocolatey.org/), run the following command:
+
+```powershell
+> choco install carina
+```
+
+#### Windows (without Chocolatey)
 
 Downloads for the latest release of `carina` are available in [releases](https://github.com/getcarina/carina/releases/latest). For quick installation, open PowerShell and run the following command:
 
-```
-> wget https://download.getcarina.com/carina/latest/Windows/x86_64/carina.exe -OutFile carina.exe
+```powershell
+> wget 'https://download.getcarina.com/carina/latest/Windows/x86_64/carina.exe' -OutFile carina.exe
 ```
 
 Be sure to move `carina.exe` to a directory on your `%PATH%`.
