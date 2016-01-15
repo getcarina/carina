@@ -142,7 +142,7 @@ func New() *Application {
 
 	createCommand := new(CreateCommand)
 	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "Create a swarm cluster")
-	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
+	createCommand.Flag("segments", "number of segments for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
 	createCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&createCommand.AutoScale)
 	createCommand.Action(createCommand.Create)
 
@@ -159,8 +159,8 @@ func New() *Application {
 	listCommand.Action(listCommand.List).Hidden()
 
 	growCommand := new(GrowCommand)
-	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of nodes")
-	growCommand.Flag("by", "number of nodes to increase the cluster by").Required().IntVar(&growCommand.Nodes)
+	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of segments")
+	growCommand.Flag("by", "number of segments to increase the cluster by").Required().IntVar(&growCommand.Nodes)
 	growCommand.Action(growCommand.Grow)
 
 	credentialsCommand := cap.NewCredentialsCommand(ctx, "credentials", "download credentials")
@@ -622,7 +622,7 @@ const CarinaHomeDirEnvVar = "CARINA_HOME"
 func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 	return carina.clusterApplyWait(func(clusterName string) (*libcarina.Cluster, error) {
 		if carina.Nodes < 1 {
-			return nil, errors.New("nodes must be >= 1")
+			return nil, errors.New("segments must be >= 1")
 		}
 		nodes := libcarina.Number(carina.Nodes)
 
@@ -812,7 +812,7 @@ func writeClusterHeader(w *tabwriter.Writer) (err error) {
 	headerFields := []string{
 		"ClusterName",
 		"Flavor",
-		"Nodes",
+		"Segments",
 		"AutoScale",
 		"Status",
 	}
