@@ -177,7 +177,7 @@ func New() *Application {
 
 	autoscaleCommand := new(AutoScaleCommand)
 	autoscaleCommand.ClusterCommand = cap.NewClusterCommand(ctx, "autoscale", "Enable or disable autoscale on a cluster")
-	autoscaleCommand.Flag("autoscale", "whether autoscale is on or off").EnumVar(&autoscaleCommand.AutoScale, AutoScaleOn, AutoScaleOff)
+	autoscaleCommand.Arg("autoscale", "whether autoscale is on or off").EnumVar(&autoscaleCommand.AutoScale, AutoScaleOn, AutoScaleOff)
 	autoscaleCommand.Action(autoscaleCommand.SetAutoScale)
 
 	credentialsCommand := cap.NewCredentialsCommand(ctx, "credentials", "download credentials")
