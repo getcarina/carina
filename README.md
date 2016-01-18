@@ -115,10 +115,10 @@ Commands:
   list
     List swarm clusters
 
-  grow --segments=NODES <cluster-name>
+  grow --segments=SEGMENTS <cluster-name>
     Grow a cluster by the requested number of segments
 
-    --segments=NODES  number of segments to increase the cluster by
+    --segments=SEGMENTS  number of segments to increase the cluster by
 
   credentials [<flags>] <cluster-name>
     download credentials
