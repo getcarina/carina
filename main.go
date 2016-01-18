@@ -89,6 +89,12 @@ type GrowCommand struct {
 	Nodes int
 }
 
+// AutoScaleCommand keeps context about a cluster command
+type AutoScaleCommand struct {
+	*ClusterCommand
+	AutoScale bool
+}
+
 // UserNameEnvKey is the name of the env var accepted for the username
 const UserNameEnvVar = "CARINA_USERNAME"
 
@@ -162,6 +168,11 @@ func New() *Application {
 	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of segments")
 	growCommand.Flag("by", "number of segments to increase the cluster by").Required().IntVar(&growCommand.Nodes)
 	growCommand.Action(growCommand.Grow)
+
+	autoscaleCommand := new(AutoScaleCommand)
+	autoscaleCommand.ClusterCommand = cap.NewClusterCommand(ctx, "autoscale", "Enable or disable autoscale on a cluster")
+	autoscaleCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&autoscaleCommand.AutoScale)
+	autoscaleCommand.Action(autoscaleCommand.SetAutoScale)
 
 	credentialsCommand := cap.NewCredentialsCommand(ctx, "credentials", "download credentials")
 	credentialsCommand.Action(credentialsCommand.Download)
@@ -544,6 +555,13 @@ func (carina *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
 func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
 	return carina.clusterApply(func(clusterName string) (*libcarina.Cluster, error) {
 		return carina.ClusterClient.Grow(clusterName, carina.Nodes)
+	})
+}
+
+// SetAutoScale sets AutoScale on the cluster
+func (carina *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err error) {
+	return carina.clusterApply(func(clusterName string) (*libcarina.Cluster, error) {
+		return carina.ClusterClient.SetAutoScale(clusterName, carina.AutoScale)
 	})
 }
 
