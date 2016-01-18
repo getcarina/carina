@@ -92,8 +92,14 @@ type GrowCommand struct {
 // AutoScaleCommand keeps context about a cluster command
 type AutoScaleCommand struct {
 	*ClusterCommand
-	AutoScale bool
+	AutoScale string
 }
+
+// AutoScaleOn is the "give me autoscale on this cluster" string for the cli
+const AutoScaleOn = "on"
+
+// AutoScaleOff is the "turn off autoscale on this cluster" string for the cli
+const AutoScaleOff = "off"
 
 // UserNameEnvKey is the name of the env var accepted for the username
 const UserNameEnvVar = "CARINA_USERNAME"
@@ -171,7 +177,7 @@ func New() *Application {
 
 	autoscaleCommand := new(AutoScaleCommand)
 	autoscaleCommand.ClusterCommand = cap.NewClusterCommand(ctx, "autoscale", "Enable or disable autoscale on a cluster")
-	autoscaleCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&autoscaleCommand.AutoScale)
+	autoscaleCommand.Flag("autoscale", "whether autoscale is on or off").EnumVar(&autoscaleCommand.AutoScale, AutoScaleOn, AutoScaleOff)
 	autoscaleCommand.Action(autoscaleCommand.SetAutoScale)
 
 	credentialsCommand := cap.NewCredentialsCommand(ctx, "credentials", "download credentials")
@@ -561,7 +567,17 @@ func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
 // SetAutoScale sets AutoScale on the cluster
 func (carina *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err error) {
 	return carina.clusterApply(func(clusterName string) (*libcarina.Cluster, error) {
-		return carina.ClusterClient.SetAutoScale(clusterName, carina.AutoScale)
+		scale := true
+
+		switch carina.AutoScale {
+		case AutoScaleOn:
+			scale = true
+			break
+		case AutoScaleOff:
+			scale = false
+			break
+		}
+		return carina.ClusterClient.SetAutoScale(clusterName, scale)
 	})
 }
 
