@@ -165,6 +165,6 @@ How do you pick the release name?
 ### Naming things
 
 The hardest problem in computer science is picking names. For releases, we take
-an adjective attached combined with the next constellation from an
+an adjective combined with the next constellation from an
 [alphabetical list of constellations](http://www.astro.wisc.edu/~dolan/constellations/constellation_list.html).
 It can be alliterative if you like.
