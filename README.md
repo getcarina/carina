@@ -13,9 +13,10 @@ To download and install the `carina` CLI, use the appropriate instructions for y
 
 #### OS X with Homebrew
 
-If you're using [Homebrew](http://brew.sh/), run the following command:
+If you're using [Homebrew](http://brew.sh/), run the following commands:
 
 ```bash
+$ brew update
 $ brew install carina
 ```
 
