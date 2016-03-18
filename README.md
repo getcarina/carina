@@ -53,14 +53,14 @@ Be sure to move `carina.exe` to a directory on your `%PATH%`.
 $ export CARINA_USERNAME=trythingsout
 $ export CARINA_APIKEY=$RACKSPACE_APIKEY
 $ carina list
-ClusterName Flavor        Segments AutoScale Status
+ClusterName Flavor        Nodes AutoScale Status
 mycluster   container1-4G 1     false     active
 $ carina create newone
 newone      container1-4G 1     false     new
 $ carina create another --wait --autoscale
 another     container1-4G 1     true      active
 $ carina list
-ClusterName Flavor        Segments AutoScale Status
+ClusterName Flavor        Nodes AutoScale Status
 mycluster   container1-4G 1     false     active
 newone      container1-4G 1     false     active
 another     container1-4G 1     true      active
@@ -105,7 +105,7 @@ Commands:
     Create a swarm cluster
 
     --wait       wait for swarm cluster to come online (or error)
-    --segments=1    number of segments for the initial cluster
+    --nodes=1    number of nodes for the initial cluster
     --autoscale  whether autoscale is on or off
 
   get <cluster-name>
@@ -114,10 +114,10 @@ Commands:
   list
     List swarm clusters
 
-  grow --segments=SEGMENTS <cluster-name>
-    Grow a cluster by the requested number of segments
+  grow --nodes=NODES <cluster-name>
+    Grow a cluster by the requested number of nodes
 
-    --segments=SEGMENTS  number of segments to increase the cluster by
+    --nodes=NODES  number of nodes to increase the cluster by
 
   credentials [<flags>] <cluster-name>
     download credentials
