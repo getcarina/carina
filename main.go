@@ -155,6 +155,7 @@ func New() *Application {
 	createCommand := new(CreateCommand)
 	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "Create a swarm cluster")
 	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
+	createCommand.Flag("segments", "number of nodes for the initial cluster").Default("1").Hidden().IntVar(&createCommand.Nodes)
 	createCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&createCommand.AutoScale)
 	createCommand.Action(createCommand.Create)
 
