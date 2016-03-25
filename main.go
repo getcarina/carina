@@ -832,15 +832,14 @@ func (carina *ShellCommand) Show(pc *kingpin.ParseContext) error {
 }
 
 func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) (err error) {
-	s := strings.Join([]string{
+	fields := []string{
 		cluster.ClusterName,
 		cluster.Flavor,
 		strconv.FormatInt(cluster.Nodes.Int64(), 10),
 		strconv.FormatBool(cluster.AutoScale),
 		cluster.Status,
-	}, "\t")
-	_, err = w.Write([]byte(s + "\n"))
-	return
+	}
+	return writeRow(w, fields)
 }
 
 func writeClusterHeader(w *tabwriter.Writer) (err error) {
@@ -851,8 +850,11 @@ func writeClusterHeader(w *tabwriter.Writer) (err error) {
 		"AutoScale",
 		"Status",
 	}
-	s := strings.Join(headerFields, "\t")
+	return writeRow(w, headerFields)
+}
 
+func writeRow(w *tabwriter.Writer, fields []string) (err error) {
+	s := strings.Join(fields, "\t")
 	_, err = w.Write([]byte(s + "\n"))
 	return err
 }
