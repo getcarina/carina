@@ -200,6 +200,9 @@ func New() *Application {
 	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a swarm cluster")
 	deleteCommand.Action(deleteCommand.Delete).Hidden()
 
+	quotasCommand := cap.NewCommand(ctx, "quotas", "Get user quotas")
+	quotasCommand.Action(quotasCommand.Quotas)
+
 	return cap
 }
 
@@ -720,6 +723,26 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 	return err
 }
 
+// Show the user's quotas
+func (carina *Command) Quotas(pc *kingpin.ParseContext) (err error) {
+	quotas, err := carina.ClusterClient.GetQuotas()
+	if err != nil {
+		return err
+	}
+	MaxClusters := strconv.FormatInt(quotas.MaxClusters.Int64(), 10)
+	MaxNodesPerCluster := strconv.FormatInt(quotas.MaxNodesPerCluster.Int64(), 10)
+	err = writeRow(carina.TabWriter, []string{"MaxClusters", "MaxNodesPerCluster"})
+	if err != nil {
+		return err
+	}
+	err = writeRow(carina.TabWriter, []string{MaxClusters, MaxNodesPerCluster})
+	if err != nil {
+		return err
+	}
+	err = carina.TabWriter.Flush()
+	return err
+}
+
 func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth string) (err error) {
 	// TODO: Prompt when file already exists?
 	for fname, b := range creds.Files {
@@ -832,15 +855,14 @@ func (carina *ShellCommand) Show(pc *kingpin.ParseContext) error {
 }
 
 func writeCluster(w *tabwriter.Writer, cluster *libcarina.Cluster) (err error) {
-	s := strings.Join([]string{
+	fields := []string{
 		cluster.ClusterName,
 		cluster.Flavor,
 		strconv.FormatInt(cluster.Nodes.Int64(), 10),
 		strconv.FormatBool(cluster.AutoScale),
 		cluster.Status,
-	}, "\t")
-	_, err = w.Write([]byte(s + "\n"))
-	return
+	}
+	return writeRow(w, fields)
 }
 
 func writeClusterHeader(w *tabwriter.Writer) (err error) {
@@ -851,8 +873,11 @@ func writeClusterHeader(w *tabwriter.Writer) (err error) {
 		"AutoScale",
 		"Status",
 	}
-	s := strings.Join(headerFields, "\t")
+	return writeRow(w, headerFields)
+}
 
+func writeRow(w *tabwriter.Writer, fields []string) (err error) {
+	s := strings.Join(fields, "\t")
 	_, err = w.Write([]byte(s + "\n"))
 	return err
 }
