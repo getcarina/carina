@@ -200,6 +200,9 @@ func New() *Application {
 	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a swarm cluster")
 	deleteCommand.Action(deleteCommand.Delete).Hidden()
 
+	quotasCommand := cap.NewCommand(ctx, "quotas", "Get user quotas")
+	quotasCommand.Action(quotasCommand.Quotas)
+
 	return cap
 }
 
@@ -716,6 +719,26 @@ func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error)
 		fmt.Println("#")
 	}
 
+	err = carina.TabWriter.Flush()
+	return err
+}
+
+// Show the user's quotas
+func (carina *Command) Quotas(pc *kingpin.ParseContext) (err error) {
+	quotas, err := carina.ClusterClient.GetQuotas()
+	if err != nil {
+		return err
+	}
+	MaxClusters := strconv.FormatInt(quotas.MaxClusters.Int64(), 10)
+	MaxNodesPerCluster := strconv.FormatInt(quotas.MaxNodesPerCluster.Int64(), 10)
+	err = writeRow(carina.TabWriter, []string{"MaxClusters", "MaxNodesPerCluster"})
+	if err != nil {
+		return err
+	}
+	err = writeRow(carina.TabWriter, []string{MaxClusters, MaxNodesPerCluster})
+	if err != nil {
+		return err
+	}
 	err = carina.TabWriter.Flush()
 	return err
 }
