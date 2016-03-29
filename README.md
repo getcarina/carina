@@ -155,6 +155,15 @@ the `Makefile` sets the `LDFLAGS` conditionally based on Go version.
 
 The release script relies on [github-release](https://github.com/aktau/github-release). Get it, configure it.
 
+This script assumes you have pulled down this repository via `go get github.com/getcarina/carina`
+and are currently working out of the `${GOPATH}/src/github.com/getcarina/carina` directory.
+
+It's also important that you have a "release" remote set up to point at the main repository.
+
+```
+git remote add release git@github.com:getcarina/carina.git
+```
+
 Make sure you're on `master` then run `release.sh` with the next tag and release name.
 
 ```bash
