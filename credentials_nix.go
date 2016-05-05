@@ -14,7 +14,12 @@ func credentialsNextStepsString(clusterName string) string {
 }
 
 func getCredentialFilePath(basepath string, shell string) string {
-	return filepath.Join(basepath, "docker.env")
+	switch shell {
+	case "fish":
+		return filepath.Join(basepath, "docker.fish")
+	default:
+		return filepath.Join(basepath, "docker.env")
+	}
 }
 
 func sourceHelpString(credentialFile string, clusterName string, shell string) string {
