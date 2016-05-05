@@ -523,7 +523,7 @@ func (carina *ClusterCommand) clusterApply(op clusterOp) (err error) {
 
 // Get an individual cluster
 func (carina *WaitClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApplyWait(carina.ClusterClient.Get)
+	return carina.clusterApplyWait(carina.ClusterClient.Get, false)
 }
 
 // Delete a cluster
@@ -587,7 +587,7 @@ func (carina *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err erro
 
 // Rebuild nukes your cluster and builds it over again
 func (carina *WaitClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApplyWait(carina.ClusterClient.Rebuild)
+	return carina.clusterApplyWait(carina.ClusterClient.Rebuild, true)
 }
 
 const startupFudgeFactor = 40 * time.Second
@@ -603,15 +603,17 @@ const StatusBuilding = "building"
 const StatusRebuildingSwarm = "rebuilding-swarm"
 
 // Does an func against a cluster then returns the new cluster representation
-func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp) (err error) {
+func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp, waitFirst bool) (err error) {
+	if carina.Wait && waitFirst {
+		time.Sleep(startupFudgeFactor)
+	}
+
 	cluster, err := op(carina.ClusterName)
 	if err != nil {
 		return err
 	}
 
 	if carina.Wait {
-		time.Sleep(startupFudgeFactor)
-
 		carina.ClusterClient.Client = &http.Client{Timeout: httpTimeout}
 		cluster, err = carina.ClusterClient.Get(carina.ClusterName)
 		if err != nil {
@@ -671,7 +673,7 @@ func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
 		}
 		cluster, err := carina.ClusterClient.Create(c)
 		return cluster, err
-	})
+	}, true)
 }
 
 func (carina *CredentialsCommand) clusterPath() (p string, err error) {
