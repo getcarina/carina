@@ -62,19 +62,3 @@ func userHomeDir() (string, error) {
 
 	return "", errors.New("Unable to locate home directory")
 }
-
-// CarinaCredentialsBaseDir get the current base directory for carina credentials
-func CarinaCredentialsBaseDir() (string, error) {
-	if os.Getenv(CarinaHomeDirEnvVar) != "" {
-		return os.Getenv(CarinaHomeDirEnvVar), nil
-	}
-	if os.Getenv(CredentialsBaseDirEnvVar) != "" {
-		return os.Getenv(CredentialsBaseDirEnvVar), nil
-	}
-
-	homeDir, err := userHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(homeDir, "carina"), nil
-}
