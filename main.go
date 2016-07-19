@@ -19,6 +19,8 @@ import (
 
 	"github.com/getcarina/carina/version"
 	"github.com/getcarina/libcarina"
+
+	"github.com/getcarina/carina/adapters"
 )
 
 // Application is, our, well, application
@@ -27,10 +29,11 @@ type Application struct {
 	*kingpin.Application
 }
 
-// Command is a command needing a ClusterClient
+// Command is a command that interacts with a cluster service
 type Command struct {
 	*Context
 	*kingpin.CmdClause
+	BackendType string
 }
 
 // Context context for the  App
@@ -39,6 +42,7 @@ type Context struct {
 	TabWriter     *tabwriter.Writer
 	Username      string
 	APIKey        string
+	Password      string
 	Endpoint      string
 	CacheEnabled  bool
 	Cache         *Cache
@@ -101,11 +105,27 @@ const AutoScaleOn = "on"
 // AutoScaleOff is the "turn off autoscale on this cluster" string for the cli
 const AutoScaleOff = "off"
 
-// UserNameEnvKey is the name of the env var accepted for the username
-const UserNameEnvVar = "CARINA_USERNAME"
+// CarinaUserNameEnvVar is the Carina username environment variable (1st)
+const CarinaUserNameEnvVar = "CARINA_USERNAME"
 
-// APIKeyEnvVar is the name of the env var accepted for the API key
-const APIKeyEnvVar = "CARINA_APIKEY"
+// RackspaceUserNameEnvVar is the Rackspace username environment variable (2nd)
+const RackspaceUserNameEnvVar = "RS_USERNAME"
+
+// OpenStackUserNameEnvVar is the OpenStack username environment variable (3nd)
+const OpenStackUserNameEnvVar = "OS_USERNAME"
+
+// CarinaAPIKeyEnvVar is the Carina API key environment variable (1st)
+const CarinaAPIKeyEnvVar = "CARINA_APIKEY"
+
+// RackspaceAPIKeyEnvVar is the Rackspace API key environment variable (2nd)
+const RackspaceAPIKeyEnvVar = "RS_API_KEY"
+
+// OpenStackPasswordEnvVar is OpenStack password environment variable.
+// When set, this instructs the cli to communicate with Carina (private cloud) instead of the default Carina (public cloud)
+const OpenStackPasswordEnvVar = "OS_PASSWORD"
+
+// OpenStackAuthURLEnvVar is the OpenStack Identity v3 URL.
+const OpenStackAuthURLEnvVar = "OS_AUTH_URL"
 
 // New creates a new Application
 func New() *Application {
@@ -131,9 +151,10 @@ func New() *Application {
 
 	cap.Context = ctx
 
-	cap.Flag("username", "Carina username - can also set env var "+UserNameEnvVar).OverrideDefaultFromEnvar(UserNameEnvVar).StringVar(&ctx.Username)
-	cap.Flag("api-key", "Carina API Key - can also set env var "+APIKeyEnvVar).OverrideDefaultFromEnvar(APIKeyEnvVar).PlaceHolder(APIKeyEnvVar).StringVar(&ctx.APIKey)
-	cap.Flag("endpoint", "Carina API endpoint").Default(libcarina.BetaEndpoint).StringVar(&ctx.Endpoint)
+	cap.Flag("username", "Carina username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]").StringVar(&ctx.Username)
+	cap.Flag("api-key", "Carina API Key [CARINA_APIKEY/RS_API_KEY]").StringVar(&ctx.APIKey)
+	cap.Flag("password", "Rackspace Password [OS_PASSWORD]").StringVar(&ctx.Password)
+	cap.Flag("endpoint", "Carina API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
 
 	cap.PreAction(cap.InitCache)
@@ -165,10 +186,10 @@ func New() *Application {
 	inspectCommand := cap.NewWaitClusterCommand(ctx, "inspect", "Get information about a swarm cluster")
 	inspectCommand.Action(inspectCommand.Get).Hidden()
 
-	lsCommand := cap.NewCommand(ctx, "ls", "List swarm clusters")
+	lsCommand := cap.NewCommand(ctx, "ls", "List clusters")
 	lsCommand.Action(lsCommand.List)
 
-	listCommand := cap.NewCommand(ctx, "list", "List swarm clusters")
+	listCommand := cap.NewCommand(ctx, "list", "List clusters")
 	listCommand.Action(listCommand.List).Hidden()
 
 	growCommand := new(GrowCommand)
@@ -241,6 +262,7 @@ func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
 	carina := new(Command)
 	carina.Context = ctx
 	carina.CmdClause = app.Command(name, help)
+	carina.PreAction(carina.InitFlags)
 	carina.PreAction(carina.Auth)
 	return carina
 }
@@ -408,6 +430,120 @@ func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
 }
 
 const httpTimeout = time.Second * 15
+const backendCarina = "Carina"
+const backendMagnum = "Magnum"
+
+func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
+	cmd.detectBackend()
+
+	if cmd.BackendType == backendCarina {
+		// endpoint = --endpoint -> public carina endpoint
+		if cmd.Endpoint == "" {
+			cmd.Endpoint = libcarina.BetaEndpoint
+			fmt.Printf("[DEBUG] Endpoint: %s\n", libcarina.BetaEndpoint)
+		} else {
+			fmt.Println("[DEBUG] Endpoint: --endpoint")
+		}
+
+		// username = --username -> CARINA_USERNAME -> RS_USERNAME
+		if cmd.Username == "" {
+			cmd.Username = os.Getenv(CarinaUserNameEnvVar)
+			if cmd.Username == "" {
+				cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
+				if cmd.Username == "" {
+					fmt.Printf("[ERROR] UserName was not specified. Either use --username or set %s, or %s.\n", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
+				} else {
+					fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
+				}
+			} else {
+				fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
+			}
+		} else {
+			fmt.Println("[DEBUG] UserName: --username")
+		}
+
+		// api-key = --api-key -> CARINA_APIKEY -> RS_API_KEY
+		if cmd.APIKey == "" {
+			cmd.APIKey = os.Getenv(CarinaAPIKeyEnvVar)
+			if cmd.APIKey == "" {
+				cmd.APIKey = os.Getenv(RackspaceAPIKeyEnvVar)
+				if cmd.APIKey == "" {
+					fmt.Printf("[ERROR] API Key was not specified. Either use --api-key or set %s or %s.\n", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
+				} else {
+					fmt.Printf("[DEBUG] API Key: %s\n", RackspaceAPIKeyEnvVar)
+				}
+			} else {
+				fmt.Printf("[DEBUG] API Key: %s\n", CarinaAPIKeyEnvVar)
+			}
+		} else {
+			fmt.Println("[DEBUG] API Key: --api-key")
+		}
+	}
+
+	if cmd.BackendType == backendMagnum {
+		if cmd.Endpoint == "" {
+			cmd.Endpoint = os.Getenv(OpenStackAuthURLEnvVar)
+			if cmd.Endpoint == "" {
+				fmt.Printf("[ERROR] Endpoint was not specified. Either use --endpoint or set %s.\n", OpenStackAuthURLEnvVar)
+			} else {
+				fmt.Printf("[DEBUG] Endpoint: %s\n", OpenStackAuthURLEnvVar)
+			}
+		} else {
+			fmt.Println("[DEBUG] Endpoint: --endpoint")
+		}
+
+		// username = --username -> if magnum OS_PASSWORD; else CARINA_USERNAME -> RACKSPACE USERNAME
+		if cmd.Username == "" {
+			if cmd.BackendType == backendMagnum {
+				cmd.Username = os.Getenv(OpenStackUserNameEnvVar)
+				if cmd.Username == "" {
+					fmt.Printf("[ERROR] UserName was not specified. Either use --username or %s.\n", OpenStackUserNameEnvVar)
+				} else {
+					fmt.Printf("[DEBUG] UserName: %s\n", OpenStackUserNameEnvVar)
+				}
+			} else {
+				cmd.Username = os.Getenv(CarinaUserNameEnvVar)
+				if cmd.Username == "" {
+					cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
+					if cmd.Username == "" {
+						fmt.Printf("[ERROR] UserName was not specified. Either use --username, set %s, or set %s.\n", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
+					} else {
+						fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
+					}
+				} else {
+					fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
+				}
+			}
+
+		} else {
+			fmt.Println("[DEBUG] UserName: --username")
+		}
+
+		if cmd.Password == "" {
+			cmd.Password = os.Getenv(OpenStackPasswordEnvVar)
+			if cmd.Password == "" {
+				fmt.Printf("[ERROR] Password was not specified. Either use --password or set %s.\n", OpenStackPasswordEnvVar)
+			} else {
+				fmt.Printf("[DEBUG] Password: %s\n", OpenStackPasswordEnvVar)
+			}
+		} else {
+			fmt.Println("[DEBUG] Password: --password")
+		}
+	}
+
+	return nil
+}
+
+func (cmd *Command) detectBackend() {
+	// Assume public Carina when no password is specified
+	if cmd.Password == "" && os.Getenv(OpenStackPasswordEnvVar) == "" {
+		cmd.BackendType = backendCarina
+		fmt.Println("[DEBUG] Backend: Carina")
+	} else {
+		cmd.BackendType = backendMagnum
+		fmt.Println("[DEBUG] Backend: Magnum")
+	}
+}
 
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
@@ -482,26 +618,27 @@ func dummyRequest(c *libcarina.ClusterClient) error {
 	return nil
 }
 
-// List the current swarm clusters
-func (carina *Command) List(pc *kingpin.ParseContext) (err error) {
-	clusterList, err := carina.ClusterClient.List()
-	if err != nil {
-		return err
+func (cmd *Command) getAdapter() (adapter adapters.Adapter, err error) {
+	switch cmd.BackendType {
+	case backendCarina:
+		carina := &adapters.Carina{}
+		carinaCredentials := adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.APIKey}
+		carina.LoadCredentials(carinaCredentials)
+		return carina, nil
+	case backendMagnum:
+		magnum := &adapters.Magnum{}
+		magnumCredentials := adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.Password}
+		magnum.LoadCredentials(magnumCredentials)
+		return magnum, nil
+	default:
+		return nil, errors.New("TODO: tell user where to set credentials")
 	}
+}
 
-	err = writeClusterHeader(carina.TabWriter)
-	if err != nil {
-		return err
-	}
-
-	for _, cluster := range clusterList {
-		err = writeCluster(carina.TabWriter, &cluster)
-		if err != nil {
-			return err
-		}
-	}
-	err = carina.TabWriter.Flush()
-	return err
+// List the current clusters
+func (cmd *Command) List(pc *kingpin.ParseContext) (err error) {
+	adapter, err := cmd.getAdapter()
+	return adapter.ListClusters()
 }
 
 type clusterOp func(clusterName string) (*libcarina.Cluster, error)
