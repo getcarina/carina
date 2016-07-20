@@ -157,7 +157,9 @@ func New() *Application {
 	cap.Flag("endpoint", "Carina API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
 
-	cap.PreAction(cap.InitCache)
+
+	cap.PreAction(cap.initCache)
+	cap.PreAction(cap.informLatest)
 
 	writer := new(tabwriter.Writer)
 	writer.Init(os.Stdout, 20, 1, 3, ' ', 0)
@@ -236,7 +238,7 @@ func VersionString() string {
 }
 
 // InitCache sets up the cache for carina
-func (app *Application) InitCache(pc *kingpin.ParseContext) error {
+func (app *Application) initCache(pc *kingpin.ParseContext) error {
 	if app.CacheEnabled {
 		bd, err := CarinaCredentialsBaseDir()
 		if err != nil {
@@ -262,7 +264,7 @@ func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
 	carina := new(Command)
 	carina.Context = ctx
 	carina.CmdClause = app.Command(name, help)
-	carina.PreAction(carina.InitFlags)
+	carina.PreAction(carina.initFlags)
 	carina.PreAction(carina.Auth)
 	return carina
 }
@@ -368,7 +370,7 @@ func (s *semver) String() string {
 	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
 }
 
-func (carina *Command) shouldCheckForUpdate() (bool, error) {
+func (carina *Application) shouldCheckForUpdate() (bool, error) {
 	lastCheck := carina.Cache.LastUpdateCheck
 
 	// If we last checked `delay` ago, don't check again
@@ -390,7 +392,7 @@ func (carina *Command) shouldCheckForUpdate() (bool, error) {
 	return true, nil
 }
 
-func (carina *Command) informLatest(pc *kingpin.ParseContext) error {
+func (carina *Application) informLatest(pc *kingpin.ParseContext) error {
 	if !carina.CacheEnabled {
 		return nil
 	}
@@ -544,11 +546,6 @@ func (cmd *Command) detectBackend() {
 
 // Auth does the authentication
 func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
-
-	// Check for the latest release.
-	if err = carina.informLatest(pc); err != nil {
-		// Do nothing if the latest version couldn't be checked
-	}
 
 	// Short circuit if the cache is not enabled
 	if !carina.CacheEnabled {
