@@ -11,6 +11,9 @@ type UserCredentials struct {
 	Endpoint        string
 	UserName        string
 	Secret          string
+	Project         string
+	Domain          string
+	Region          string
 	Token           string
 	TokenExpiration string
 }

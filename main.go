@@ -36,13 +36,16 @@ type Command struct {
 	BackendType string
 }
 
-// Context context for the  App
+// Context context for the App
 type Context struct {
 	ClusterClient *libcarina.ClusterClient
 	TabWriter     *tabwriter.Writer
 	Username      string
 	APIKey        string
 	Password      string
+	Project       string
+	Domain        string
+	Region        string
 	Endpoint      string
 	CacheEnabled  bool
 	Cache         *Cache
@@ -120,12 +123,21 @@ const CarinaAPIKeyEnvVar = "CARINA_APIKEY"
 // RackspaceAPIKeyEnvVar is the Rackspace API key environment variable (2nd)
 const RackspaceAPIKeyEnvVar = "RS_API_KEY"
 
-// OpenStackPasswordEnvVar is OpenStack password environment variable.
+// OpenStackPasswordEnvVar is OpenStack password environment variable
 // When set, this instructs the cli to communicate with Carina (private cloud) instead of the default Carina (public cloud)
 const OpenStackPasswordEnvVar = "OS_PASSWORD"
 
-// OpenStackAuthURLEnvVar is the OpenStack Identity v3 URL.
+// OpenStackAuthURLEnvVar is the OpenStack Identity URL (v2 and v3 supported)
 const OpenStackAuthURLEnvVar = "OS_AUTH_URL"
+
+// OpenStackProjectEnvVar is the OpenStack project name, required for identity v3
+const OpenStackProjectEnvVar = "OS_PROJECT_NAME"
+
+// OpenStackDomainEnvVar is the OpenStack domain name, optional for identity v3
+const OpenStackDomainEnvVar = "OS_DOMAIN_NAME"
+
+// OpenStackRegionEnvVar is the OpenStack domain name, optional for identity v3
+const OpenStackRegionEnvVar = "OS_REGION_NAME"
 
 // New creates a new Application
 func New() *Application {
@@ -154,9 +166,11 @@ func New() *Application {
 	cap.Flag("username", "Carina username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]").StringVar(&ctx.Username)
 	cap.Flag("api-key", "Carina API Key [CARINA_APIKEY/RS_API_KEY]").StringVar(&ctx.APIKey)
 	cap.Flag("password", "Rackspace Password [OS_PASSWORD]").StringVar(&ctx.Password)
+	cap.Flag("project", "Rackspace Project Name [OS_PROJECT_NAME]").StringVar(&ctx.Project)
+	cap.Flag("domain", "Rackspace Domain Name [OS_DOMAIN_NAME]").StringVar(&ctx.Domain)
+	cap.Flag("region", "Rackspace Region Name [OS_REGION_NAME]").StringVar(&ctx.Region)
 	cap.Flag("endpoint", "Carina API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
-
 
 	cap.PreAction(cap.initCache)
 	cap.PreAction(cap.informLatest)
@@ -265,7 +279,6 @@ func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
 	carina.Context = ctx
 	carina.CmdClause = app.Command(name, help)
 	carina.PreAction(carina.initFlags)
-	carina.PreAction(carina.Auth)
 	return carina
 }
 
@@ -274,6 +287,7 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 	cc := new(ClusterCommand)
 	cc.Command = app.NewCommand(ctx, name, help)
 	cc.Arg("cluster-name", "name of the cluster").Required().StringVar(&cc.ClusterName)
+	cc.PreAction(cc.Auth)
 	return cc
 }
 
@@ -483,7 +497,7 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 		if cmd.Endpoint == "" {
 			cmd.Endpoint = os.Getenv(OpenStackAuthURLEnvVar)
 			if cmd.Endpoint == "" {
-				fmt.Printf("[ERROR] Endpoint was not specified. Either use --endpoint or set %s.\n", OpenStackAuthURLEnvVar)
+				return errors.New(fmt.Sprintf("Endpoint was not specified via --endpoint or %s", OpenStackAuthURLEnvVar))
 			} else {
 				fmt.Printf("[DEBUG] Endpoint: %s\n", OpenStackAuthURLEnvVar)
 			}
@@ -496,7 +510,7 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 			if cmd.BackendType == backendMagnum {
 				cmd.Username = os.Getenv(OpenStackUserNameEnvVar)
 				if cmd.Username == "" {
-					fmt.Printf("[ERROR] UserName was not specified. Either use --username or %s.\n", OpenStackUserNameEnvVar)
+					return errors.New(fmt.Sprintf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar))
 				} else {
 					fmt.Printf("[DEBUG] UserName: %s\n", OpenStackUserNameEnvVar)
 				}
@@ -505,7 +519,7 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 				if cmd.Username == "" {
 					cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
 					if cmd.Username == "" {
-						fmt.Printf("[ERROR] UserName was not specified. Either use --username, set %s, or set %s.\n", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
+						return errors.New(fmt.Sprintf("UserName was not specified via --username, %s or %s.", CarinaUserNameEnvVar, RackspaceUserNameEnvVar))
 					} else {
 						fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
 					}
@@ -521,12 +535,46 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 		if cmd.Password == "" {
 			cmd.Password = os.Getenv(OpenStackPasswordEnvVar)
 			if cmd.Password == "" {
-				fmt.Printf("[ERROR] Password was not specified. Either use --password or set %s.\n", OpenStackPasswordEnvVar)
+				return errors.New(fmt.Sprintf("Password was not specified via --password or %s", OpenStackPasswordEnvVar))
 			} else {
 				fmt.Printf("[DEBUG] Password: %s\n", OpenStackPasswordEnvVar)
 			}
 		} else {
 			fmt.Println("[DEBUG] Password: --password")
+		}
+
+		if cmd.Project == "" {
+			cmd.Project = os.Getenv(OpenStackProjectEnvVar)
+			if cmd.Project == "" {
+				fmt.Printf("[DEBUG] Project was not specified. Either use --project or set %s.\n", OpenStackProjectEnvVar)
+			} else {
+				fmt.Printf("[DEBUG] Project: %s\n", OpenStackProjectEnvVar)
+			}
+		} else {
+			fmt.Println("[DEBUG] Project: --project")
+		}
+
+		if cmd.Domain == "" {
+			cmd.Domain = os.Getenv(OpenStackDomainEnvVar)
+			if cmd.Domain == "" {
+				cmd.Domain = "default";
+				fmt.Printf("[DEBUG] Project: default. Either use --project or set %s.\n", OpenStackProjectEnvVar)
+			} else {
+				fmt.Printf("[DEBUG] Project: %s\n", OpenStackDomainEnvVar)
+			}
+		} else {
+			fmt.Println("[DEBUG] Domain: --domain")
+		}
+
+		if cmd.Region == "" {
+			cmd.Region = os.Getenv(OpenStackRegionEnvVar)
+			if cmd.Region == "" {
+				fmt.Printf("[DEBUG] Region was not specified. Either use --region or set %s.\n", OpenStackRegionEnvVar)
+			} else {
+				fmt.Printf("[DEBUG] Region: %s\n", OpenStackRegionEnvVar)
+			}
+		} else {
+			fmt.Println("[DEBUG] Region: --region")
 		}
 	}
 
@@ -534,8 +582,8 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 }
 
 func (cmd *Command) detectBackend() {
-	// Assume public Carina when no password is specified
-	if cmd.Password == "" && os.Getenv(OpenStackPasswordEnvVar) == "" {
+	// Assume public Carina when no OpenStack project is specified
+	if cmd.Project == "" && os.Getenv(OpenStackProjectEnvVar) == "" {
 		cmd.BackendType = backendCarina
 		fmt.Println("[DEBUG] Backend: Carina")
 	} else {
@@ -610,7 +658,7 @@ func (cmd *Command) getAdapter() (adapter adapters.Adapter, err error) {
 		return carina, nil
 	case backendMagnum:
 		magnum := &adapters.Magnum{}
-		magnumCredentials := adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.Password}
+		magnumCredentials := adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
 		magnum.LoadCredentials(magnumCredentials)
 		return magnum, nil
 	default:

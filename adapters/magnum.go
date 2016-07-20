@@ -23,7 +23,8 @@ func (magnum *Magnum) ListClusters() error {
 		IdentityEndpoint: magnum.Credentials.Endpoint,
 		Username:         magnum.Credentials.UserName,
 		Password:         magnum.Credentials.Secret,
-		DomainName:       "default",
+		TenantName:       magnum.Credentials.Project,
+		DomainName:       magnum.Credentials.Domain,
 	}
 	identityService, authErr := openstack.AuthenticatedClient(auth)
 	if authErr != nil {
