@@ -2,18 +2,18 @@ package adapters
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
-	"text/tabwriter"
+	"github.com/gophercloud/gophercloud/pagination"
+	"github.com/pkg/errors"
 	"strconv"
+	"text/tabwriter"
 )
 
 type Magnum struct {
 	Credentials UserCredentials
-	Output *tabwriter.Writer
+	Output      *tabwriter.Writer
 }
 
 func (magnum *Magnum) LoadCredentials(credentials UserCredentials) error {
@@ -34,7 +34,7 @@ func (magnum *Magnum) authenticate() (*gophercloud.ServiceClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return openstack.NewContainerOrchestrationV1(identity, gophercloud.EndpointOpts{ Region: magnum.Credentials.Region})
+	return openstack.NewContainerOrchestrationV1(identity, gophercloud.EndpointOpts{Region: magnum.Credentials.Region})
 }
 
 func (magnum *Magnum) ListClusters() error {

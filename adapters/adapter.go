@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"text/tabwriter"
 	"strings"
+	"text/tabwriter"
 )
 
 // Maps between a container service API and the command line client
@@ -29,5 +29,5 @@ func writeRow(output *tabwriter.Writer, fields []string) error {
 	if err != nil {
 		return err
 	}
-	return output.Flush();
+	return output.Flush()
 }

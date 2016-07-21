@@ -2,16 +2,16 @@ package adapters
 
 import (
 	"fmt"
-	"strconv"
-	"text/tabwriter"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
+	"strconv"
+	"text/tabwriter"
 	"time"
 )
 
 type MakeSwarm struct {
 	Credentials UserCredentials
-	Output *tabwriter.Writer
+	Output      *tabwriter.Writer
 }
 
 const httpTimeout = time.Second * 15
