@@ -652,12 +652,12 @@ func dummyRequest(c *libcarina.ClusterClient) error {
 func (cmd *Command) getAdapter() (adapter adapters.Adapter, err error) {
 	switch cmd.BackendType {
 	case backendCarina:
-		carina := &adapters.Carina{}
+		carina := &adapters.Carina{ Output: cmd.TabWriter }
 		carinaCredentials := adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.APIKey}
 		carina.LoadCredentials(carinaCredentials)
 		return carina, nil
 	case backendMagnum:
-		magnum := &adapters.Magnum{}
+		magnum := &adapters.Magnum{ Output: cmd.TabWriter }
 		magnumCredentials := adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
 		magnum.LoadCredentials(magnumCredentials)
 		return magnum, nil

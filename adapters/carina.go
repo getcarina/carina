@@ -1,9 +1,13 @@
 package adapters
 
-import "fmt"
+import (
+	"fmt"
+	"text/tabwriter"
+)
 
 type Carina struct {
 	Credentials UserCredentials
+	Output *tabwriter.Writer
 }
 
 func (carina *Carina) LoadCredentials(credentials UserCredentials) error {
