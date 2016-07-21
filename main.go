@@ -33,10 +33,10 @@ type Application struct {
 type Command struct {
 	*Context
 	*kingpin.CmdClause
-	BackendType string
+	CloudType string
 }
 
-// Context context for the App
+// Context for the App
 type Context struct {
 	ClusterClient *libcarina.ClusterClient
 	TabWriter     *tabwriter.Writer
@@ -275,11 +275,12 @@ func (app *Application) initCache(pc *kingpin.ParseContext) error {
 
 // NewCommand creates a command wrapped with carina.Context
 func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
-	carina := new(Command)
-	carina.Context = ctx
-	carina.CmdClause = app.Command(name, help)
-	carina.PreAction(carina.initFlags)
-	return carina
+	cmd := new(Command)
+	cmd.Context = ctx
+	cmd.CmdClause = app.Command(name, help)
+	cmd.PreAction(cmd.initFlags)
+	cmd.Flag("cloud", "The cloud type: magnum, make-swarm or make-coe. This is automatically detected using the provided credentials.").Hidden().StringVar(&cmd.CloudType)
+	return cmd
 }
 
 // NewClusterCommand is a command that uses a cluster name
@@ -443,13 +444,23 @@ func (carina *Application) informLatest(pc *kingpin.ParseContext) error {
 }
 
 const httpTimeout = time.Second * 15
-const backendCarina = "Carina"
-const backendMagnum = "Magnum"
+const cloudMakeSwarm = "make-swarm"
+const cloudMagnum = "magnum"
 
 func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
-	cmd.detectBackend()
+	if cmd.CloudType == "" {
+		fmt.Println("[DEBUG] No cloud type specified, detecting with the provided user credentials. Use --cloud=[magnum|make-coe|make-swarm] to skip detection.")
+		// Assume public Carina when no OpenStack project is specified
+		if cmd.Project == "" && os.Getenv(OpenStackProjectEnvVar) == "" {
+			cmd.CloudType = cloudMakeSwarm
+			fmt.Println("[DEBUG] Cloud: make-swarm")
+		} else {
+			cmd.CloudType = cloudMagnum
+			fmt.Println("[DEBUG] Cloud: Magnum")
+		}
+	}
 
-	if cmd.BackendType == backendCarina {
+	if cmd.CloudType == cloudMakeSwarm {
 		// endpoint = --endpoint -> public carina endpoint
 		if cmd.Endpoint == "" {
 			cmd.Endpoint = libcarina.BetaEndpoint
@@ -493,7 +504,7 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 		}
 	}
 
-	if cmd.BackendType == backendMagnum {
+	if cmd.CloudType == cloudMagnum {
 		if cmd.Endpoint == "" {
 			cmd.Endpoint = os.Getenv(OpenStackAuthURLEnvVar)
 			if cmd.Endpoint == "" {
@@ -507,7 +518,7 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 
 		// username = --username -> if magnum OS_PASSWORD; else CARINA_USERNAME -> RACKSPACE USERNAME
 		if cmd.Username == "" {
-			if cmd.BackendType == backendMagnum {
+			if cmd.CloudType == cloudMagnum {
 				cmd.Username = os.Getenv(OpenStackUserNameEnvVar)
 				if cmd.Username == "" {
 					return errors.New(fmt.Sprintf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar))
@@ -557,10 +568,10 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 		if cmd.Domain == "" {
 			cmd.Domain = os.Getenv(OpenStackDomainEnvVar)
 			if cmd.Domain == "" {
-				cmd.Domain = "default";
-				fmt.Printf("[DEBUG] Project: default. Either use --project or set %s.\n", OpenStackProjectEnvVar)
+				cmd.Domain = "default"
+				fmt.Printf("[DEBUG] Domain: default. Either use --domain or set %s.\n", OpenStackDomainEnvVar)
 			} else {
-				fmt.Printf("[DEBUG] Project: %s\n", OpenStackDomainEnvVar)
+				fmt.Printf("[DEBUG] Domain: %s\n", OpenStackDomainEnvVar)
 			}
 		} else {
 			fmt.Println("[DEBUG] Domain: --domain")
@@ -579,17 +590,6 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 	}
 
 	return nil
-}
-
-func (cmd *Command) detectBackend() {
-	// Assume public Carina when no OpenStack project is specified
-	if cmd.Project == "" && os.Getenv(OpenStackProjectEnvVar) == "" {
-		cmd.BackendType = backendCarina
-		fmt.Println("[DEBUG] Backend: Carina")
-	} else {
-		cmd.BackendType = backendMagnum
-		fmt.Println("[DEBUG] Backend: Magnum")
-	}
 }
 
 // Auth does the authentication
@@ -650,20 +650,19 @@ func dummyRequest(c *libcarina.ClusterClient) error {
 }
 
 func (cmd *Command) getAdapter() (adapter adapters.Adapter, err error) {
-	switch cmd.BackendType {
-	case backendCarina:
-		carina := &adapters.MakeSwarm{ Output: cmd.TabWriter }
-		carinaCredentials := adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.APIKey}
-		carina.LoadCredentials(carinaCredentials)
-		return carina, nil
-	case backendMagnum:
-		magnum := &adapters.Magnum{ Output: cmd.TabWriter }
-		magnumCredentials := adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
-		magnum.LoadCredentials(magnumCredentials)
-		return magnum, nil
-	default:
-		return nil, errors.New("TODO: tell user where to set credentials")
+	var credentials adapters.UserCredentials
+
+	switch cmd.CloudType {
+	case cloudMakeSwarm:
+		adapter = &adapters.MakeSwarm{Output: cmd.TabWriter}
+		credentials = adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.APIKey}
+	case cloudMagnum:
+		adapter = &adapters.Magnum{Output: cmd.TabWriter}
+		credentials = adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
 	}
+
+	err = adapter.LoadCredentials(credentials)
+	return
 }
 
 // List the current clusters
