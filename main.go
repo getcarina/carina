@@ -445,13 +445,20 @@ func (carina *Application) informLatest(pc *kingpin.ParseContext) error {
 
 const httpTimeout = time.Second * 15
 const cloudMakeSwarm = "make-swarm"
+const cloudMakeCOE = "make-coe"
 const cloudMagnum = "magnum"
 
 func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
+	// Require either an apikey or password
+	apikeyFound := cmd.APIKey != "" || os.Getenv(CarinaAPIKeyEnvVar) != "" || os.Getenv(RackspaceAPIKeyEnvVar) != ""
+	passwordFound := cmd.Password != "" || os.Getenv(OpenStackPasswordEnvVar) != ""
+	if !apikeyFound && !passwordFound {
+		return errors.New("No credentials provided. An --apikey or --password must either be specified or the equivalent environment variables must be set. Run carina --help for more information.")
+	}
+
 	if cmd.CloudType == "" {
-		fmt.Println("[DEBUG] No cloud type specified, detecting with the provided user credentials. Use --cloud=[magnum|make-coe|make-swarm] to skip detection.")
-		// Assume public Carina when no OpenStack project is specified
-		if cmd.Project == "" && os.Getenv(OpenStackProjectEnvVar) == "" {
+		fmt.Println("[DEBUG] No cloud type specified, detecting with the provided credentials. Use --cloud=[magnum|make-coe|make-swarm] to skip detection.")
+		if apikeyFound {
 			cmd.CloudType = cloudMakeSwarm
 			fmt.Println("[DEBUG] Cloud: make-swarm")
 		} else {
@@ -460,133 +467,145 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 		}
 	}
 
-	if cmd.CloudType == cloudMakeSwarm {
-		// endpoint = --endpoint -> public carina endpoint
-		if cmd.Endpoint == "" {
-			cmd.Endpoint = libcarina.BetaEndpoint
-			fmt.Printf("[DEBUG] Endpoint: %s\n", libcarina.BetaEndpoint)
-		} else {
-			fmt.Println("[DEBUG] Endpoint: --endpoint")
-		}
+	if cmd.CloudType == cloudMakeSwarm || cmd.CloudType == cloudMakeCOE {
+		return initCarinaFlags(cmd)
+	}
 
-		// username = --username -> CARINA_USERNAME -> RS_USERNAME
+	if cmd.CloudType == cloudMagnum {
+		return initMagnumFlags(cmd)
+	}
+
+	return nil
+}
+
+func initCarinaFlags(cmd *Command) error {
+	// endpoint = --endpoint -> public carina endpoint
+	if cmd.Endpoint == "" {
+		cmd.Endpoint = libcarina.BetaEndpoint
+		fmt.Printf("[DEBUG] Endpoint: %s\n", libcarina.BetaEndpoint)
+	} else {
+		fmt.Println("[DEBUG] Endpoint: --endpoint")
+	}
+
+	// username = --username -> CARINA_USERNAME -> RS_USERNAME
+	if cmd.Username == "" {
+		cmd.Username = os.Getenv(CarinaUserNameEnvVar)
 		if cmd.Username == "" {
+			cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
+			if cmd.Username == "" {
+				return errors.New(fmt.Sprintf("UserName was not specified. Either use --username or set %s, or %s.\n", CarinaUserNameEnvVar, RackspaceUserNameEnvVar))
+			} else {
+				fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
+			}
+		} else {
+			fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
+		}
+	} else {
+		fmt.Println("[DEBUG] UserName: --username")
+	}
+
+	// api-key = --api-key -> CARINA_APIKEY -> RS_API_KEY
+	if cmd.APIKey == "" {
+		cmd.APIKey = os.Getenv(CarinaAPIKeyEnvVar)
+		if cmd.APIKey == "" {
+			cmd.APIKey = os.Getenv(RackspaceAPIKeyEnvVar)
+			if cmd.APIKey == "" {
+				return errors.New(fmt.Sprintf("API Key was not specified. Either use --api-key or set %s or %s.\n", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar))
+			} else {
+				fmt.Printf("[DEBUG] API Key: %s\n", RackspaceAPIKeyEnvVar)
+			}
+		} else {
+			fmt.Printf("[DEBUG] API Key: %s\n", CarinaAPIKeyEnvVar)
+		}
+	} else {
+		fmt.Println("[DEBUG] API Key: --api-key")
+	}
+
+	return nil
+}
+
+func initMagnumFlags(cmd *Command) error {
+	if cmd.Endpoint == "" {
+		cmd.Endpoint = os.Getenv(OpenStackAuthURLEnvVar)
+		if cmd.Endpoint == "" {
+			return errors.New(fmt.Sprintf("Endpoint was not specified via --endpoint or %s", OpenStackAuthURLEnvVar))
+		} else {
+			fmt.Printf("[DEBUG] Endpoint: %s\n", OpenStackAuthURLEnvVar)
+		}
+	} else {
+		fmt.Println("[DEBUG] Endpoint: --endpoint")
+	}
+
+	// username = --username -> if magnum OS_PASSWORD; else CARINA_USERNAME -> RACKSPACE USERNAME
+	if cmd.Username == "" {
+		if cmd.CloudType == cloudMagnum {
+			cmd.Username = os.Getenv(OpenStackUserNameEnvVar)
+			if cmd.Username == "" {
+				return errors.New(fmt.Sprintf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar))
+			} else {
+				fmt.Printf("[DEBUG] UserName: %s\n", OpenStackUserNameEnvVar)
+			}
+		} else {
 			cmd.Username = os.Getenv(CarinaUserNameEnvVar)
 			if cmd.Username == "" {
 				cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
 				if cmd.Username == "" {
-					fmt.Printf("[ERROR] UserName was not specified. Either use --username or set %s, or %s.\n", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
+					return errors.New(fmt.Sprintf("UserName was not specified via --username, %s or %s.", CarinaUserNameEnvVar, RackspaceUserNameEnvVar))
 				} else {
 					fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
 				}
 			} else {
 				fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
 			}
-		} else {
-			fmt.Println("[DEBUG] UserName: --username")
 		}
 
-		// api-key = --api-key -> CARINA_APIKEY -> RS_API_KEY
-		if cmd.APIKey == "" {
-			cmd.APIKey = os.Getenv(CarinaAPIKeyEnvVar)
-			if cmd.APIKey == "" {
-				cmd.APIKey = os.Getenv(RackspaceAPIKeyEnvVar)
-				if cmd.APIKey == "" {
-					fmt.Printf("[ERROR] API Key was not specified. Either use --api-key or set %s or %s.\n", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
-				} else {
-					fmt.Printf("[DEBUG] API Key: %s\n", RackspaceAPIKeyEnvVar)
-				}
-			} else {
-				fmt.Printf("[DEBUG] API Key: %s\n", CarinaAPIKeyEnvVar)
-			}
-		} else {
-			fmt.Println("[DEBUG] API Key: --api-key")
-		}
+	} else {
+		fmt.Println("[DEBUG] UserName: --username")
 	}
 
-	if cmd.CloudType == cloudMagnum {
-		if cmd.Endpoint == "" {
-			cmd.Endpoint = os.Getenv(OpenStackAuthURLEnvVar)
-			if cmd.Endpoint == "" {
-				return errors.New(fmt.Sprintf("Endpoint was not specified via --endpoint or %s", OpenStackAuthURLEnvVar))
-			} else {
-				fmt.Printf("[DEBUG] Endpoint: %s\n", OpenStackAuthURLEnvVar)
-			}
-		} else {
-			fmt.Println("[DEBUG] Endpoint: --endpoint")
-		}
-
-		// username = --username -> if magnum OS_PASSWORD; else CARINA_USERNAME -> RACKSPACE USERNAME
-		if cmd.Username == "" {
-			if cmd.CloudType == cloudMagnum {
-				cmd.Username = os.Getenv(OpenStackUserNameEnvVar)
-				if cmd.Username == "" {
-					return errors.New(fmt.Sprintf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar))
-				} else {
-					fmt.Printf("[DEBUG] UserName: %s\n", OpenStackUserNameEnvVar)
-				}
-			} else {
-				cmd.Username = os.Getenv(CarinaUserNameEnvVar)
-				if cmd.Username == "" {
-					cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
-					if cmd.Username == "" {
-						return errors.New(fmt.Sprintf("UserName was not specified via --username, %s or %s.", CarinaUserNameEnvVar, RackspaceUserNameEnvVar))
-					} else {
-						fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
-					}
-				} else {
-					fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
-				}
-			}
-
-		} else {
-			fmt.Println("[DEBUG] UserName: --username")
-		}
-
+	if cmd.Password == "" {
+		cmd.Password = os.Getenv(OpenStackPasswordEnvVar)
 		if cmd.Password == "" {
-			cmd.Password = os.Getenv(OpenStackPasswordEnvVar)
-			if cmd.Password == "" {
-				return errors.New(fmt.Sprintf("Password was not specified via --password or %s", OpenStackPasswordEnvVar))
-			} else {
-				fmt.Printf("[DEBUG] Password: %s\n", OpenStackPasswordEnvVar)
-			}
+			return errors.New(fmt.Sprintf("Password was not specified via --password or %s", OpenStackPasswordEnvVar))
 		} else {
-			fmt.Println("[DEBUG] Password: --password")
+			fmt.Printf("[DEBUG] Password: %s\n", OpenStackPasswordEnvVar)
 		}
+	} else {
+		fmt.Println("[DEBUG] Password: --password")
+	}
 
+	if cmd.Project == "" {
+		cmd.Project = os.Getenv(OpenStackProjectEnvVar)
 		if cmd.Project == "" {
-			cmd.Project = os.Getenv(OpenStackProjectEnvVar)
-			if cmd.Project == "" {
-				fmt.Printf("[DEBUG] Project was not specified. Either use --project or set %s.\n", OpenStackProjectEnvVar)
-			} else {
-				fmt.Printf("[DEBUG] Project: %s\n", OpenStackProjectEnvVar)
-			}
+			fmt.Printf("[DEBUG] Project was not specified. Either use --project or set %s.\n", OpenStackProjectEnvVar)
 		} else {
-			fmt.Println("[DEBUG] Project: --project")
+			fmt.Printf("[DEBUG] Project: %s\n", OpenStackProjectEnvVar)
 		}
+	} else {
+		fmt.Println("[DEBUG] Project: --project")
+	}
 
+	if cmd.Domain == "" {
+		cmd.Domain = os.Getenv(OpenStackDomainEnvVar)
 		if cmd.Domain == "" {
-			cmd.Domain = os.Getenv(OpenStackDomainEnvVar)
-			if cmd.Domain == "" {
-				cmd.Domain = "default"
-				fmt.Printf("[DEBUG] Domain: default. Either use --domain or set %s.\n", OpenStackDomainEnvVar)
-			} else {
-				fmt.Printf("[DEBUG] Domain: %s\n", OpenStackDomainEnvVar)
-			}
+			cmd.Domain = "default"
+			fmt.Printf("[DEBUG] Domain: default. Either use --domain or set %s.\n", OpenStackDomainEnvVar)
 		} else {
-			fmt.Println("[DEBUG] Domain: --domain")
+			fmt.Printf("[DEBUG] Domain: %s\n", OpenStackDomainEnvVar)
 		}
+	} else {
+		fmt.Println("[DEBUG] Domain: --domain")
+	}
 
+	if cmd.Region == "" {
+		cmd.Region = os.Getenv(OpenStackRegionEnvVar)
 		if cmd.Region == "" {
-			cmd.Region = os.Getenv(OpenStackRegionEnvVar)
-			if cmd.Region == "" {
-				fmt.Printf("[DEBUG] Region was not specified. Either use --region or set %s.\n", OpenStackRegionEnvVar)
-			} else {
-				fmt.Printf("[DEBUG] Region: %s\n", OpenStackRegionEnvVar)
-			}
+			fmt.Printf("[DEBUG] Region was not specified. Either use --region or set %s.\n", OpenStackRegionEnvVar)
 		} else {
-			fmt.Println("[DEBUG] Region: --region")
+			fmt.Printf("[DEBUG] Region: %s\n", OpenStackRegionEnvVar)
 		}
+	} else {
+		fmt.Println("[DEBUG] Region: --region")
 	}
 
 	return nil
