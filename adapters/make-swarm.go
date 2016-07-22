@@ -85,6 +85,28 @@ func (carina *MakeSwarm) ShowCluster(name string) error {
 	return err
 }
 
+// DeleteCluster permanently deletes a cluster
+func (carina *MakeSwarm) DeleteCluster(name string) error {
+	carinaClient, err := carina.authenticate()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[DEBUG][make-swarm] Deleting cluster: %s\n", name)
+	cluster, err := carinaClient.Delete(name)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to delete cluster (%s)", name))
+	}
+
+	err = carina.writeClusterHeader()
+	if err != nil {
+		return err
+	}
+
+	err = carina.writeCluster(cluster)
+	return err
+}
+
 func (carina *MakeSwarm) writeCluster(cluster *libcarina.Cluster) error {
 	fields := []string{
 		cluster.ClusterName,

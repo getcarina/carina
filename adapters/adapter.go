@@ -16,6 +16,9 @@ type Adapter interface {
 
 	// ShowCluster prints out a cluster's information to the console
 	ShowCluster(name string) error
+
+	// DeleteCluster permanently deletes a cluster
+	DeleteCluster(name string) error
 }
 
 // UserCredentials is the set of authentication credentials discovered by the cli

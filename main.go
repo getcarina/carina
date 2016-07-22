@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/getcarina/carina/version"
 	"github.com/getcarina/libcarina"
+	"github.com/pkg/errors"
 
 	"github.com/getcarina/carina/adapters"
 )
@@ -714,16 +714,21 @@ func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
 }
 
 // Delete a cluster
-func (carina *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
-	err = carina.clusterApply(carina.ClusterClient.Delete)
+func (cmd *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
+	adapter, err := cmd.getAdapter()
+	err = adapter.DeleteCluster(cmd.ClusterName)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Unable to delete cluster, not deleting credentials on disk")
+		fmt.Fprintf(os.Stderr, "[WARN] Unable to delete cluster (%s), not deleting credentials on disk\n", cmd.ClusterName)
 		return err
 	}
-	p, err := carina.clusterPath()
 
+	return cmd.DeleteCachedCredentials(cmd.ClusterName)
+}
+
+func (cmd *CredentialsCommand) DeleteCachedCredentials(clusterName string) error {
+	p, err := cmd.clusterPath()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to locate carina config path, not deleteing credentials on disk\n")
+		fmt.Fprintf(os.Stderr, "[WARN] Unable to locate carina config path, not deleteing credentials on disk\n")
 		return err
 	}
 
@@ -741,11 +746,15 @@ func (carina *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
 	// If the path exists but not the actual credentials, inform user
 	_, statErr = os.Stat(filepath.Join(p, "ca.pem"))
 	if os.IsNotExist(statErr) {
-		return errors.New("Path to cluster credentials exists but not the ca.pem, not deleting. Remove by hand.")
+		return errors.New("Path to cluster credentials exists but not the ca.pem, not deleting")
 	}
 
 	err = os.RemoveAll(p)
-	return err
+	if err != nil {
+		return errors.Wrap(err, "Unable to delete the credentials on disk")
+	}
+
+	return nil
 }
 
 // Grow increases the size of the given cluster

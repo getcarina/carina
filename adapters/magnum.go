@@ -97,6 +97,11 @@ func (magnum *Magnum) ShowCluster(name string) error {
 	return err
 }
 
+// DeleteCluster permanently deletes a cluster
+func (magnum *Magnum) DeleteCluster(name string) error {
+	return errors.New("Not implemented yet")
+}
+
 func (magnum *Magnum) writeCluster(cluster *bays.Bay) error {
 	fields := []string{
 		cluster.Name,
