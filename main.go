@@ -21,6 +21,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/getcarina/carina/adapters"
+	"github.com/getcarina/carina/adapters/magnum"
+	"github.com/getcarina/carina/adapters/makeswarm"
 )
 
 // Application is, our, well, application
@@ -80,14 +82,7 @@ type WaitClusterCommand struct {
 // CreateCommand keeps context about the create command
 type CreateCommand struct {
 	*WaitClusterCommand
-
-	// Options passed along to Carina's API
-	Nodes     int
-	AutoScale bool
-
-	// TODO: See if setting flavor or image makes sense, even if the API takes it
-	// Flavor    string
-	// Image     string
+	Nodes int
 }
 
 // GrowCommand keeps context about the number of nodes to scale by
@@ -193,7 +188,6 @@ func New() *Application {
 	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "Create a swarm cluster")
 	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
 	createCommand.Flag("segments", "number of nodes for the initial cluster").Default("1").Hidden().IntVar(&createCommand.Nodes)
-	createCommand.Flag("autoscale", "Automatically add nodes to the cluster as necessary; defaults to off").BoolVar(&createCommand.AutoScale)
 	createCommand.Action(createCommand.Create)
 
 	getCommand := cap.NewWaitClusterCommand(ctx, "get", "Get information about a swarm cluster")
@@ -279,7 +273,7 @@ func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
 	cmd.Context = ctx
 	cmd.CmdClause = app.Command(name, help)
 	cmd.PreAction(cmd.initFlags)
-	cmd.Flag("cloud", "The cloud type: magnum, make-swarm or make-coe. This is automatically detected using the provided credentials.").Hidden().StringVar(&cmd.CloudType)
+	cmd.Flag("cloud", "The cloud type: magnum or make-swarm. This is automatically detected using the provided credentials.").Hidden().EnumVar(&cmd.CloudType, cloudMagnum, cloudMakeSwarm)
 	return cmd
 }
 
@@ -288,7 +282,6 @@ func (app *Application) NewClusterCommand(ctx *Context, name, help string) *Clus
 	cc := new(ClusterCommand)
 	cc.Command = app.NewCommand(ctx, name, help)
 	cc.Arg("cluster-name", "name of the cluster").Required().StringVar(&cc.ClusterName)
-	cc.PreAction(cc.Auth)
 	return cc
 }
 
@@ -493,10 +486,9 @@ func initCarinaFlags(cmd *Command) error {
 		if cmd.Username == "" {
 			cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
 			if cmd.Username == "" {
-				return errors.New(fmt.Sprintf("UserName was not specified. Either use --username or set %s, or %s.\n", CarinaUserNameEnvVar, RackspaceUserNameEnvVar))
-			} else {
-				fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
+				return fmt.Errorf("UserName was not specified. Either use --username or set %s, or %s.\n", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
 			}
+			fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
 		} else {
 			fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
 		}
@@ -510,10 +502,9 @@ func initCarinaFlags(cmd *Command) error {
 		if cmd.APIKey == "" {
 			cmd.APIKey = os.Getenv(RackspaceAPIKeyEnvVar)
 			if cmd.APIKey == "" {
-				return errors.New(fmt.Sprintf("API Key was not specified. Either use --api-key or set %s or %s.\n", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar))
-			} else {
-				fmt.Printf("[DEBUG] API Key: %s\n", RackspaceAPIKeyEnvVar)
+				return fmt.Errorf("API Key was not specified. Either use --api-key or set %s or %s.\n", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
 			}
+			fmt.Printf("[DEBUG] API Key: %s\n", RackspaceAPIKeyEnvVar)
 		} else {
 			fmt.Printf("[DEBUG] API Key: %s\n", CarinaAPIKeyEnvVar)
 		}
@@ -528,10 +519,9 @@ func initMagnumFlags(cmd *Command) error {
 	if cmd.Endpoint == "" {
 		cmd.Endpoint = os.Getenv(OpenStackAuthURLEnvVar)
 		if cmd.Endpoint == "" {
-			return errors.New(fmt.Sprintf("Endpoint was not specified via --endpoint or %s", OpenStackAuthURLEnvVar))
-		} else {
-			fmt.Printf("[DEBUG] Endpoint: %s\n", OpenStackAuthURLEnvVar)
+			return fmt.Errorf("Endpoint was not specified via --endpoint or %s", OpenStackAuthURLEnvVar)
 		}
+		fmt.Printf("[DEBUG] Endpoint: %s\n", OpenStackAuthURLEnvVar)
 	} else {
 		fmt.Println("[DEBUG] Endpoint: --endpoint")
 	}
@@ -541,19 +531,17 @@ func initMagnumFlags(cmd *Command) error {
 		if cmd.CloudType == cloudMagnum {
 			cmd.Username = os.Getenv(OpenStackUserNameEnvVar)
 			if cmd.Username == "" {
-				return errors.New(fmt.Sprintf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar))
-			} else {
-				fmt.Printf("[DEBUG] UserName: %s\n", OpenStackUserNameEnvVar)
+				return fmt.Errorf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar)
 			}
+			fmt.Printf("[DEBUG] UserName: %s\n", OpenStackUserNameEnvVar)
 		} else {
 			cmd.Username = os.Getenv(CarinaUserNameEnvVar)
 			if cmd.Username == "" {
 				cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
 				if cmd.Username == "" {
-					return errors.New(fmt.Sprintf("UserName was not specified via --username, %s or %s.", CarinaUserNameEnvVar, RackspaceUserNameEnvVar))
-				} else {
-					fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
+					return fmt.Errorf("UserName was not specified via --username, %s or %s.", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
 				}
+				fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
 			} else {
 				fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
 			}
@@ -566,10 +554,9 @@ func initMagnumFlags(cmd *Command) error {
 	if cmd.Password == "" {
 		cmd.Password = os.Getenv(OpenStackPasswordEnvVar)
 		if cmd.Password == "" {
-			return errors.New(fmt.Sprintf("Password was not specified via --password or %s", OpenStackPasswordEnvVar))
-		} else {
-			fmt.Printf("[DEBUG] Password: %s\n", OpenStackPasswordEnvVar)
+			return fmt.Errorf("Password was not specified via --password or %s", OpenStackPasswordEnvVar)
 		}
+		fmt.Printf("[DEBUG] Password: %s\n", OpenStackPasswordEnvVar)
 	} else {
 		fmt.Println("[DEBUG] Password: --password")
 	}
@@ -612,38 +599,37 @@ func initMagnumFlags(cmd *Command) error {
 }
 
 // Auth does the authentication
-func (carina *Command) Auth(pc *kingpin.ParseContext) (err error) {
-
+func (cmd *Command) Auth(pc *kingpin.ParseContext) (err error) {
 	// Short circuit if the cache is not enabled
-	if !carina.CacheEnabled {
-		carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+	if !cmd.CacheEnabled {
+		cmd.ClusterClient, err = libcarina.NewClusterClient(cmd.Endpoint, cmd.Username, cmd.APIKey)
 		if err != nil {
-			carina.ClusterClient.Client.Timeout = httpTimeout
+			cmd.ClusterClient.Client.Timeout = httpTimeout
 		}
 		return err
 	}
 
-	token, ok := carina.Cache.Tokens[carina.Username]
+	token, ok := cmd.Cache.Tokens[cmd.Username]
 
 	if ok {
-		carina.ClusterClient = &libcarina.ClusterClient{
+		cmd.ClusterClient = &libcarina.ClusterClient{
 			Client:   &http.Client{Timeout: httpTimeout},
-			Username: carina.Username,
+			Username: cmd.Username,
 			Token:    token,
-			Endpoint: carina.Endpoint,
+			Endpoint: cmd.Endpoint,
 		}
 
-		if dummyRequest(carina.ClusterClient) == nil {
+		if dummyRequest(cmd.ClusterClient) == nil {
 			return nil
 		}
 		// Otherwise we fall through and authenticate again
 	}
 
-	carina.ClusterClient, err = libcarina.NewClusterClient(carina.Endpoint, carina.Username, carina.APIKey)
+	cmd.ClusterClient, err = libcarina.NewClusterClient(cmd.Endpoint, cmd.Username, cmd.APIKey)
 	if err != nil {
 		return err
 	}
-	err = carina.Cache.SetToken(carina.Username, carina.ClusterClient.Token)
+	err = cmd.Cache.SetToken(cmd.Username, cmd.ClusterClient.Token)
 	return err
 }
 
@@ -669,21 +655,16 @@ func dummyRequest(c *libcarina.ClusterClient) error {
 }
 
 func (cmd *Command) getAdapter() adapters.Adapter {
-	var adapter adapters.Adapter
-	var credentials adapters.UserCredentials
-
 	switch cmd.CloudType {
 	case cloudMakeSwarm:
-		adapter = &adapters.MakeSwarm{Output: cmd.TabWriter}
-		credentials = adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.APIKey}
+		credentials := makeswarm.Credentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, APIKey: cmd.APIKey}
+		return &makeswarm.MakeSwarm{Credentials: credentials, Output: cmd.TabWriter}
 	case cloudMagnum:
-		adapter = &adapters.Magnum{Output: cmd.TabWriter}
-		credentials = adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
+		credentials := magnum.Credentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Password: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
+		return &magnum.Magnum{Credentials: credentials, Output: cmd.TabWriter}
+	default:
+		panic(fmt.Sprintf("Unsupported cloud type: %s", cmd.CloudType))
 	}
-
-	adapter.LoadCredentials(credentials)
-
-	return adapter
 }
 
 // List displays attributes for all clusters
@@ -694,25 +675,10 @@ func (cmd *Command) List(pc *kingpin.ParseContext) error {
 
 type clusterOp func(clusterName string) (*libcarina.Cluster, error)
 
-// Does an func against a cluster then returns the new cluster representation
-func (carina *ClusterCommand) clusterApply(op clusterOp) (err error) {
-	cluster, err := op(carina.ClusterName)
-	if err != nil {
-		return err
-	}
-
-	writeClusterHeader(carina.TabWriter)
-	err = writeCluster(carina.TabWriter, cluster)
-	if err != nil {
-		return err
-	}
-	return carina.TabWriter.Flush()
-}
-
 // Get displays attributes of an individual cluster
 func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) error {
 	adapter := cmd.getAdapter()
-	return adapter.ShowCluster(cmd.ClusterName)
+	return adapter.ShowCluster(cmd.ClusterName, cmd.Wait)
 }
 
 // Delete a cluster
@@ -724,10 +690,11 @@ func (cmd *CredentialsCommand) Delete(pc *kingpin.ParseContext) error {
 		return err
 	}
 
-	return cmd.DeleteCachedCredentials(cmd.ClusterName)
+	return cmd.DeleteClusterCredentials(cmd.ClusterName)
 }
 
-func (cmd *CredentialsCommand) DeleteCachedCredentials(clusterName string) error {
+// DeleteClusterCredentials removes a cluster's downloaded TLS certificates
+func (cmd *CredentialsCommand) DeleteClusterCredentials(clusterName string) error {
 	p, err := cmd.clusterPath()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[WARN] Unable to locate carina config path, not deleteing credentials on disk\n")
@@ -781,8 +748,8 @@ func (carina *WaitClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) 
 	return carina.clusterApplyWait(carina.ClusterClient.Rebuild, true)
 }
 
-const startupFudgeFactor = 40 * time.Second
-const waitBetween = 10 * time.Second
+const initialClusterWaitTime = 40 * time.Second
+const clusterPollingInterval = 10 * time.Second
 
 // Cluster status when new
 const StatusNew = "new"
@@ -796,7 +763,7 @@ const StatusRebuildingSwarm = "rebuilding-swarm"
 // Does an func against a cluster then returns the new cluster representation
 func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp, waitFirst bool) (err error) {
 	if carina.Wait && waitFirst {
-		time.Sleep(startupFudgeFactor)
+		time.Sleep(initialClusterWaitTime)
 	}
 
 	cluster, err := op(carina.ClusterName)
@@ -816,7 +783,7 @@ func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp, waitFirst bool)
 		// Transitions past point of "new" or "building" are assumed to be states we
 		// can stop on.
 		for status == StatusNew || status == StatusBuilding || status == StatusRebuildingSwarm {
-			time.Sleep(waitBetween)
+			time.Sleep(clusterPollingInterval)
 			// Assume go has held this connection live long enough
 			carina.ClusterClient.Client = &http.Client{Timeout: httpTimeout}
 			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
@@ -850,21 +817,13 @@ const CredentialsBaseDirEnvVar = "CARINA_CREDENTIALS_DIR"
 const CarinaHomeDirEnvVar = "CARINA_HOME"
 
 // Create a cluster
-func (carina *CreateCommand) Create(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApplyWait(func(clusterName string) (*libcarina.Cluster, error) {
-		if carina.Nodes < 1 {
-			return nil, errors.New("nodes must be >= 1")
-		}
-		nodes := libcarina.Number(carina.Nodes)
+func (cmd *CreateCommand) Create(pc *kingpin.ParseContext) error {
+	if cmd.Nodes < 1 {
+		return errors.New("--nodes must be >= 1")
+	}
 
-		c := libcarina.Cluster{
-			ClusterName: carina.ClusterName,
-			Nodes:       nodes,
-			AutoScale:   carina.AutoScale,
-		}
-		cluster, err := carina.ClusterClient.Create(c)
-		return cluster, err
-	}, true)
+	adapter := cmd.getAdapter()
+	return adapter.CreateCluster(cmd.ClusterName, cmd.Nodes, cmd.Wait)
 }
 
 func (carina *CredentialsCommand) clusterPath() (p string, err error) {
