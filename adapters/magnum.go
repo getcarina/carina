@@ -11,11 +11,13 @@ import (
 	"text/tabwriter"
 )
 
+// Magnum is an adapter between the cli and the OpenStack COE API (Magnum)
 type Magnum struct {
 	Credentials UserCredentials
 	Output      *tabwriter.Writer
 }
 
+// LoadCredentials accepts credentials collected by the cli
 func (magnum *Magnum) LoadCredentials(credentials UserCredentials) error {
 	magnum.Credentials = credentials
 	return nil
@@ -37,6 +39,7 @@ func (magnum *Magnum) authenticate() (*gophercloud.ServiceClient, error) {
 	return openstack.NewContainerOrchestrationV1(identity, gophercloud.EndpointOpts{Region: magnum.Credentials.Region})
 }
 
+// ListClusters prints out a list of the user's clusters to the console
 func (magnum *Magnum) ListClusters() error {
 	magnumClient, err := magnum.authenticate()
 	if err != nil {
@@ -72,6 +75,7 @@ func (magnum *Magnum) ListClusters() error {
 	return err
 }
 
+// ShowCluster prints out a cluster's information to the console
 func (magnum *Magnum) ShowCluster(name string) error {
 	magnumClient, err := magnum.authenticate()
 	if err != nil {

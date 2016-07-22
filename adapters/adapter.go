@@ -6,14 +6,19 @@ import (
 	"text/tabwriter"
 )
 
-// Maps between a container service API and the command line client
+// Adapter maps between a container service API and the cli
 type Adapter interface {
+	// LoadCredentials accepts credentials collected by the cli
 	LoadCredentials(credentials UserCredentials) error
+
+	// ListClusters prints out a list of the user's clusters to the console
 	ListClusters() error
+
+	// ShowCluster prints out a cluster's information to the console
 	ShowCluster(name string) error
 }
 
-// The credentials supplied by the user to the command line client
+// UserCredentials is the set of authentication credentials discovered by the cli
 type UserCredentials struct {
 	Endpoint        string
 	UserName        string

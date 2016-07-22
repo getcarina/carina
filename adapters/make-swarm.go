@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// MakeSwarm is an adapter between the cli and Carina (make-swarm)
 type MakeSwarm struct {
 	Credentials UserCredentials
 	Output      *tabwriter.Writer
@@ -16,6 +17,7 @@ type MakeSwarm struct {
 
 const httpTimeout = time.Second * 15
 
+// LoadCredentials accepts credentials collected by the cli
 func (carina *MakeSwarm) LoadCredentials(credentials UserCredentials) error {
 	carina.Credentials = credentials
 	return nil
@@ -33,6 +35,7 @@ func (carina *MakeSwarm) authenticate() (*libcarina.ClusterClient, error) {
 	return carinaClient, err
 }
 
+// ListClusters prints out a list of the user's clusters to the console
 func (carina *MakeSwarm) ListClusters() error {
 	carinaClient, err := carina.authenticate()
 	if err != nil {
@@ -60,6 +63,7 @@ func (carina *MakeSwarm) ListClusters() error {
 	return err
 }
 
+// ShowCluster prints out a cluster's information to the console
 func (carina *MakeSwarm) ShowCluster(name string) error {
 	carinaClient, err := carina.authenticate()
 	if err != nil {
