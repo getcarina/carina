@@ -684,7 +684,7 @@ func (cmd *Command) getAdapter() (adapter adapters.Adapter, err error) {
 	return
 }
 
-// List the current clusters
+// List displays attributes for all clusters
 func (cmd *Command) List(pc *kingpin.ParseContext) (err error) {
 	adapter, err := cmd.getAdapter()
 	return adapter.ListClusters()
@@ -707,9 +707,10 @@ func (carina *ClusterCommand) clusterApply(op clusterOp) (err error) {
 	return carina.TabWriter.Flush()
 }
 
-// Get an individual cluster
-func (carina *WaitClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApplyWait(carina.ClusterClient.Get, false)
+// Get displays attributes of an individual cluster
+func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
+	adapter, err := cmd.getAdapter()
+	return adapter.ShowCluster(cmd.ClusterName)
 }
 
 // Delete a cluster

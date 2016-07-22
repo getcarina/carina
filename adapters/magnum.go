@@ -72,6 +72,27 @@ func (magnum *Magnum) ListClusters() error {
 	return err
 }
 
+func (magnum *Magnum) ShowCluster(name string) error {
+	magnumClient, err := magnum.authenticate()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[DEBUG][magnum] Showing cluster: %s\n", name)
+	cluster, err := bays.Get(magnumClient, name).Extract()
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Unable to show cluster (%s)", name))
+	}
+
+	err = magnum.writeClusterHeader()
+	if err != nil {
+		return err
+	}
+
+	err = magnum.writeCluster(cluster)
+	return err
+}
+
 func (magnum *Magnum) writeCluster(cluster *bays.Bay) error {
 	fields := []string{
 		cluster.Name,

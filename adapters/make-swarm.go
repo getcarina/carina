@@ -60,6 +60,27 @@ func (carina *MakeSwarm) ListClusters() error {
 	return err
 }
 
+func (carina *MakeSwarm) ShowCluster(name string) error {
+	carinaClient, err := carina.authenticate()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[DEBUG][make-swarm] Showing cluster: %s\n", name)
+	cluster, err := carinaClient.Get(name)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Unable to show cluster (%s)", name))
+	}
+
+	err = carina.writeClusterHeader()
+	if err != nil {
+		return err
+	}
+
+	err = carina.writeCluster(cluster)
+	return err
+}
+
 func (carina *MakeSwarm) writeCluster(cluster *libcarina.Cluster) error {
 	fields := []string{
 		cluster.ClusterName,
