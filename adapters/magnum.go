@@ -101,6 +101,11 @@ func (magnum *Magnum) DeleteCluster(name string) error {
 	return errors.New("Not implemented yet")
 }
 
+// GrowCluster adds nodes to a cluster
+func (magnum *Magnum) GrowCluster(name string, nodes int) error {
+	return errors.New("Not implemented yet")
+}
+
 func (magnum *Magnum) writeCluster(cluster *bays.Bay) error {
 	fields := []string{
 		cluster.Name,

@@ -760,10 +760,9 @@ func (cmd *CredentialsCommand) DeleteCachedCredentials(clusterName string) error
 }
 
 // Grow increases the size of the given cluster
-func (carina *GrowCommand) Grow(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApply(func(clusterName string) (*libcarina.Cluster, error) {
-		return carina.ClusterClient.Grow(clusterName, carina.Nodes)
-	})
+func (cmd *GrowCommand) Grow(pc *kingpin.ParseContext) error {
+	adapter := cmd.getAdapter()
+	return adapter.GrowCluster(cmd.ClusterName, cmd.Nodes)
 }
 
 // SetAutoScale sets AutoScale on the cluster

@@ -106,6 +106,28 @@ func (carina *MakeSwarm) DeleteCluster(name string) error {
 	return err
 }
 
+// GrowCluster adds nodes to a cluster
+func (carina *MakeSwarm) GrowCluster(name string, nodes int) error {
+	carinaClient, err := carina.authenticate()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[DEBUG][make-swarm] Growing cluster (%s) by %d nodes\n", name, nodes)
+	cluster, err := carinaClient.Grow(name, nodes)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to grow cluster (%s)", name))
+	}
+
+	err = carina.writeClusterHeader()
+	if err != nil {
+		return err
+	}
+
+	err = carina.writeCluster(cluster)
+	return err
+}
+
 func (carina *MakeSwarm) writeCluster(cluster *libcarina.Cluster) error {
 	fields := []string{
 		cluster.ClusterName,

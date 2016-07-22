@@ -19,6 +19,9 @@ type Adapter interface {
 
 	// DeleteCluster permanently deletes a cluster
 	DeleteCluster(name string) error
+
+	// GrowCluster adds nodes to a cluster
+	GrowCluster(name string, nodes int) error
 }
 
 // UserCredentials is the set of authentication credentials discovered by the cli
