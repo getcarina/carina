@@ -22,6 +22,9 @@ type Adapter interface {
 
 	// GrowCluster adds nodes to a cluster
 	GrowCluster(name string, nodes int) error
+
+	// SetAutoScale enables or disables autoscaling on a cluster
+	SetAutoScale(name string, value bool) error
 }
 
 // UserCredentials is the set of authentication credentials discovered by the cli

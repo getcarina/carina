@@ -128,6 +128,28 @@ func (carina *MakeSwarm) GrowCluster(name string, nodes int) error {
 	return err
 }
 
+// SetAutoScale enables or disables autoscaling on a cluster
+func (carina *MakeSwarm) SetAutoScale(name string, value bool) error {
+	carinaClient, err := carina.authenticate()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[DEBUG][make-swarm] Changing the autoscale setting on the cluster (%s) to %t\n", name, value)
+	cluster, err := carinaClient.SetAutoScale(name, value)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to change the cluster's autoscale setting (%s)", name))
+	}
+
+	err = carina.writeClusterHeader()
+	if err != nil {
+		return err
+	}
+
+	err = carina.writeCluster(cluster)
+	return err
+}
+
 func (carina *MakeSwarm) writeCluster(cluster *libcarina.Cluster) error {
 	fields := []string{
 		cluster.ClusterName,

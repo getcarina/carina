@@ -106,6 +106,11 @@ func (magnum *Magnum) GrowCluster(name string, nodes int) error {
 	return errors.New("Not implemented yet")
 }
 
+// SetAutoScale enables or disables autoscaling on a cluster
+func (magnum *Magnum) SetAutoScale(name string, value bool) error {
+	return errors.New("Magnum does not support autoscaling.")
+}
+
 func (magnum *Magnum) writeCluster(cluster *bays.Bay) error {
 	fields := []string{
 		cluster.Name,

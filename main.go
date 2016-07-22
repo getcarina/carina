@@ -193,7 +193,7 @@ func New() *Application {
 	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "Create a swarm cluster")
 	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
 	createCommand.Flag("segments", "number of nodes for the initial cluster").Default("1").Hidden().IntVar(&createCommand.Nodes)
-	createCommand.Flag("autoscale", "whether autoscale is on or off").BoolVar(&createCommand.AutoScale)
+	createCommand.Flag("autoscale", "Automatically add nodes to the cluster as necessary; defaults to off").BoolVar(&createCommand.AutoScale)
 	createCommand.Action(createCommand.Create)
 
 	getCommand := cap.NewWaitClusterCommand(ctx, "get", "Get information about a swarm cluster")
@@ -215,7 +215,7 @@ func New() *Application {
 
 	autoscaleCommand := new(AutoScaleCommand)
 	autoscaleCommand.ClusterCommand = cap.NewClusterCommand(ctx, "autoscale", "Enable or disable autoscale on a cluster")
-	autoscaleCommand.Arg("autoscale", "whether autoscale is on or off").EnumVar(&autoscaleCommand.AutoScale, AutoScaleOn, AutoScaleOff)
+	autoscaleCommand.Arg("autoscale", "whether the cluster's autoscaling feature is enabled; defaults to on. Allowed values are on and off").Default(AutoScaleOn).EnumVar(&autoscaleCommand.AutoScale, AutoScaleOn, AutoScaleOff)
 	autoscaleCommand.Action(autoscaleCommand.SetAutoScale)
 
 	credentialsCommand := cap.NewCredentialsCommand(ctx, "credentials", "download credentials")
@@ -766,20 +766,14 @@ func (cmd *GrowCommand) Grow(pc *kingpin.ParseContext) error {
 }
 
 // SetAutoScale sets AutoScale on the cluster
-func (carina *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApply(func(clusterName string) (*libcarina.Cluster, error) {
-		scale := true
+func (cmd *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err error) {
+	isAutoScaleOn, err := strconv.ParseBool(cmd.AutoScale)
+	if err != nil {
+		return errors.Wrap(err, "Unable to parse the autoscale value. Allowed values are on and off")
+	}
 
-		switch carina.AutoScale {
-		case AutoScaleOn:
-			scale = true
-			break
-		case AutoScaleOff:
-			scale = false
-			break
-		}
-		return carina.ClusterClient.SetAutoScale(clusterName, scale)
-	})
+	adapter := cmd.getAdapter()
+	return adapter.SetAutoScale(cmd.ClusterName, isAutoScaleOn)
 }
 
 // Rebuild nukes your cluster and builds it over again
