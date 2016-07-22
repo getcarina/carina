@@ -39,7 +39,7 @@ func (carina *MakeSwarm) ListClusters() error {
 		return err
 	}
 
-	fmt.Println("[DEBUG][make-swarm] Listing clusters...")
+	fmt.Println("[DEBUG][make-swarm] Listing clusters")
 	clusterList, err := carinaClient.List()
 	if err != nil {
 		return errors.Wrap(err, "Unable to list clusters")

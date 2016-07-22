@@ -22,7 +22,7 @@ func (magnum *Magnum) LoadCredentials(credentials UserCredentials) error {
 }
 
 func (magnum *Magnum) authenticate() (*gophercloud.ServiceClient, error) {
-	fmt.Println("[DEBUG][Magnum] Authenticating...")
+	fmt.Println("[DEBUG][magnum] Authenticating...")
 	auth := gophercloud.AuthOptions{
 		IdentityEndpoint: magnum.Credentials.Endpoint,
 		Username:         magnum.Credentials.UserName,
@@ -38,15 +38,15 @@ func (magnum *Magnum) authenticate() (*gophercloud.ServiceClient, error) {
 }
 
 func (magnum *Magnum) ListClusters() error {
-	magnumService, err := magnum.authenticate()
+	magnumClient, err := magnum.authenticate()
 	if err != nil {
-		return errors.Wrap(err, "[Magnum] Authentication failed")
+		return errors.Wrap(err, "[magnum] Authentication failed")
 	}
 
-	fmt.Println("[DEBUG][Magnum] Listing clusters...")
-	results := bays.List(magnumService, bays.ListOpts{})
+	fmt.Println("[DEBUG][magnum] Listing clusters")
+	results := bays.List(magnumClient, bays.ListOpts{})
 	if results.Err != nil {
-		return errors.Wrap(results.Err, "[Magnum] Unable to list clusters")
+		return errors.Wrap(results.Err, "[magnum] Unable to list clusters")
 	}
 
 	err = magnum.writeClusterHeader()
@@ -57,7 +57,7 @@ func (magnum *Magnum) ListClusters() error {
 	err = results.EachPage(func(page pagination.Page) (bool, error) {
 		clusters, err := bays.ExtractBays(page)
 		if err != nil {
-			return false, errors.Wrap(err, "[Magnum]Unable to read the Magnum clusters from the results page")
+			return false, errors.Wrap(err, "[magnum] Unable to read the Magnum clusters from the results page")
 		}
 
 		for _, cluster := range clusters {
