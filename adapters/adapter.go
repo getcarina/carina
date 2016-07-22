@@ -9,7 +9,7 @@ import (
 // Adapter maps between a container service API and the cli
 type Adapter interface {
 	// LoadCredentials accepts credentials collected by the cli
-	LoadCredentials(credentials UserCredentials) error
+	LoadCredentials(credentials UserCredentials)
 
 	// ListClusters prints out a list of the user's clusters to the console
 	ListClusters() error

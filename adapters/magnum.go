@@ -18,9 +18,8 @@ type Magnum struct {
 }
 
 // LoadCredentials accepts credentials collected by the cli
-func (magnum *Magnum) LoadCredentials(credentials UserCredentials) error {
+func (magnum *Magnum) LoadCredentials(credentials UserCredentials) {
 	magnum.Credentials = credentials
-	return nil
 }
 
 func (magnum *Magnum) authenticate() (*gophercloud.ServiceClient, error) {

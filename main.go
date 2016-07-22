@@ -668,7 +668,8 @@ func dummyRequest(c *libcarina.ClusterClient) error {
 	return nil
 }
 
-func (cmd *Command) getAdapter() (adapter adapters.Adapter, err error) {
+func (cmd *Command) getAdapter() adapters.Adapter {
+	var adapter adapters.Adapter
 	var credentials adapters.UserCredentials
 
 	switch cmd.CloudType {
@@ -680,13 +681,14 @@ func (cmd *Command) getAdapter() (adapter adapters.Adapter, err error) {
 		credentials = adapters.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Secret: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
 	}
 
-	err = adapter.LoadCredentials(credentials)
-	return
+	adapter.LoadCredentials(credentials)
+
+	return adapter
 }
 
 // List displays attributes for all clusters
-func (cmd *Command) List(pc *kingpin.ParseContext) (err error) {
-	adapter, err := cmd.getAdapter()
+func (cmd *Command) List(pc *kingpin.ParseContext) error {
+	adapter := cmd.getAdapter()
 	return adapter.ListClusters()
 }
 
@@ -708,15 +710,15 @@ func (carina *ClusterCommand) clusterApply(op clusterOp) (err error) {
 }
 
 // Get displays attributes of an individual cluster
-func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) (err error) {
-	adapter, err := cmd.getAdapter()
+func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) error {
+	adapter := cmd.getAdapter()
 	return adapter.ShowCluster(cmd.ClusterName)
 }
 
 // Delete a cluster
-func (cmd *CredentialsCommand) Delete(pc *kingpin.ParseContext) (err error) {
-	adapter, err := cmd.getAdapter()
-	err = adapter.DeleteCluster(cmd.ClusterName)
+func (cmd *CredentialsCommand) Delete(pc *kingpin.ParseContext) error {
+	adapter := cmd.getAdapter()
+	err := adapter.DeleteCluster(cmd.ClusterName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[WARN] Unable to delete cluster (%s), not deleting credentials on disk\n", cmd.ClusterName)
 		return err

@@ -18,9 +18,8 @@ type MakeSwarm struct {
 const httpTimeout = time.Second * 15
 
 // LoadCredentials accepts credentials collected by the cli
-func (carina *MakeSwarm) LoadCredentials(credentials UserCredentials) error {
+func (carina *MakeSwarm) LoadCredentials(credentials UserCredentials) {
 	carina.Credentials = credentials
-	return nil
 }
 
 func (carina *MakeSwarm) authenticate() (*libcarina.ClusterClient, error) {
