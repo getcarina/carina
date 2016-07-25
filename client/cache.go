@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"encoding/json"
@@ -17,6 +17,13 @@ type Cache struct {
 	Tokens          map[string]string `json:"tokens"`
 }
 
+type CacheUnavailableError struct {
+	cause error
+}
+
+func (error CacheUnavailableError) Cause() error {
+	return error.cause
+}
 func defaultCacheFilename() (string, error) {
 	bd, err := CarinaCredentialsBaseDir()
 	if err != nil {

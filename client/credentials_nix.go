@@ -1,12 +1,13 @@
 // +build !windows
 
-package main
+package client
 
 import (
 	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
+	"github.com/go-errors/errors"
 )
 
 func credentialsNextStepsString(clusterName string) string {
@@ -35,7 +36,7 @@ func userHomeDir() (string, error) {
 	}
 	currentUser, err := user.Current()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Unable to retrieve the current user")
 	}
 	return currentUser.HomeDir, nil
 }
