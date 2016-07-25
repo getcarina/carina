@@ -744,70 +744,9 @@ func (cmd *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err error) 
 }
 
 // Rebuild nukes your cluster and builds it over again
-func (carina *WaitClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) {
-	return carina.clusterApplyWait(carina.ClusterClient.Rebuild, true)
-}
-
-const initialClusterWaitTime = 40 * time.Second
-const clusterPollingInterval = 10 * time.Second
-
-// Cluster status when new
-const StatusNew = "new"
-
-// Cluster status when building
-const StatusBuilding = "building"
-
-// Cluster status when rebuilding swarm
-const StatusRebuildingSwarm = "rebuilding-swarm"
-
-// Does an func against a cluster then returns the new cluster representation
-func (carina *WaitClusterCommand) clusterApplyWait(op clusterOp, waitFirst bool) (err error) {
-	if carina.Wait && waitFirst {
-		time.Sleep(initialClusterWaitTime)
-	}
-
-	cluster, err := op(carina.ClusterName)
-	if err != nil {
-		return err
-	}
-
-	if carina.Wait {
-		carina.ClusterClient.Client = &http.Client{Timeout: httpTimeout}
-		cluster, err = carina.ClusterClient.Get(carina.ClusterName)
-		if err != nil {
-			return err
-		}
-
-		status := cluster.Status
-
-		// Transitions past point of "new" or "building" are assumed to be states we
-		// can stop on.
-		for status == StatusNew || status == StatusBuilding || status == StatusRebuildingSwarm {
-			time.Sleep(clusterPollingInterval)
-			// Assume go has held this connection live long enough
-			carina.ClusterClient.Client = &http.Client{Timeout: httpTimeout}
-			cluster, err = carina.ClusterClient.Get(carina.ClusterName)
-			if err != nil || cluster == nil {
-				// Assume we should reauth
-				if err != nil {
-					break
-				}
-				continue
-			}
-			status = cluster.Status
-		}
-	}
-
-	if err != nil {
-		return err
-	}
-
-	writeClusterHeader(carina.TabWriter)
-	err = writeCluster(carina.TabWriter, cluster)
-	if err != nil {
-		return err
-	}
-	return carina.TabWriter.Flush()
+func (cmd *WaitClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) {
+	adapter := cmd.getAdapter()
+	return adapter.RebuildCluster(cmd.ClusterName, cmd.Wait)
 }
 
 // CredentialsBaseDirEnvVar environment variable name for where credentials are downloaded to by default

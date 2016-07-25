@@ -17,6 +17,9 @@ type Adapter interface {
 	// ShowCluster prints out a cluster's information to the console
 	ShowCluster(name string, waitUntilActive bool) error
 
+	// RebuildCluster destroys and recreates the cluster
+	RebuildCluster(name string, waitUntilActive bool) error
+
 	// DeleteCluster permanently deletes a cluster
 	DeleteCluster(name string) error
 

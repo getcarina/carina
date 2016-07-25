@@ -121,6 +121,11 @@ func (magnum *Magnum) ShowCluster(name string, waitUntilActive bool) error {
 	return err
 }
 
+// RebuildCluster destroys and recreates the cluster
+func (magnum *Magnum) RebuildCluster(name string, waitUntilActive bool) error {
+	return errors.New("Not implemented yet")
+}
+
 // DeleteCluster permanently deletes a cluster
 func (magnum *Magnum) DeleteCluster(name string) error {
 	return errors.New("Not implemented yet")

@@ -71,7 +71,7 @@ func (carina *MakeSwarm) CreateCluster(name string, nodes int, waitUntilActive b
 	}
 	cluster, err := carina.client.Create(options)
 	if err != nil {
-		return errors.Wrap(err, "[make-swarm] Unable to list clusters")
+		return errors.Wrap(err, "[make-swarm] Unable to create the cluster")
 	}
 
 	if waitUntilActive {
@@ -116,6 +116,36 @@ func (carina *MakeSwarm) ListClusters() error {
 		}
 	}
 
+	return err
+}
+
+// RebuildCluster destroys and recreates the cluster
+func (carina *MakeSwarm) RebuildCluster(name string, waitUntilActive bool) error {
+	err := carina.authenticate()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[DEBUG][make-swarm] Rebuilding cluster (%s)\n", name)
+	cluster, err := carina.client.Rebuild(name)
+	if err != nil {
+		return errors.Wrap(err, "[make-swarm] Unable to rebuild the cluster")
+	}
+
+	if waitUntilActive {
+		time.Sleep(initialClusterWaitTime)
+		cluster, err = carina.waitUntilClusterIsActive(name)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = carina.writeClusterHeader()
+	if err != nil {
+		return err
+	}
+
+	err = carina.writeCluster(cluster)
 	return err
 }
 
