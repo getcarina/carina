@@ -1,24 +1,19 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
-	"io/ioutil"
-	"net/url"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
-	"text/tabwriter"
 	"time"
 	"unicode"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	carinaclient "github.com/getcarina/carina/client"
+	"github.com/getcarina/carina/console"
 	"github.com/getcarina/carina/magnum"
 	"github.com/getcarina/carina/makeswarm"
-	"github.com/getcarina/carina/console"
 	"github.com/getcarina/carina/version"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
@@ -39,15 +34,15 @@ type Command struct {
 
 // Context contains the global application flags
 type Context struct {
-	client        *carinaclient.Client
-	Username      string
-	APIKey        string
-	Password      string
-	Project       string
-	Domain        string
-	Region        string
-	Endpoint      string
-	CacheEnabled  bool
+	client       *carinaclient.Client
+	Username     string
+	APIKey       string
+	Password     string
+	Project      string
+	Domain       string
+	Region       string
+	Endpoint     string
+	CacheEnabled bool
 }
 
 // ClusterCommand is a Command with a ClusterName set
@@ -84,7 +79,7 @@ type CreateCommand struct {
 
 // GrowCommand keeps context about the number of nodes to scale by
 type GrowCommand struct {
-	*WaitClusterCommand
+	*ClusterCommand
 	Nodes int
 }
 
@@ -137,7 +132,7 @@ func New() *Application {
 	app := kingpin.New("carina", "command line interface to launch and work with Docker Swarm clusters")
 	app.Version(VersionString())
 
-	baseDir, err := carinaclient.CarinaCredentialsBaseDir()
+	baseDir, err := carinaclient.GetCredentialsDir()
 	if err != nil {
 		panic(err)
 	}
@@ -163,7 +158,7 @@ func New() *Application {
 	cap.Flag("endpoint", "Carina API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
 
-	cap.PreAction(cap.informLatest)
+	//cap.PreAction(cap.informLatest)
 
 	cap.Flag("bash-completion", "Generate bash completion").Action(cap.generateBashCompletion).Hidden().Bool()
 
@@ -557,13 +552,13 @@ func initMagnumFlags(cmd *Command) error {
 }
 
 func (cmd *Command) buildAccount() *carinaclient.Account {
-	account := &carinaclient.Account { CloudType: cmd.CloudType }
+	account := &carinaclient.Account{CloudType: cmd.CloudType}
 
 	switch cmd.CloudType {
 	case carinaclient.CloudMakeSwarm:
-		account.Credentials = makeswarm.Credentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, APIKey: cmd.APIKey}
+		account.Credentials = makeswarm.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, APIKey: cmd.APIKey}
 	case carinaclient.CloudMagnum:
-		account.Credentials = magnum.Credentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Password: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
+		account.Credentials = magnum.MagnumCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Password: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
 	default:
 		panic(fmt.Sprintf("Unsupported cloud type: %s", cmd.CloudType))
 	}
@@ -578,12 +573,12 @@ func (cmd *Command) List(pc *kingpin.ParseContext) error {
 		return err
 	}
 
-	err = console.WriteClusterHeader()
+	console.WriteClusterHeader()
 	for _, cluster := range clusters {
-		err = console.WriteCluster(cluster)
+		console.WriteCluster(cluster)
 	}
 
-	return nil
+	return console.Err
 }
 
 // Get displays attributes of an individual cluster
@@ -614,7 +609,7 @@ func (cmd *CredentialsCommand) Delete(pc *kingpin.ParseContext) error {
 
 // Grow increases the size of the given cluster
 func (cmd *GrowCommand) Grow(pc *kingpin.ParseContext) error {
-	cluster, err := cmd.client.GrowCluster(cmd.buildAccount(), cmd.ClusterName, cmd.Nodes, cmd.Wait)
+	cluster, err := cmd.client.GrowCluster(cmd.buildAccount(), cmd.ClusterName, cmd.Nodes, false)
 	if err != nil {
 		return err
 	}
@@ -632,7 +627,7 @@ func (cmd *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err error) 
 		return errors.Wrap(err, "Unable to parse the autoscale value. Allowed values are on and off")
 	}
 
-	cluster, err := cmd.client.SetAutoScale(cmd.ClusterName, isAutoScaleOn)
+	cluster, err := cmd.client.SetAutoScale(cmd.buildAccount(), cmd.ClusterName, isAutoScaleOn)
 	if err != nil {
 		return err
 	}
@@ -674,167 +669,44 @@ func (cmd *CreateCommand) Create(pc *kingpin.ParseContext) error {
 }
 
 // Download credentials for a cluster
-func (carina *CredentialsCommand) Download(pc *kingpin.ParseContext) (err error) {
-	credentials, err := carina.ClusterClient.GetCredentials(carina.ClusterName)
+func (cmd *CredentialsCommand) Download(pc *kingpin.ParseContext) error {
+	credentialsPath, err := cmd.client.DownloadClusterCredentials(cmd.buildAccount(), cmd.ClusterName, cmd.Path)
 	if err != nil {
 		return err
 	}
 
-	p, err := carina.clusterPath()
-
-	if p != "." {
-		err = os.MkdirAll(p, 0777)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	err = writeCredentials(carina.TabWriter, credentials, p)
-	if err != nil {
-		return err
-	}
-
-	if !carina.Silent {
+	if !cmd.Silent {
 		fmt.Println("#")
-		fmt.Printf("# Credentials written to \"%s\"\n", p)
-		fmt.Print(credentialsNextStepsString(carina.ClusterName))
+		fmt.Printf("# Credentials written to \"%s\"\n", credentialsPath)
+		fmt.Print(carinaclient.CredentialsNextStepsString(cmd.ClusterName))
 		fmt.Println("#")
 	}
 
-	err = carina.TabWriter.Flush()
-	return err
+	return nil
 }
 
 // Show the user's quotas
-func (carina *Command) Quotas(pc *kingpin.ParseContext) (err error) {
-	quotas, err := carina.ClusterClient.GetQuotas()
-	if err != nil {
-		return err
-	}
-	MaxClusters := strconv.FormatInt(quotas.MaxClusters.Int64(), 10)
-	MaxNodesPerCluster := strconv.FormatInt(quotas.MaxNodesPerCluster.Int64(), 10)
-	err = writeRow(carina.TabWriter, []string{"MaxClusters", "MaxNodesPerCluster"})
-	if err != nil {
-		return err
-	}
-	err = writeRow(carina.TabWriter, []string{MaxClusters, MaxNodesPerCluster})
-	if err != nil {
-		return err
-	}
-	err = carina.TabWriter.Flush()
-	return err
-}
-
-func writeCredentials(w *tabwriter.Writer, creds *libcarina.Credentials, pth string) (err error) {
-	// TODO: Prompt when file already exists?
-	for fname, b := range creds.Files {
-		p := filepath.Join(pth, fname)
-		err = ioutil.WriteFile(p, b, 0600)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func verifyCredentials(path string) error {
-	ca, err := ioutil.ReadFile(filepath.Join(path, "ca.pem"))
-	if err != nil {
-		return err
-	}
-	caKey, err := ioutil.ReadFile(filepath.Join(path, "ca-key.pem"))
-	if err != nil {
-		return err
-	}
-	dockerEnv, err := ioutil.ReadFile(filepath.Join(path, "docker.env"))
-	if err != nil {
-		return err
-	}
-	cert, err := ioutil.ReadFile(filepath.Join(path, "cert.pem"))
-	if err != nil {
-		return err
-	}
-	key, err := ioutil.ReadFile(filepath.Join(path, "key.pem"))
+func (cmd *Command) Quotas(pc *kingpin.ParseContext) (err error) {
+	quotas, err := cmd.client.GetQuotas(cmd.buildAccount())
 	if err != nil {
 		return err
 	}
 
-	creds := libcarina.Credentials{
-		CA:        ca,
-		CAKey:     caKey,
-		DockerEnv: dockerEnv,
-		Cert:      cert,
-		Key:       key,
-	}
+	console.WriteRow([]string{"MaxClusters", "MaxNodesPerCluster"})
+	console.WriteRow([]string{strconv.Itoa(quotas.GetMaxClusters()), strconv.Itoa(quotas.GetMaxNodesPerCluster())})
 
-	tlsConfig, err := creds.GetTLSConfig()
-	if err != nil {
-		return err
-	}
-
-	sourceLines := strings.Split(string(creds.DockerEnv), "\n")
-	for _, line := range sourceLines {
-		if strings.Index(line, "export ") == 0 {
-			varDecl := strings.TrimRight(line[7:], "\n")
-			eqLocation := strings.Index(varDecl, "=")
-
-			varName := varDecl[:eqLocation]
-			varValue := varDecl[eqLocation+1:]
-
-			switch varName {
-			case "DOCKER_HOST":
-				creds.DockerHost = varValue
-			}
-
-		}
-	}
-
-	u, err := url.Parse(creds.DockerHost)
-	if err != nil {
-		return err
-	}
-
-	conn, err := tls.Dial("tcp", u.Host, tlsConfig)
-	if err != nil {
-		return err
-	}
-	conn.Close()
-	return nil
+	return console.Err
 }
 
 // Show echos the source command, for eval `carina env <name>`
-func (carina *ShellCommand) Show(pc *kingpin.ParseContext) error {
-	if carina.Path == "" {
-		baseDir, err := CarinaCredentialsBaseDir()
-		if err != nil {
-			return err
-		}
-		carina.Path = filepath.Join(baseDir, clusterDirName, carina.Username, carina.ClusterName)
+func (cmd *ShellCommand) Show(pc *kingpin.ParseContext) error {
+	sourceText, err := cmd.client.GetSourceCommand(cmd.buildAccount(), cmd.Shell, cmd.ClusterName, cmd.Path)
+	if err != nil {
+		return err
 	}
 
-	envPath := getCredentialFilePath(carina.Path, carina.Shell)
-	_, err := os.Stat(envPath)
-
-	// Either the credentials aren't there or they're wrong
-	if os.IsNotExist(err) || verifyCredentials(carina.Path) != nil {
-		// Show is a NoAuth command, so we'll auth first for a download
-		err := carina.Auth(pc)
-		if err != nil {
-			return err
-		}
-		carina.Silent = true // hack to force `carina credentials` to be quiet when called from `carina env`
-		err = carina.Download(pc)
-		if err != nil {
-			return err
-		}
-	}
-
-	fmt.Fprintln(os.Stdout, sourceHelpString(envPath, carina.ClusterName, carina.Shell))
-
-	err = carina.TabWriter.Flush()
-	return err
+	fmt.Println(sourceText)
+	return nil
 }
 
 func (app *Application) generateBashCompletion(c *kingpin.ParseContext) error {

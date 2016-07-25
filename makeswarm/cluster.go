@@ -1,21 +1,21 @@
 package makeswarm
 
-import	"github.com/getcarina/libcarina"
+import "github.com/getcarina/libcarina"
 
-type Cluster libcarina.Cluster
+type CarinaCluster libcarina.Cluster
 
-func (cluster *Cluster) GetName() string {
+func (cluster CarinaCluster) GetName() string {
 	return cluster.ClusterName
 }
 
-func (cluster *Cluster) GetFlavor() string {
+func (cluster CarinaCluster) GetFlavor() string {
 	return cluster.Flavor
 }
 
-func (cluster *Cluster) GetNodes() int {
-	return cluster.Nodes
+func (cluster CarinaCluster) GetNodes() int {
+	return cluster.Nodes.Int()
 }
 
-func (cluster *Cluster) GetStatus() string {
+func (cluster CarinaCluster) GetStatus() string {
 	return cluster.Status
 }

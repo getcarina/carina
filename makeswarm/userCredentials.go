@@ -1,7 +1,7 @@
 package makeswarm
 
 // Credentials is a set of authentication credentials accepted by Rackspace Identity
-type Credentials struct {
+type UserCredentials struct {
 	Endpoint        string
 	UserName        string
 	APIKey          string
@@ -9,6 +9,6 @@ type Credentials struct {
 	TokenExpiration string
 }
 
-func (credentials *Credentials) GetUserName() string {
+func (credentials UserCredentials) GetUserName() string {
 	return credentials.UserName
 }

@@ -1,10 +1,10 @@
 package client
 
 type Account struct {
-	CloudType     string
-	Credentials   Credentials
+	CloudType   string
+	Credentials UserCredentials
 }
 
-type Credentials interface {
+type UserCredentials interface {
 	GetUserName() string
 }

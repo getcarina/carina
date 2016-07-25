@@ -1,20 +1,14 @@
 package console
 
 import (
-	"text/tabwriter"
-	"strings"
+	"github.com/getcarina/carina/common"
 	"os"
-
-	carinaclient "github.com/getcarina/carina/client"
+	"strconv"
+	"strings"
+	"text/tabwriter"
 )
 
-var output *tabwriter.Writer
 var Err error
-
-func init() {
-	output := new(tabwriter.Writer)
-	output.Init(os.Stdout, 20, 1, 3, ' ', 0)
-}
 
 // WriteRow writes a row of tabular data to the console
 func WriteRow(fields []string) {
@@ -22,10 +16,14 @@ func WriteRow(fields []string) {
 		return
 	}
 
+	output := new(tabwriter.Writer)
+	output.Init(os.Stdout, 20, 1, 3, ' ', 0)
+
 	s := strings.Join(fields, "\t")
-	_, Err = output.Write([]byte(s + "\n"))
-	
-	if Err != nil {
+	b := []byte(s + "\n")
+	_, Err = output.Write(b)
+
+	if Err == nil {
 		Err = output.Flush()
 	}
 }
@@ -42,12 +40,12 @@ func WriteClusterHeader() {
 }
 
 // WriteCluster writes the cluster data to the console
-func WriteCluster(cluster carinaclient.Cluster) {
+func WriteCluster(cluster common.Cluster) {
 	fields := []string{
 		cluster.GetName(),
 		cluster.GetFlavor(),
-		cluster.GetNodes(),
+		strconv.Itoa(cluster.GetNodes()),
 		cluster.GetStatus(),
 	}
-	return WriteRow(fields)
+	WriteRow(fields)
 }

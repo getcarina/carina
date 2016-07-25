@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -21,11 +22,16 @@ type CacheUnavailableError struct {
 	cause error
 }
 
+func (error CacheUnavailableError) Error() string {
+	return fmt.Sprintf("The cache has been disabled due to the following error: \n%s", error.cause.Error())
+}
+
 func (error CacheUnavailableError) Cause() error {
 	return error.cause
 }
+
 func defaultCacheFilename() (string, error) {
-	bd, err := CarinaCredentialsBaseDir()
+	bd, err := GetCredentialsDir()
 	if err != nil {
 		return "", err
 	}

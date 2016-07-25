@@ -4,13 +4,13 @@ package client
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"os/user"
 	"path/filepath"
-	"github.com/go-errors/errors"
 )
 
-func credentialsNextStepsString(clusterName string) string {
+func CredentialsNextStepsString(clusterName string) string {
 	return fmt.Sprintf("# To see how to connect to your cluster, run: carina env %s\n", clusterName)
 }
 
