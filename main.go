@@ -719,7 +719,9 @@ func (cmd *Command) Quotas(pc *kingpin.ParseContext) (err error) {
 	}
 
 	console.WriteRow([]string{"MaxClusters", "MaxNodesPerCluster"})
-	console.WriteRow([]string{strconv.Itoa(quotas.GetMaxClusters()), strconv.Itoa(quotas.GetMaxNodesPerCluster())})
+	maxClusters := strconv.Itoa(quotas.GetMaxClusters())
+	maxNodesPerCluster := strconv.Itoa(quotas.GetMaxNodesPerCluster())
+	console.WriteRow([]string{maxClusters, maxNodesPerCluster})
 
 	return nil
 }

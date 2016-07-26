@@ -26,7 +26,6 @@ const StatusBuilding = "building"
 const StatusRebuilding = "rebuilding-swarm"
 
 const httpTimeout = 15 * time.Second
-const initialClusterWaitTime = 1 * time.Minute
 const clusterPollingInterval = 10 * time.Second
 
 func (carina *MakeSwarm) authenticate() error {
@@ -45,7 +44,7 @@ func (carina *MakeSwarm) authenticate() error {
 }
 
 func (carina *MakeSwarm) GetQuotas() (common.Quotas, error) {
-	var quotas common.Quotas
+	var quotas CarinaQuotas
 
 	err := carina.authenticate()
 	if err != nil {
@@ -53,7 +52,11 @@ func (carina *MakeSwarm) GetQuotas() (common.Quotas, error) {
 	}
 
 	common.Log.WriteDebug("[make-swarm] Retrieving account quotas")
-	carina.client.GetQuotas()
+	result, err := carina.client.GetQuotas()
+	if err != nil {
+		return quotas, errors.Wrap(err, "[make-swarm] Unable to retrieve account quotas")
+	}
+	quotas = CarinaQuotas(*result)
 
 	return quotas, err
 }
