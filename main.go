@@ -11,6 +11,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	carinaclient "github.com/getcarina/carina/client"
+	"github.com/getcarina/carina/common"
 	"github.com/getcarina/carina/console"
 	"github.com/getcarina/carina/magnum"
 	"github.com/getcarina/carina/makeswarm"
@@ -158,6 +159,8 @@ func New() *Application {
 	cap.Flag("endpoint", "Carina API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
 	cap.Flag("cloud", "The cloud type: magnum or make-swarm. This is automatically detected using the provided credentials.").EnumVar(&cap.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
+	cap.Flag("debug", "Print additional debug messages to stdout.").BoolVar(&common.Log.Debug)
+	cap.Flag("silent", "Do not print to stdout.").BoolVar(&common.Log.Silent)
 
 	cap.PreAction(cap.initApp)
 
@@ -246,7 +249,6 @@ func (app *Application) NewCredentialsCommand(ctx *Context, name, help string) *
 	credentialsCommand := new(CredentialsCommand)
 	credentialsCommand.ClusterCommand = app.NewClusterCommand(ctx, name, help)
 	credentialsCommand.Flag("path", "path to read & write credentials").PlaceHolder("<cluster-name>").StringVar(&credentialsCommand.Path)
-	credentialsCommand.Flag("silent", "Do not print to stdout").Hidden().BoolVar(&credentialsCommand.Silent)
 	return credentialsCommand
 }
 
@@ -349,7 +351,7 @@ func (app *Application) shouldCheckForUpdate() (bool, error) {
 	}
 
 	if strings.Contains(version.Version, "-dev") || version.Version == "" {
-		fmt.Fprintln(os.Stderr, "# [WARN] In dev mode, not checking for latest release")
+		common.Log.WriteWarning("# In dev mode, not checking for latest release")
 		return false, nil
 	}
 
@@ -370,25 +372,25 @@ func (app *Application) initApp(pc *kingpin.ParseContext) error {
 
 	rel, err := version.LatestRelease()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "# [WARN] Unable to fetch information about the latest release of %s. %s\n.", os.Args[0], err)
+		common.Log.WriteWarning("# Unable to fetch information about the latest release of %s. %s\n.", os.Args[0], err)
 		return nil
 	}
 
 	latest, err := extractSemver(rel.TagName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "# [WARN] Trouble parsing latest tag (%v): %s\n", rel.TagName, err)
+		common.Log.WriteWarning("# Trouble parsing latest tag (%v): %s", rel.TagName, err)
 		return nil
 	}
 	current, err := extractSemver(version.Version)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "# [WARN] Trouble parsing current tag (%v): %s\n", version.Version, err)
+		common.Log.WriteWarning("# Trouble parsing current tag (%v): %s", version.Version, err)
 		return nil
 	}
 
 	if latest.Greater(current) {
-		fmt.Fprintf(os.Stderr, "# A new version of the Carina client is out, go get it\n")
-		fmt.Fprintf(os.Stderr, "# You're on %v and the latest is %v\n", current, latest)
-		fmt.Fprintf(os.Stderr, "# https://github.com/getcarina/carina/releases\n")
+		common.Log.WriteWarning("# A new version of the Carina client is out, go get it!")
+		common.Log.WriteWarning("# You're on %v and the latest is %v", current, latest)
+		common.Log.WriteWarning("# https://github.com/getcarina/carina/releases")
 	}
 
 	return nil
@@ -403,13 +405,13 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 	}
 
 	if cmd.CloudType == "" {
-		fmt.Println("[DEBUG] No cloud type specified, detecting with the provided credentials. Use --cloud=[magnum|make-coe|make-swarm] to skip detection.")
+		common.Log.WriteDebug("No cloud type specified, detecting with the provided credentials. Use --cloud=[magnum|make-coe|make-swarm] to skip detection.")
 		if apikeyFound {
 			cmd.CloudType = carinaclient.CloudMakeSwarm
-			fmt.Println("[DEBUG] Cloud: make-swarm")
+			common.Log.WriteDebug("Cloud: make-swarm")
 		} else {
 			cmd.CloudType = carinaclient.CloudMagnum
-			fmt.Println("[DEBUG] Cloud: Magnum")
+			common.Log.WriteDebug("Cloud: Magnum")
 		}
 	}
 
@@ -430,9 +432,9 @@ func initCarinaFlags(cmd *Command) error {
 	// endpoint = --endpoint -> public carina endpoint
 	if cmd.Endpoint == "" {
 		cmd.Endpoint = libcarina.BetaEndpoint
-		fmt.Printf("[DEBUG] Endpoint: %s\n", libcarina.BetaEndpoint)
+		common.Log.WriteDebug("Endpoint: %s", libcarina.BetaEndpoint)
 	} else {
-		fmt.Println("[DEBUG] Endpoint: --endpoint")
+		common.Log.WriteDebug("Endpoint: --endpoint")
 	}
 
 	// username = --username -> CARINA_USERNAME -> RS_USERNAME
@@ -441,14 +443,14 @@ func initCarinaFlags(cmd *Command) error {
 		if cmd.Username == "" {
 			cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
 			if cmd.Username == "" {
-				return fmt.Errorf("UserName was not specified. Either use --username or set %s, or %s.\n", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
+				return fmt.Errorf("UserName was not specified. Either use --username or set %s, or %s.", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
 			}
-			fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
+			common.Log.WriteDebug("UserName: %s", RackspaceUserNameEnvVar)
 		} else {
-			fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
+			common.Log.WriteDebug("UserName: %s", CarinaUserNameEnvVar)
 		}
 	} else {
-		fmt.Println("[DEBUG] UserName: --username")
+		common.Log.WriteDebug("UserName: --username")
 	}
 
 	// api-key = --api-key -> CARINA_APIKEY -> RS_API_KEY
@@ -457,14 +459,14 @@ func initCarinaFlags(cmd *Command) error {
 		if cmd.APIKey == "" {
 			cmd.APIKey = os.Getenv(RackspaceAPIKeyEnvVar)
 			if cmd.APIKey == "" {
-				return fmt.Errorf("API Key was not specified. Either use --api-key or set %s or %s.\n", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
+				return fmt.Errorf("API Key was not specified. Either use --api-key or set %s or %s.", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
 			}
-			fmt.Printf("[DEBUG] API Key: %s\n", RackspaceAPIKeyEnvVar)
+			common.Log.WriteDebug("API Key: %s", RackspaceAPIKeyEnvVar)
 		} else {
-			fmt.Printf("[DEBUG] API Key: %s\n", CarinaAPIKeyEnvVar)
+			common.Log.WriteDebug("API Key: %s", CarinaAPIKeyEnvVar)
 		}
 	} else {
-		fmt.Println("[DEBUG] API Key: --api-key")
+		common.Log.WriteDebug("API Key: --api-key")
 	}
 
 	return nil
@@ -476,9 +478,9 @@ func initMagnumFlags(cmd *Command) error {
 		if cmd.Endpoint == "" {
 			return fmt.Errorf("Endpoint was not specified via --endpoint or %s", OpenStackAuthURLEnvVar)
 		}
-		fmt.Printf("[DEBUG] Endpoint: %s\n", OpenStackAuthURLEnvVar)
+		common.Log.WriteDebug("Endpoint: %s", OpenStackAuthURLEnvVar)
 	} else {
-		fmt.Println("[DEBUG] Endpoint: --endpoint")
+		common.Log.WriteDebug("Endpoint: --endpoint")
 	}
 
 	// username = --username -> if magnum OS_PASSWORD; else CARINA_USERNAME -> RACKSPACE USERNAME
@@ -488,7 +490,7 @@ func initMagnumFlags(cmd *Command) error {
 			if cmd.Username == "" {
 				return fmt.Errorf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar)
 			}
-			fmt.Printf("[DEBUG] UserName: %s\n", OpenStackUserNameEnvVar)
+			common.Log.WriteDebug("UserName: %s", OpenStackUserNameEnvVar)
 		} else {
 			cmd.Username = os.Getenv(CarinaUserNameEnvVar)
 			if cmd.Username == "" {
@@ -496,14 +498,14 @@ func initMagnumFlags(cmd *Command) error {
 				if cmd.Username == "" {
 					return fmt.Errorf("UserName was not specified via --username, %s or %s.", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
 				}
-				fmt.Printf("[DEBUG] UserName: %s\n", RackspaceUserNameEnvVar)
+				common.Log.WriteDebug("UserName: %s", RackspaceUserNameEnvVar)
 			} else {
-				fmt.Printf("[DEBUG] UserName: %s\n", CarinaUserNameEnvVar)
+				common.Log.WriteDebug("UserName: %s", CarinaUserNameEnvVar)
 			}
 		}
 
 	} else {
-		fmt.Println("[DEBUG] UserName: --username")
+		common.Log.WriteDebug("UserName: --username")
 	}
 
 	if cmd.Password == "" {
@@ -511,43 +513,43 @@ func initMagnumFlags(cmd *Command) error {
 		if cmd.Password == "" {
 			return fmt.Errorf("Password was not specified via --password or %s", OpenStackPasswordEnvVar)
 		}
-		fmt.Printf("[DEBUG] Password: %s\n", OpenStackPasswordEnvVar)
+		common.Log.WriteDebug("Password: %s", OpenStackPasswordEnvVar)
 	} else {
-		fmt.Println("[DEBUG] Password: --password")
+		common.Log.WriteDebug("Password: --password")
 	}
 
 	if cmd.Project == "" {
 		cmd.Project = os.Getenv(OpenStackProjectEnvVar)
 		if cmd.Project == "" {
-			fmt.Printf("[DEBUG] Project was not specified. Either use --project or set %s.\n", OpenStackProjectEnvVar)
+			common.Log.WriteDebug("Project was not specified. Either use --project or set %s.", OpenStackProjectEnvVar)
 		} else {
-			fmt.Printf("[DEBUG] Project: %s\n", OpenStackProjectEnvVar)
+			common.Log.WriteDebug("Project: %s", OpenStackProjectEnvVar)
 		}
 	} else {
-		fmt.Println("[DEBUG] Project: --project")
+		common.Log.WriteDebug("Project: --project")
 	}
 
 	if cmd.Domain == "" {
 		cmd.Domain = os.Getenv(OpenStackDomainEnvVar)
 		if cmd.Domain == "" {
 			cmd.Domain = "default"
-			fmt.Printf("[DEBUG] Domain: default. Either use --domain or set %s.\n", OpenStackDomainEnvVar)
+			common.Log.WriteDebug("Domain: default. Either use --domain or set %s.", OpenStackDomainEnvVar)
 		} else {
-			fmt.Printf("[DEBUG] Domain: %s\n", OpenStackDomainEnvVar)
+			common.Log.WriteDebug("Domain: %s", OpenStackDomainEnvVar)
 		}
 	} else {
-		fmt.Println("[DEBUG] Domain: --domain")
+		common.Log.WriteDebug("Domain: --domain")
 	}
 
 	if cmd.Region == "" {
 		cmd.Region = os.Getenv(OpenStackRegionEnvVar)
 		if cmd.Region == "" {
-			fmt.Printf("[DEBUG] Region was not specified. Either use --region or set %s.\n", OpenStackRegionEnvVar)
+			common.Log.WriteDebug("Region was not specified. Either use --region or set %s.", OpenStackRegionEnvVar)
 		} else {
-			fmt.Printf("[DEBUG] Region: %s\n", OpenStackRegionEnvVar)
+			common.Log.WriteDebug("Region: %s", OpenStackRegionEnvVar)
 		}
 	} else {
-		fmt.Println("[DEBUG] Region: --region")
+		common.Log.WriteDebug("Region: --region")
 	}
 
 	return nil
@@ -678,10 +680,10 @@ func (cmd *CredentialsCommand) Download(pc *kingpin.ParseContext) error {
 	}
 
 	if !cmd.Silent {
-		fmt.Println("#")
-		fmt.Printf("# Credentials written to \"%s\"\n", credentialsPath)
-		fmt.Print(carinaclient.CredentialsNextStepsString(cmd.ClusterName))
-		fmt.Println("#")
+		common.Log.WriteInfo("#")
+		common.Log.WriteInfo("# Credentials written to \"%s\"", credentialsPath)
+		common.Log.WriteInfo(carinaclient.CredentialsNextStepsString(cmd.ClusterName))
+		common.Log.WriteInfo("#")
 	}
 
 	return nil

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"github.com/getcarina/carina/common"
 )
 
 var rand uint32
@@ -36,7 +37,7 @@ func TestLoadCache(t *testing.T) {
 	defer func() {
 		err := os.Remove(filename)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to remove temporary cache: %v\n", err)
+			common.Log.WriteError("Unable to remove temporary cache: %v", err)
 		}
 	}()
 

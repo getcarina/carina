@@ -252,7 +252,7 @@ func (client *Client) DeleteClusterCredentials(account *Account, name string, cu
 	username := account.Credentials.GetUserName()
 	p, err := buildClusterCredentialsPath(username, name, customPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[WARN] Unable to locate carina config path, not deleteing credentials on disk\n")
+		common.Log.WriteWarning("Unable to locate carina config path, not deleteing credentials on disk.")
 		return err
 	}
 

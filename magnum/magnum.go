@@ -24,7 +24,7 @@ const clusterPollingInterval = 10 * time.Second
 
 func (magnum *Magnum) authenticate() error {
 	if magnum.client == nil {
-		fmt.Println("[DEBUG][magnum] Authenticating")
+		common.Log.WriteDebug("[magnum] Authenticating")
 		auth := gophercloud.AuthOptions{
 			IdentityEndpoint: magnum.Credentials.Endpoint,
 			Username:         magnum.Credentials.UserName,
@@ -66,7 +66,7 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 		return nil, errors.Wrap(err, "[magnum] Authentication failed")
 	}
 
-	fmt.Println("[DEBUG][magnum] Listing clusters")
+	common.Log.WriteDebug("[magnum] Listing clusters")
 	pager := bays.List(magnum.client, bays.ListOpts{})
 	if pager.Err != nil {
 		return nil, errors.Wrap(pager.Err, "[magnum] Unable to list clusters")
@@ -98,7 +98,7 @@ func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 		return cluster, err
 	}
 
-	fmt.Printf("[DEBUG][magnum] Retrieving cluster (%s)\n", name)
+	common.Log.WriteDebug("[magnum] Retrieving cluster (%s)", name)
 	result, err := bays.Get(magnum.client, name).Extract()
 	if err != nil {
 		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve cluster (%s)", name))
