@@ -130,7 +130,28 @@ const OpenStackRegionEnvVar = "OS_REGION_NAME"
 // New creates a new Application
 func New() *Application {
 
-	app := kingpin.New("carina", "command line interface to launch and work with Carina clusters")
+	appDescription :=
+		`command line interface to launch and work with clusters both in the Rackspace public cloud (Carina) and Rackspace private cloud (Magnum)
+
+Authentication:
+
+The user credentials are used to automatically detect the cloud with which the cli should communicate. First, it looks for the Rackspace public cloud environment variables, such as CARINA_USERNAME/CARINA_APIKEY or RS_USERNAME/RS_API_KEY. Then it looks for OpenStack environment variables, such as OS_USERNAME/OS_PASSWORD. Use --cloud flag to explicitly select a cloud.
+
+
+In the following example, the detected cloud is magnum because --password is specified:
+    carina --username bob --password --project admin --endpoint http://example.com/auth/v3 ilovepuppies ls
+
+
+In the following example, the detected cloud is carina because --apikey is specified:
+    carina --username bob --apikey abc123 ls
+
+
+In the following example, magnum is used, even though the Rackspace public cloud environment variables are present, because the --cloud is specified:
+    carina --cloud magnum ls
+
+See https://github.com/getcarina/carina for additional documentation, FAQ and examples.
+`
+	app := kingpin.New("carina", appDescription)
 	app.Version(VersionString())
 
 	baseDir, err := carinaclient.GetCredentialsDir()
