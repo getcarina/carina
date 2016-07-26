@@ -426,7 +426,7 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 	}
 
 	if cmd.CloudType == "" {
-		common.Log.WriteDebug("No cloud type specified, detecting with the provided credentials. Use --cloud=[magnum|make-coe|make-swarm] to skip detection.")
+		common.Log.WriteDebug("No cloud type specified, detecting with the provided credentials. Use --cloud to skip detection.")
 		if apikeyFound {
 			cmd.CloudType = carinaclient.CloudMakeSwarm
 			common.Log.WriteDebug("Cloud: make-swarm")
