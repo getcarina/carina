@@ -84,7 +84,22 @@ func (carina *MakeSwarm) CreateCluster(name string, nodes int) (common.Cluster, 
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
 func (carina *MakeSwarm) GetClusterCredentials(name string) (common.CredentialsBundle, error) {
-	return common.CredentialsBundle{}, errors.New("Not implemented yet")
+	var creds common.CredentialsBundle
+
+	err := carina.authenticate()
+	if err != nil {
+		return creds, err
+	}
+
+	common.Log.WriteDebug("[make-swarm] Retrieving cluster credentials (%s)", name)
+	result, err := carina.client.GetCredentials(name)
+	if err != nil {
+		return creds, errors.Wrap(err, "[make-swarm] Unable to retrieve the cluster credentials")
+	}
+
+	creds = common.CredentialsBundle{Files: result.Files}
+
+	return creds, nil
 }
 
 // ListClusters prints out a list of the user's clusters to the console

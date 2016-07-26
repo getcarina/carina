@@ -134,14 +134,11 @@ func (client *Client) DownloadClusterCredentials(account *Account, name string, 
 // GetSourceCommand returns the shell command and appropriate help text to load a cluster's credentials
 func (client *Client) GetSourceCommand(account *Account, shell string, name string, customPath string) (sourceText string, err error) {
 	username := account.Credentials.GetUserName()
-	credentialsPath, err := buildClusterCredentialsPath(username, name, customPath)
 
-	creds, err := common.NewCredentialsBundle(credentialsPath)
-	if err != nil {
-		return "", err
-	}
+	// We are ignoring errors here, and checking lower down if the creds are missing
+	credentialsPath, _ := buildClusterCredentialsPath(username, name, customPath)
+	creds, _ := common.NewCredentialsBundle(credentialsPath)
 
-	// Make sure the appropriate shell script exists, e.g. fish/ps1/env
 	shellScriptPath := getCredentialFilePath(credentialsPath, shell)
 	_, err = os.Stat(shellScriptPath)
 

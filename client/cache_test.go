@@ -2,12 +2,12 @@ package client
 
 import (
 	"fmt"
+	"github.com/getcarina/carina/common"
 	"os"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
-	"github.com/getcarina/carina/common"
 )
 
 var rand uint32
