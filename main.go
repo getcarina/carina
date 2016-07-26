@@ -171,13 +171,13 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	cap.Application = app
 	cap.Context = ctx
 
-	cap.Flag("username", "Carina username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]").StringVar(&ctx.Username)
-	cap.Flag("api-key", "Carina API Key [CARINA_APIKEY/RS_API_KEY]").StringVar(&ctx.APIKey)
-	cap.Flag("password", "Rackspace Password [OS_PASSWORD]").StringVar(&ctx.Password)
-	cap.Flag("project", "Rackspace Project Name [OS_PROJECT_NAME]").StringVar(&ctx.Project)
-	cap.Flag("domain", "Rackspace Domain Name [OS_DOMAIN_NAME]").StringVar(&ctx.Domain)
-	cap.Flag("region", "Rackspace Region Name [OS_REGION_NAME]").StringVar(&ctx.Region)
-	cap.Flag("endpoint", "Carina API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
+	cap.Flag("username", "Username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]").StringVar(&ctx.Username)
+	cap.Flag("api-key", "Public Cloud API Key [CARINA_APIKEY/RS_API_KEY]").StringVar(&ctx.APIKey)
+	cap.Flag("password", "Private CLoud Password [OS_PASSWORD]").StringVar(&ctx.Password)
+	cap.Flag("project", "Private Cloud Project Name [OS_PROJECT_NAME]").StringVar(&ctx.Project)
+	cap.Flag("domain", "Private Cloud Domain Name [OS_DOMAIN_NAME]").StringVar(&ctx.Domain)
+	cap.Flag("region", "Private Cloud Region Name [OS_REGION_NAME]").StringVar(&ctx.Region)
+	cap.Flag("endpoint", "API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
 	cap.Flag("cloud", "The cloud type: magnum or make-swarm. This is automatically detected using the provided credentials.").EnumVar(&cap.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
 	cap.Flag("debug", "Print additional debug messages to stdout.").BoolVar(&common.Log.Debug)
