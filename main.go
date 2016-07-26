@@ -29,12 +29,12 @@ type Application struct {
 type Command struct {
 	*Context
 	*kingpin.CmdClause
-	CloudType string
 }
 
 // Context contains the global application flags
 type Context struct {
 	client       *carinaclient.Client
+	CloudType    string
 	Username     string
 	APIKey       string
 	Password     string
@@ -156,9 +156,10 @@ func New() *Application {
 	cap.Flag("domain", "Rackspace Domain Name [OS_DOMAIN_NAME]").StringVar(&ctx.Domain)
 	cap.Flag("region", "Rackspace Region Name [OS_REGION_NAME]").StringVar(&ctx.Region)
 	cap.Flag("endpoint", "Carina API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
+	cap.Flag("cloud", "The cloud type: magnum or make-swarm. This is automatically detected using the provided credentials.").EnumVar(&cap.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
 
-	//cap.PreAction(cap.informLatest)
+	cap.PreAction(cap.initApp)
 
 	cap.Flag("bash-completion", "Generate bash completion").Action(cap.generateBashCompletion).Hidden().Bool()
 
@@ -229,7 +230,6 @@ func (app *Application) NewCommand(ctx *Context, name, help string) *Command {
 	cmd.Context = ctx
 	cmd.CmdClause = app.Command(name, help)
 	cmd.PreAction(cmd.initFlags)
-	cmd.Flag("cloud", "The cloud type: magnum or make-swarm. This is automatically detected using the provided credentials.").Hidden().EnumVar(&cmd.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm)
 	return cmd
 }
 
@@ -356,12 +356,14 @@ func (app *Application) shouldCheckForUpdate() (bool, error) {
 	return true, nil
 }
 
-func (carina *Application) informLatest(pc *kingpin.ParseContext) error {
-	if !carina.CacheEnabled {
+func (app *Application) initApp(pc *kingpin.ParseContext) error {
+	app.client = carinaclient.NewClient(app.CacheEnabled)
+
+	if !app.CacheEnabled {
 		return nil
 	}
 
-	ok, err := carina.shouldCheckForUpdate()
+	ok, err := app.shouldCheckForUpdate()
 	if !ok {
 		return err
 	}
