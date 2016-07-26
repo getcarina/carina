@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/url"
+	"path/filepath"
 	"strings"
 )
 
@@ -22,10 +23,12 @@ func NewCredentialsBundle(credentialsPath string) (CredentialsBundle, error) {
 		return creds, errors.Wrap(err, "Invalid credentials bundle. Cannot list files in "+credentialsPath)
 	}
 
+	creds.Files = make(map[string][]byte)
 	for _, file := range files {
-		fileContents, err := ioutil.ReadFile(file.Name())
+		filePath := filepath.Join(credentialsPath, file.Name())
+		fileContents, err := ioutil.ReadFile(filePath)
 		if err != nil {
-			return creds, errors.Wrap(err, "Invalid credentials bundle. Cannot read "+file.Name())
+			return creds, errors.Wrap(err, "Invalid credentials bundle. Cannot read "+filePath)
 		}
 		creds.Files[file.Name()] = fileContents
 	}
