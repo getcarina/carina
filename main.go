@@ -565,7 +565,8 @@ func initMagnumFlags(cmd *Command) error {
 	if cmd.Region == "" {
 		cmd.Region = os.Getenv(OpenStackRegionEnvVar)
 		if cmd.Region == "" {
-			common.Log.WriteDebug("Region was not specified. Either use --region or set %s.", OpenStackRegionEnvVar)
+			cmd.Region = "RegionOne"
+			common.Log.WriteDebug("Region: RegionOne. Either use --region or set %s.", OpenStackRegionEnvVar)
 		} else {
 			common.Log.WriteDebug("Region: %s", OpenStackRegionEnvVar)
 		}
