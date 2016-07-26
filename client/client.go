@@ -20,9 +20,9 @@ type Client struct {
 // CarinaHomeDirEnvVar is the environment variable name for carina data, config, etc.
 const CarinaHomeDirEnvVar = "CARINA_HOME"
 
-const CloudMakeSwarm = "make-swarm"
+const CloudMakeSwarm = "public"
 const CloudMakeCOE = "make-coe"
-const CloudMagnum = "magnum"
+const CloudMagnum = "private"
 
 func NewClient(cacheEnabled bool) *Client {
 	client := &Client{cacheEnabled: cacheEnabled}
