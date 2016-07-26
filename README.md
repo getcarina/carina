@@ -87,7 +87,7 @@ $ curl $( docker port whoa 8080 )
 ```
 usage: carina [<flags>] <command> [<args> ...]
 
-command line interface to launch and work with Docker Swarm clusters
+command line interface to launch and work with Carina clusters
 
 Flags:
   --help               Show context-sensitive help (also try --help-long and --help-man).

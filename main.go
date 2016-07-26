@@ -129,7 +129,7 @@ const OpenStackRegionEnvVar = "OS_REGION_NAME"
 // New creates a new Application
 func New() *Application {
 
-	app := kingpin.New("carina", "command line interface to launch and work with Docker Swarm clusters")
+	app := kingpin.New("carina", "command line interface to launch and work with Carina clusters")
 	app.Version(VersionString())
 
 	baseDir, err := carinaclient.GetCredentialsDir()
@@ -164,15 +164,15 @@ func New() *Application {
 	cap.Flag("bash-completion", "Generate bash completion").Action(cap.generateBashCompletion).Hidden().Bool()
 
 	createCommand := new(CreateCommand)
-	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "Create a swarm cluster")
+	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "Create a cluster")
 	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
 	createCommand.Flag("segments", "number of nodes for the initial cluster").Default("1").Hidden().IntVar(&createCommand.Nodes)
 	createCommand.Action(createCommand.Create)
 
-	getCommand := cap.NewWaitClusterCommand(ctx, "get", "Get information about a swarm cluster")
+	getCommand := cap.NewWaitClusterCommand(ctx, "get", "Get information about a cluster")
 	getCommand.Action(getCommand.Get)
 
-	inspectCommand := cap.NewWaitClusterCommand(ctx, "inspect", "Get information about a swarm cluster")
+	inspectCommand := cap.NewWaitClusterCommand(ctx, "inspect", "Get information about a cluster")
 	inspectCommand.Action(inspectCommand.Get).Hidden()
 
 	lsCommand := cap.NewCommand(ctx, "ls", "List clusters")
@@ -201,13 +201,13 @@ func New() *Application {
 	envCommand := cap.NewEnvCommand(ctx, "env", "show source command for setting credential environment")
 	envCommand.Action(envCommand.Show)
 
-	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a swarm cluster")
+	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
 
-	rmCommand := cap.NewCredentialsCommand(ctx, "rm", "Remove a swarm cluster")
+	rmCommand := cap.NewCredentialsCommand(ctx, "rm", "Remove a cluster")
 	rmCommand.Action(rmCommand.Delete)
 
-	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a swarm cluster")
+	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a cluster")
 	deleteCommand.Action(deleteCommand.Delete).Hidden()
 
 	quotasCommand := cap.NewCommand(ctx, "quotas", "Get user quotas")
@@ -263,7 +263,7 @@ func (app *Application) NewEnvCommand(ctx *Context, name, help string) *ShellCom
 func (app *Application) NewWaitClusterCommand(ctx *Context, name, help string) *WaitClusterCommand {
 	wcc := new(WaitClusterCommand)
 	wcc.ClusterCommand = app.NewClusterCommand(ctx, name, help)
-	wcc.Flag("wait", "wait for swarm cluster to come online (or error)").BoolVar(&wcc.Wait)
+	wcc.Flag("wait", "wait for the previous cluster operation to complete").BoolVar(&wcc.Wait)
 	return wcc
 }
 
