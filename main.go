@@ -604,7 +604,7 @@ func (cmd *Command) List(pc *kingpin.ParseContext) error {
 		console.WriteCluster(cluster)
 	}
 
-	return console.Err
+	return nil
 }
 
 // Get displays attributes of an individual cluster
@@ -617,7 +617,7 @@ func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) error {
 	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
-	return console.Err
+	return nil
 }
 
 // Delete a cluster
@@ -630,7 +630,7 @@ func (cmd *CredentialsCommand) Delete(pc *kingpin.ParseContext) error {
 	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
-	return console.Err
+	return nil
 }
 
 // Grow increases the size of the given cluster
@@ -643,7 +643,7 @@ func (cmd *GrowCommand) Grow(pc *kingpin.ParseContext) error {
 	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
-	return console.Err
+	return nil
 }
 
 // SetAutoScale sets AutoScale on the cluster
@@ -661,7 +661,7 @@ func (cmd *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err error) 
 	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
-	return console.Err
+	return nil
 }
 
 // Rebuild nukes your cluster and builds it over again
@@ -674,7 +674,7 @@ func (cmd *WaitClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) {
 	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
-	return console.Err
+	return nil
 }
 
 // Create a cluster
@@ -691,7 +691,7 @@ func (cmd *CreateCommand) Create(pc *kingpin.ParseContext) error {
 	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
-	return console.Err
+	return nil
 }
 
 // Download credentials for a cluster
@@ -721,7 +721,7 @@ func (cmd *Command) Quotas(pc *kingpin.ParseContext) (err error) {
 	console.WriteRow([]string{"MaxClusters", "MaxNodesPerCluster"})
 	console.WriteRow([]string{strconv.Itoa(quotas.GetMaxClusters()), strconv.Itoa(quotas.GetMaxNodesPerCluster())})
 
-	return console.Err
+	return nil
 }
 
 // Show echos the source command, for eval `carina env <name>`

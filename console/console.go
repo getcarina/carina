@@ -1,30 +1,28 @@
 package console
 
 import (
+	"fmt"
 	"github.com/getcarina/carina/common"
+	"github.com/pkg/errors"
 	"os"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 )
 
-var Err error
-
 // WriteRow writes a row of tabular data to the console
 func WriteRow(fields []string) {
-	if Err != nil {
-		return
-	}
-
 	output := new(tabwriter.Writer)
 	output.Init(os.Stdout, 20, 1, 3, ' ', 0)
 
 	s := strings.Join(fields, "\t")
 	b := []byte(s + "\n")
-	_, Err = output.Write(b)
-
-	if Err == nil {
-		Err = output.Flush()
+	_, err := output.Write(b)
+	if err == nil {
+		_ = output.Flush()
+	} else {
+		err = errors.Wrap(err, "Unable to write to console.")
+		fmt.Println(err.Error())
 	}
 }
 
