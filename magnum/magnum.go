@@ -63,20 +63,20 @@ func (magnum *Magnum) GetClusterCredentials(name string) (common.CredentialsBund
 func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 	err := magnum.authenticate()
 	if err != nil {
-		return nil, errors.Wrap(err, "[magnum] Authentication failed")
+		return nil, err
 	}
 
-	common.Log.WriteDebug("[magnum] Listing clusters")
+	common.Log.WriteDebug("[magnum] Listing bays")
 	pager := bays.List(magnum.client, bays.ListOpts{})
 	if pager.Err != nil {
-		return nil, errors.Wrap(pager.Err, "[magnum] Unable to list clusters")
+		return nil, errors.Wrap(pager.Err, "[magnum] Unable to list bays")
 	}
 
 	var clusters []common.Cluster
 	err = pager.EachPage(func(page pagination.Page) (bool, error) {
 		results, err := bays.ExtractBays(page)
 		if err != nil {
-			return false, errors.Wrap(err, "[magnum] Unable to read the Magnum clusters from the results page")
+			return false, errors.Wrap(err, "[magnum] Unable to read the Magnum bays from the results page")
 		}
 
 		for _, result := range results {
@@ -89,7 +89,7 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 	return clusters, err
 }
 
-// ShowCluster prints out a cluster's information to the console
+// GetCluster prints out a cluster's information to the console
 func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 	var cluster MagnumCluster
 
@@ -98,10 +98,10 @@ func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 		return cluster, err
 	}
 
-	common.Log.WriteDebug("[magnum] Retrieving cluster (%s)", name)
+	common.Log.WriteDebug("[magnum] Retrieving bay (%s)", name)
 	result, err := bays.Get(magnum.client, name).Extract()
 	if err != nil {
-		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve cluster (%s)", name))
+		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
 	}
 	cluster = MagnumCluster(*result)
 
