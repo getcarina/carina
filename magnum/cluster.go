@@ -2,14 +2,17 @@ package magnum
 
 import "github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
 
-type MagnumCluster bays.Bay
+type MagnumCluster struct {
+	bays.Bay
+	FlavorID string
+}
 
 func (cluster MagnumCluster) GetName() string {
 	return cluster.Name
 }
 
 func (cluster MagnumCluster) GetFlavor() string {
-	return "" // TODO lookup the baymodel
+	return cluster.FlavorID
 }
 
 func (cluster MagnumCluster) GetNodes() int {

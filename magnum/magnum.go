@@ -5,6 +5,7 @@ import (
 	"github.com/getcarina/carina/common"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
+	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/baymodels"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/pkg/errors"
@@ -15,9 +16,10 @@ import (
 
 // Magnum is an adapter between the cli and the OpenStack COE API (Magnum)
 type Magnum struct {
-	client      *gophercloud.ServiceClient
-	Credentials MagnumCredentials
-	Output      *tabwriter.Writer
+	client                *gophercloud.ServiceClient
+	bayModelToFlavorCache map[string]string
+	Credentials           MagnumCredentials
+	Output                *tabwriter.Writer
 }
 
 const clusterPollingInterval = 10 * time.Second
@@ -80,7 +82,7 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 		}
 
 		for _, result := range results {
-			cluster := MagnumCluster(result)
+			cluster := magnum.newCluster(result)
 			clusters = append(clusters, cluster)
 		}
 		return true, nil
@@ -103,7 +105,7 @@ func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 	if err != nil {
 		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
 	}
-	cluster = MagnumCluster(*result)
+	cluster = magnum.newCluster(*result)
 
 	return cluster, err
 }
@@ -141,4 +143,59 @@ func (magnum *Magnum) WaitUntilClusterIsActive(name string) (common.Cluster, err
 		}
 		time.Sleep(clusterPollingInterval)
 	}
+}
+
+func (magnum *Magnum) newCluster(bay bays.Bay) MagnumCluster {
+	cluster := MagnumCluster{Bay: bay}
+	flavor, err := magnum.lookupFlavor(bay.BayModelID)
+	cluster.FlavorID = flavor
+	if err != nil {
+		common.Log.WriteWarning(err.Error())
+	}
+
+	return cluster
+}
+
+func (magnum *Magnum) listBayModels() ([]baymodels.BayModel, error) {
+	err := magnum.authenticate()
+	if err != nil {
+		return nil, err
+	}
+
+	common.Log.WriteDebug("[magnum] Listing baymodels")
+	pager := baymodels.List(magnum.client, baymodels.ListOpts{})
+	if pager.Err != nil {
+		return nil, errors.Wrap(pager.Err, "[magnum] Unabe to list baymodels")
+	}
+
+	var bayModels []baymodels.BayModel
+	err = pager.EachPage(func(page pagination.Page) (bool, error) {
+		results, err := baymodels.ExtractBayModels(page)
+		if err != nil {
+			return false, errors.Wrap(err, "[magnum] Unable to read the Magnum baymodels from the results page")
+		}
+
+		for _, result := range results {
+			bayModels = append(bayModels, result)
+		}
+		return true, nil
+	})
+
+	return bayModels, err
+}
+
+func (magnum *Magnum) lookupFlavor(bayModelID string) (flavorID string, error error) {
+	if magnum.bayModelToFlavorCache == nil {
+		bayModels, err := magnum.listBayModels()
+		if err != nil {
+			return "", err
+		}
+
+		magnum.bayModelToFlavorCache = make(map[string]string)
+		for _, bayModel := range bayModels {
+			magnum.bayModelToFlavorCache[bayModel.ID] = bayModel.FlavorID
+		}
+	}
+
+	return magnum.bayModelToFlavorCache[bayModelID], nil
 }
