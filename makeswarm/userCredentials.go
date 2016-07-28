@@ -12,3 +12,7 @@ type UserCredentials struct {
 func (credentials UserCredentials) GetUserName() string {
 	return credentials.UserName
 }
+
+func (credentials UserCredentials) GetEndpoint() string {
+	return credentials.Endpoint
+}

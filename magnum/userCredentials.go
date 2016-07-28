@@ -15,3 +15,7 @@ type MagnumCredentials struct {
 func (credentials MagnumCredentials) GetUserName() string {
 	return credentials.UserName
 }
+
+func (credentials MagnumCredentials) GetEndpoint() string {
+	return credentials.Endpoint
+}

@@ -32,7 +32,7 @@ func GetCredentialsDir() (string, error) {
 	return filepath.Join(homeDir, defaultDotDir), nil
 }
 
-func buildClusterCredentialsPath(userName string, clusterName string, customPath string) (string, error) {
+func buildClusterCredentialsPath(account *Account, clusterName string, customPath string) (string, error) {
 	var credentialsPath string
 
 	// Use the default path, if the user didn't specify a special path where the credentials are stored
@@ -42,7 +42,7 @@ func buildClusterCredentialsPath(userName string, clusterName string, customPath
 		if err != nil {
 			return "", err
 		}
-		credentialsPath = filepath.Join(baseDir, clusterDirName, userName, clusterName)
+		credentialsPath = filepath.Join(baseDir, clusterDirName, account.GetTag(), account.Credentials.GetUserName(), clusterName)
 	}
 
 	credentialsPath = filepath.Clean(credentialsPath)

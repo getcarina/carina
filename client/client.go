@@ -106,8 +106,7 @@ func (client *Client) DownloadClusterCredentials(account *Account, name string, 
 		return "", err
 	}
 
-	username := account.Credentials.GetUserName()
-	credentialsPath, err = buildClusterCredentialsPath(username, name, customPath)
+	credentialsPath, err = buildClusterCredentialsPath(account, name, customPath)
 	if err != nil {
 		return "", errors.Wrap(err, "Unable to save downloaded cluster credentials")
 	}
@@ -133,10 +132,8 @@ func (client *Client) DownloadClusterCredentials(account *Account, name string, 
 
 // GetSourceCommand returns the shell command and appropriate help text to load a cluster's credentials
 func (client *Client) GetSourceCommand(account *Account, shell string, name string, customPath string) (sourceText string, err error) {
-	username := account.Credentials.GetUserName()
-
 	// We are ignoring errors here, and checking lower down if the creds are missing
-	credentialsPath, _ := buildClusterCredentialsPath(username, name, customPath)
+	credentialsPath, _ := buildClusterCredentialsPath(account, name, customPath)
 	creds, _ := common.NewCredentialsBundle(credentialsPath)
 
 	shellScriptPath := getCredentialFilePath(credentialsPath, shell)
@@ -246,8 +243,7 @@ func (client *Client) DeleteCluster(account *Account, name string) (common.Clust
 
 // DeleteClusterCredentials removes a cluster's downloaded credentials
 func (client *Client) DeleteClusterCredentials(account *Account, name string, customPath string) error {
-	username := account.Credentials.GetUserName()
-	p, err := buildClusterCredentialsPath(username, name, customPath)
+	p, err := buildClusterCredentialsPath(account, name, customPath)
 	if err != nil {
 		common.Log.WriteWarning("Unable to locate carina config path, not deleteing credentials on disk.")
 		return err
