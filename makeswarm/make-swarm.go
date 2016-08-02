@@ -12,7 +12,7 @@ import (
 // MakeSwarm is an adapter between the cli and Carina (make-swarm)
 type MakeSwarm struct {
 	client      *libcarina.ClusterClient
-	Credentials UserCredentials
+	Credentials *UserCredentials
 	Output      *tabwriter.Writer
 }
 
@@ -37,6 +37,7 @@ func (carina *MakeSwarm) authenticate() error {
 
 		}
 
+		carina.Credentials.Token = carinaClient.Token
 		carinaClient.Client.Timeout = httpTimeout
 		carina.client = carinaClient
 	}

@@ -28,6 +28,8 @@ func NewClient(cacheEnabled bool) *Client {
 	client := &Client{cacheEnabled: cacheEnabled}
 	err := client.initCache()
 	if err != nil {
+		common.Log.WriteWarning("Unable to initialize cache. Starting fresh!")
+		common.Log.WriteWarning(err.Error())
 		client.cacheEnabled = false
 		client.Error = CacheUnavailableError{cause: err}
 	}
@@ -42,7 +44,7 @@ func (client *Client) initCache() error {
 		}
 		err = os.MkdirAll(bd, 0777)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Unable to create cache directory")
 		}
 
 		cacheName, err := defaultCacheFilename()
@@ -58,10 +60,10 @@ func (client *Client) initCache() error {
 func (client *Client) buildContainerService(account *Account) (common.ClusterService, error) {
 	switch account.CloudType {
 	case CloudMakeSwarm:
-		credentials, _ := account.Credentials.(makeswarm.UserCredentials)
+		credentials, _ := account.Credentials.(*makeswarm.UserCredentials)
 		return &makeswarm.MakeSwarm{Credentials: credentials}, nil
 	case CloudMagnum:
-		credentials, _ := account.Credentials.(magnum.MagnumCredentials)
+		credentials, _ := account.Credentials.(*magnum.MagnumCredentials)
 		return &magnum.Magnum{Credentials: credentials}, nil
 	default:
 		return nil, fmt.Errorf("Invalid cloud type: %s", account.CloudType)
@@ -72,6 +74,7 @@ func (client *Client) buildContainerService(account *Account) (common.ClusterSer
 func (client *Client) GetQuotas(account *Account) (common.Quotas, error) {
 	var quotas common.Quotas
 
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return quotas, err
@@ -84,6 +87,7 @@ func (client *Client) GetQuotas(account *Account) (common.Quotas, error) {
 func (client *Client) CreateCluster(account *Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -99,7 +103,11 @@ func (client *Client) CreateCluster(account *Account, name string, nodes int, wa
 
 // GetClusterCredentials downloads the TLS certificates and configuration scripts for a cluster
 func (client *Client) DownloadClusterCredentials(account *Account, name string, customPath string) (credentialsPath string, err error) {
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
+	if err != nil {
+		return "", err
+	}
 
 	creds, err := svc.GetClusterCredentials(name)
 	if err != nil {
@@ -153,6 +161,7 @@ func (client *Client) GetSourceCommand(account *Account, shell string, name stri
 
 // ListClusters retrieves all clusters
 func (client *Client) ListClusters(account *Account) ([]common.Cluster, error) {
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return nil, err
@@ -165,6 +174,7 @@ func (client *Client) ListClusters(account *Account) ([]common.Cluster, error) {
 func (client *Client) GetCluster(account *Account, name string, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -182,6 +192,7 @@ func (client *Client) GetCluster(account *Account, name string, waitUntilActive 
 func (client *Client) GrowCluster(account *Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -199,6 +210,7 @@ func (client *Client) GrowCluster(account *Account, name string, nodes int, wait
 func (client *Client) RebuildCluster(account *Account, name string, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -216,6 +228,7 @@ func (client *Client) RebuildCluster(account *Account, name string, waitUntilAct
 func (client *Client) SetAutoScale(account *Account, name string, value bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -228,6 +241,7 @@ func (client *Client) SetAutoScale(account *Account, name string, value bool) (c
 func (client *Client) DeleteCluster(account *Account, name string) (common.Cluster, error) {
 	var cluster common.Cluster
 
+	defer client.Cache.UpdateAccount(*account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err

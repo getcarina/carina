@@ -11,8 +11,9 @@ type Account struct {
 }
 
 type UserCredentials interface {
-	GetUserName() string
 	GetEndpoint() string
+	GetUserName() string
+	GetToken() string
 }
 
 // GetTag returns a unique tag for the account, e.g. public-8e3d76d3

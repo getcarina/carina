@@ -18,7 +18,7 @@ import (
 type Magnum struct {
 	client                *gophercloud.ServiceClient
 	bayModelToFlavorCache map[string]string
-	Credentials           MagnumCredentials
+	Credentials           *MagnumCredentials
 	Output                *tabwriter.Writer
 }
 
@@ -42,6 +42,8 @@ func (magnum *Magnum) authenticate() error {
 		if err != nil {
 			return errors.Wrap(err, "[magnum] Unable to create a Magnum client")
 		}
+
+		magnum.Credentials.Token = magnum.client.TokenID
 	}
 	return nil
 }

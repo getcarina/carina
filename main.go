@@ -582,9 +582,9 @@ func (cmd *Command) buildAccount() *carinaclient.Account {
 
 	switch cmd.CloudType {
 	case carinaclient.CloudMakeSwarm:
-		account.Credentials = makeswarm.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, APIKey: cmd.APIKey}
+		account.Credentials = &makeswarm.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, APIKey: cmd.APIKey}
 	case carinaclient.CloudMagnum:
-		account.Credentials = magnum.MagnumCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Password: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
+		account.Credentials = &magnum.MagnumCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Password: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
 	default:
 		panic(fmt.Sprintf("Unsupported cloud type: %s", cmd.CloudType))
 	}

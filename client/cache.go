@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -14,8 +15,16 @@ import (
 type Cache struct {
 	sync.Mutex
 	filename        string
-	LastUpdateCheck time.Time         `json:"last-check"`
-	Tokens          map[string]string `json:"tokens"`
+	LastUpdateCheck time.Time               `json:"last-check"`
+	Accounts        map[string]AccountCache `json:"accounts"`
+}
+
+func NewCache(filename string) *Cache {
+	return &Cache{filename: filename, Accounts: make(map[string]AccountCache)}
+}
+
+type AccountCache struct {
+	Tokens map[string]string `json:"tokens"`
 }
 
 type CacheUnavailableError struct {
@@ -41,16 +50,16 @@ func defaultCacheFilename() (string, error) {
 // Read the on disk cache
 func (cache *Cache) read() error {
 	f, err := os.OpenFile(cache.filename, os.O_RDONLY, 0666)
-	if err != nil {
-		return err
+	if os.IsNotExist(err) {
+		return nil
 	}
+
 	err = json.NewDecoder(f).Decode(cache)
 	if err != nil {
 		_ = f.Close()
-		return err
+		return errors.Wrap(err, "Unable to deserialize cache file")
 	}
-	err = f.Close()
-	return err
+	return f.Close()
 }
 
 // write will put the current version of the cache on disk at cache.filename
@@ -71,24 +80,10 @@ func (cache *Cache) write() error {
 }
 
 // LoadCache retrieves the on disk cache and returns a cache struct
-func LoadCache(filename string) (cache *Cache, err error) {
-	cache = new(Cache)
-	cache.Tokens = make(map[string]string)
-
-	cache.filename = filename
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = os.Stat(cache.filename)
-
-	if os.IsNotExist(err) {
-		return cache, cache.write()
-	} else if err != nil {
-		return nil, err
-	}
-
-	return cache, cache.read()
+func LoadCache(filename string) (*Cache, error) {
+	cache := NewCache(filename)
+	err := cache.read()
+	return cache, err
 }
 
 // UpdateLastCheck sets the last update time to t
@@ -104,8 +99,13 @@ func (cache *Cache) UpdateLastCheck(t time.Time) error {
 	return cache.write()
 }
 
-// SetToken sets the API token for a username in the cache
-func (cache *Cache) SetToken(username, token string) error {
+// UpdateAccount sets the API token for an account in the cache
+func (cache *Cache) UpdateAccount(account Account) error {
+	token := account.Credentials.GetToken()
+	if token == "" {
+		return nil
+	}
+
 	cache.Lock()
 	defer cache.Unlock()
 
@@ -114,6 +114,14 @@ func (cache *Cache) SetToken(username, token string) error {
 		return err
 	}
 
-	cache.Tokens[username] = token
+	tag := account.GetTag()
+	accountCache, exists := cache.Accounts[tag]
+	if !exists {
+		accountCache = AccountCache{Tokens: make(map[string]string)}
+		cache.Accounts[tag] = accountCache
+	}
+
+	accountCache.Tokens[account.Credentials.GetUserName()] = token
+
 	return cache.write()
 }
