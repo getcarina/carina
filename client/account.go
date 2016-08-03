@@ -5,14 +5,21 @@ import (
 	"fmt"
 )
 
+// Account contains the data required to communicate with a Carina API instance
 type Account struct {
 	CloudType   string
 	Credentials UserCredentials
 }
 
+// UserCredentials is a set of user credentials to authenticate to a Carina API instance
 type UserCredentials interface {
+	// GetEndpoint returns the API endpoint
 	GetEndpoint() string
+
+	// GetUserName returns the username
 	GetUserName() string
+
+	// GetToken returns the API authentication token
 	GetToken() string
 }
 

@@ -86,8 +86,17 @@ func LoadCache(filename string) (*Cache, error) {
 	return cache, err
 }
 
+// LoadCache retrieves the on disk cache and returns a cache struct
+func NilCache() *Cache {
+	return NewCache("")
+}
+
 // UpdateLastCheck sets the last update time to t
 func (cache *Cache) UpdateLastCheck(t time.Time) error {
+	if cache.filename == "" {
+		return nil
+	}
+
 	cache.Lock()
 	defer cache.Unlock()
 
@@ -100,7 +109,11 @@ func (cache *Cache) UpdateLastCheck(t time.Time) error {
 }
 
 // UpdateAccount sets the API token for an account in the cache
-func (cache *Cache) UpdateAccount(account Account) error {
+func (cache *Cache) UpdateFromAccount(account Account) error {
+	if cache.filename == "" {
+		return nil
+	}
+
 	token := account.Credentials.GetToken()
 	if token == "" {
 		return nil

@@ -28,17 +28,12 @@ const StatusRebuilding = "rebuilding-swarm"
 const httpTimeout = 15 * time.Second
 const clusterPollingInterval = 10 * time.Second
 
-func (carina *MakeSwarm) authenticate() error {
+func (carina *MakeSwarm) init() error {
 	if carina.client == nil {
-		common.Log.WriteDebug("[make-swarm] Authenticating")
-		carinaClient, err := libcarina.NewClusterClient(carina.Credentials.Endpoint, carina.Credentials.UserName, carina.Credentials.APIKey)
+		carinaClient, err := carina.Credentials.Authenticate()
 		if err != nil {
-			return errors.Wrap(err, "[make-swarm] Authentication failed")
-
+			return err
 		}
-
-		carina.Credentials.Token = carinaClient.Token
-		carinaClient.Client.Timeout = httpTimeout
 		carina.client = carinaClient
 	}
 	return nil
@@ -47,7 +42,7 @@ func (carina *MakeSwarm) authenticate() error {
 func (carina *MakeSwarm) GetQuotas() (common.Quotas, error) {
 	var quotas CarinaQuotas
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return quotas, err
 	}
@@ -66,7 +61,7 @@ func (carina *MakeSwarm) GetQuotas() (common.Quotas, error) {
 func (carina *MakeSwarm) CreateCluster(name string, nodes int) (common.Cluster, error) {
 	var cluster CarinaCluster
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return cluster, err
 	}
@@ -90,7 +85,7 @@ func (carina *MakeSwarm) CreateCluster(name string, nodes int) (common.Cluster, 
 func (carina *MakeSwarm) GetClusterCredentials(name string) (common.CredentialsBundle, error) {
 	var creds common.CredentialsBundle
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return creds, err
 	}
@@ -110,7 +105,7 @@ func (carina *MakeSwarm) GetClusterCredentials(name string) (common.CredentialsB
 func (carina *MakeSwarm) ListClusters() ([]common.Cluster, error) {
 	var clusters []common.Cluster
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return clusters, err
 	}
@@ -132,7 +127,7 @@ func (carina *MakeSwarm) ListClusters() ([]common.Cluster, error) {
 func (carina *MakeSwarm) RebuildCluster(name string) (common.Cluster, error) {
 	var cluster CarinaCluster
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return cluster, err
 	}
@@ -152,7 +147,7 @@ func (carina *MakeSwarm) RebuildCluster(name string) (common.Cluster, error) {
 func (carina *MakeSwarm) GetCluster(name string) (common.Cluster, error) {
 	var cluster CarinaCluster
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return cluster, err
 	}
@@ -171,7 +166,7 @@ func (carina *MakeSwarm) GetCluster(name string) (common.Cluster, error) {
 func (carina *MakeSwarm) DeleteCluster(name string) (common.Cluster, error) {
 	var cluster CarinaCluster
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return cluster, err
 	}
@@ -190,7 +185,7 @@ func (carina *MakeSwarm) DeleteCluster(name string) (common.Cluster, error) {
 func (carina *MakeSwarm) GrowCluster(name string, nodes int) (common.Cluster, error) {
 	var cluster CarinaCluster
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return cluster, err
 	}
@@ -209,7 +204,7 @@ func (carina *MakeSwarm) GrowCluster(name string, nodes int) (common.Cluster, er
 func (carina *MakeSwarm) SetAutoScale(name string, value bool) (common.Cluster, error) {
 	var cluster CarinaCluster
 
-	err := carina.authenticate()
+	err := carina.init()
 	if err != nil {
 		return cluster, err
 	}
