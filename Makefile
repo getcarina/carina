@@ -15,19 +15,21 @@ GOFILES = main.go version/*.go
 
 BINDIR = bin/carina/$(VERSION)
 
-default: carina
+default: validate carina
 
 get-deps:
 	go get ./...
+
+validate: get-deps
 	go fmt ./...
 	go vet ./...
 	-golint ./...
+	go test ./...
 
 carina-linux: linux
 	cp bin/carina-linux-amd64 carina-linux
 
 test: carina
-	go test -v
 	eval "$( ./carina --bash-completion )"
 	./carina --version
 
