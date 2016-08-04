@@ -16,7 +16,6 @@ import (
 	"github.com/getcarina/carina/magnum"
 	"github.com/getcarina/carina/makeswarm"
 	"github.com/getcarina/carina/version"
-	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
 )
 
@@ -42,6 +41,7 @@ type Context struct {
 	Project      string
 	Domain       string
 	Region       string
+	AuthEndpoint string
 	Endpoint     string
 	CacheEnabled bool
 }
@@ -118,6 +118,9 @@ const OpenStackPasswordEnvVar = "OS_PASSWORD"
 // OpenStackAuthURLEnvVar is the OpenStack Identity URL (v2 and v3 supported)
 const OpenStackAuthURLEnvVar = "OS_AUTH_URL"
 
+// OpenStackEndpointEnvVar overrides the default endpoint from the service catalog
+const OpenStackEndpointEnvVar = "OS_ENDPOINT"
+
 // OpenStackProjectEnvVar is the OpenStack project name, required for identity v3
 const OpenStackProjectEnvVar = "OS_PROJECT_NAME"
 
@@ -139,7 +142,7 @@ The user credentials are used to automatically detect the cloud with which the c
 
 
 In the following example, the detected cloud is 'private' because --password is specified:
-    carina --username bob --password --project admin --endpoint http://example.com/auth/v3 ilovepuppies ls
+    carina --username bob --password --project admin --auth-endpoint http://example.com/auth/v3 ilovepuppies ls
 
 
 In the following example, the detected cloud is 'public' because --apikey is specified:
@@ -177,7 +180,10 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	cap.Flag("project", "Private Cloud Project Name [OS_PROJECT_NAME]").StringVar(&ctx.Project)
 	cap.Flag("domain", "Private Cloud Domain Name [OS_DOMAIN_NAME]").StringVar(&ctx.Domain)
 	cap.Flag("region", "Private Cloud Region Name [OS_REGION_NAME]").StringVar(&ctx.Region)
-	cap.Flag("endpoint", "API endpoint [OS_AUTH_URL]").StringVar(&ctx.Endpoint)
+	// --auth-endpoint can also override the authentication endpoint for public Carina as well, but that's only helpful for local development
+	cap.Flag("auth-endpoint", "Private Cloud Authentication endpoint [OS_AUTH_URL]").StringVar(&ctx.AuthEndpoint)
+	// --endpoint can override the API endpoint for both Carina and Magnum, hidden since it's only helpful for local development
+	cap.Flag("endpoint", "Custom API endpoint [OS_ENDPOINT]").Hidden().StringVar(&ctx.Endpoint)
 	cap.Flag("cloud", "The cloud type: public or private. This is automatically detected using the provided credentials.").EnumVar(&cap.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
 	cap.Flag("debug", "Print additional debug messages to stdout.").BoolVar(&common.Log.Debug)
@@ -365,7 +371,7 @@ func (app *Application) shouldCheckForUpdate() (bool, error) {
 		return false, nil
 	}
 
-	err := app.client.Cache.UpdateLastCheck(time.Now())
+	err := app.client.Cache.SaveLastUpdateCheck(time.Now())
 
 	if err != nil {
 		return false, err
@@ -450,10 +456,16 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 }
 
 func initCarinaFlags(cmd *Command) error {
+	// auth-endpoint = --auth-endpoint -> rackspace identity endpoint
+	if cmd.AuthEndpoint == "" {
+		common.Log.WriteDebug("AuthEndpoint: default")
+	} else {
+		common.Log.WriteDebug("AuthEndpoint: --auth-endpoint")
+	}
+
 	// endpoint = --endpoint -> public carina endpoint
 	if cmd.Endpoint == "" {
-		cmd.Endpoint = libcarina.BetaEndpoint
-		common.Log.WriteDebug("Endpoint: %s", libcarina.BetaEndpoint)
+		common.Log.WriteDebug("Endpoint: default")
 	} else {
 		common.Log.WriteDebug("Endpoint: --endpoint")
 	}
@@ -494,41 +506,41 @@ func initCarinaFlags(cmd *Command) error {
 }
 
 func initMagnumFlags(cmd *Command) error {
-	if cmd.Endpoint == "" {
-		cmd.Endpoint = os.Getenv(OpenStackAuthURLEnvVar)
-		if cmd.Endpoint == "" {
-			return fmt.Errorf("Endpoint was not specified via --endpoint or %s", OpenStackAuthURLEnvVar)
+	// auth-endpoint = --auth-endpoint -> OS_AUTH_URL
+	if cmd.AuthEndpoint == "" {
+		cmd.AuthEndpoint = os.Getenv(OpenStackAuthURLEnvVar)
+		if cmd.AuthEndpoint == "" {
+			return fmt.Errorf("AuthEndpoint was not specified via --auth-endpoint or %s", OpenStackAuthURLEnvVar)
 		}
-		common.Log.WriteDebug("Endpoint: %s", OpenStackAuthURLEnvVar)
+		common.Log.WriteDebug("AuthEndpoint: %s", OpenStackAuthURLEnvVar)
+	} else {
+		common.Log.WriteDebug("AuthEndpoint: --auth-endpoint")
+	}
+
+	// endpoint = --endpoint -> OS_ENDPOINT -> service catalog endpoint
+	if cmd.Endpoint == "" {
+		cmd.Endpoint = os.Getenv(OpenStackEndpointEnvVar)
+		if cmd.Endpoint == "" {
+			common.Log.WriteDebug("Endpoint: default")
+		} else {
+			common.Log.WriteDebug("Endpoint: %s", OpenStackEndpointEnvVar)
+		}
 	} else {
 		common.Log.WriteDebug("Endpoint: --endpoint")
 	}
 
-	// username = --username -> if magnum OS_PASSWORD; else CARINA_USERNAME -> RACKSPACE USERNAME
+	// username = --username -> OS_USERNAME
 	if cmd.Username == "" {
-		if cmd.CloudType == carinaclient.CloudMagnum {
-			cmd.Username = os.Getenv(OpenStackUserNameEnvVar)
-			if cmd.Username == "" {
-				return fmt.Errorf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar)
-			}
-			common.Log.WriteDebug("UserName: %s", OpenStackUserNameEnvVar)
-		} else {
-			cmd.Username = os.Getenv(CarinaUserNameEnvVar)
-			if cmd.Username == "" {
-				cmd.Username = os.Getenv(RackspaceUserNameEnvVar)
-				if cmd.Username == "" {
-					return fmt.Errorf("UserName was not specified via --username, %s or %s.", CarinaUserNameEnvVar, RackspaceUserNameEnvVar)
-				}
-				common.Log.WriteDebug("UserName: %s", RackspaceUserNameEnvVar)
-			} else {
-				common.Log.WriteDebug("UserName: %s", CarinaUserNameEnvVar)
-			}
+		cmd.Username = os.Getenv(OpenStackUserNameEnvVar)
+		if cmd.Username == "" {
+			return fmt.Errorf("UserName was not specified via --username or %s", OpenStackUserNameEnvVar)
 		}
-
+		common.Log.WriteDebug("UserName: %s", OpenStackUserNameEnvVar)
 	} else {
 		common.Log.WriteDebug("UserName: --username")
 	}
 
+	// password = --password -> OS_PASSWORD
 	if cmd.Password == "" {
 		cmd.Password = os.Getenv(OpenStackPasswordEnvVar)
 		if cmd.Password == "" {
@@ -539,6 +551,7 @@ func initMagnumFlags(cmd *Command) error {
 		common.Log.WriteDebug("Password: --password")
 	}
 
+	// project = --project -> OS_PROJECT_NAME
 	if cmd.Project == "" {
 		cmd.Project = os.Getenv(OpenStackProjectEnvVar)
 		if cmd.Project == "" {
@@ -550,6 +563,7 @@ func initMagnumFlags(cmd *Command) error {
 		common.Log.WriteDebug("Project: --project")
 	}
 
+	// domain = --domain -> OS_DOMAIN_NAME -> "default"
 	if cmd.Domain == "" {
 		cmd.Domain = os.Getenv(OpenStackDomainEnvVar)
 		if cmd.Domain == "" {
@@ -562,6 +576,7 @@ func initMagnumFlags(cmd *Command) error {
 		common.Log.WriteDebug("Domain: --domain")
 	}
 
+	// region = --region -> OS_REGION_NAME -> "RegionOne"
 	if cmd.Region == "" {
 		cmd.Region = os.Getenv(OpenStackRegionEnvVar)
 		if cmd.Region == "" {
@@ -577,19 +592,26 @@ func initMagnumFlags(cmd *Command) error {
 	return nil
 }
 
-func (cmd *Command) buildAccount() *carinaclient.Account {
-	account := &carinaclient.Account{CloudType: cmd.CloudType}
-
+func (cmd *Command) buildAccount() carinaclient.Account {
 	switch cmd.CloudType {
 	case carinaclient.CloudMakeSwarm:
-		account.Credentials = &makeswarm.UserCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, APIKey: cmd.APIKey}
+		return &makeswarm.CarinaAccount{
+			Endpoint: cmd.Endpoint,
+			UserName: cmd.Username,
+			APIKey:   cmd.APIKey,
+		}
 	case carinaclient.CloudMagnum:
-		account.Credentials = &magnum.MagnumCredentials{Endpoint: cmd.Endpoint, UserName: cmd.Username, Password: cmd.Password, Project: cmd.Project, Domain: cmd.Domain}
+		return &magnum.MagnumAccount{
+			AuthEndpoint: cmd.AuthEndpoint,
+			Endpoint:     cmd.Endpoint,
+			UserName:     cmd.Username,
+			Password:     cmd.Password,
+			Project:      cmd.Project,
+			Domain:       cmd.Domain,
+		}
 	default:
 		panic(fmt.Sprintf("Unsupported cloud type: %s", cmd.CloudType))
 	}
-
-	return account
 }
 
 // List displays attributes for all clusters

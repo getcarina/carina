@@ -11,9 +11,9 @@ import (
 
 // MakeSwarm is an adapter between the cli and Carina (make-swarm)
 type MakeSwarm struct {
-	client      *libcarina.ClusterClient
-	Credentials *UserCredentials
-	Output      *tabwriter.Writer
+	client  *libcarina.ClusterClient
+	Account *CarinaAccount
+	Output  *tabwriter.Writer
 }
 
 // StatusNew is the status of a new, inactive cluster
@@ -30,7 +30,7 @@ const clusterPollingInterval = 10 * time.Second
 
 func (carina *MakeSwarm) init() error {
 	if carina.client == nil {
-		carinaClient, err := carina.Credentials.Authenticate()
+		carinaClient, err := carina.Account.Authenticate()
 		if err != nil {
 			return err
 		}

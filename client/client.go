@@ -33,13 +33,13 @@ func (client *Client) initCache(cacheEnabled bool) {
 	disableCache := func(err error) {
 		common.Log.WriteWarning("Unable to initialize cache. Starting fresh!")
 		common.Log.WriteWarning(err.Error())
-		client.Cache = NilCache()
+		client.Cache = &Cache{}
 		client.Error = CacheUnavailableError{cause: err}
 	}
 
 	if !cacheEnabled {
 		common.Log.WriteDebug("Cache disabled")
-		client.Cache = NilCache()
+		client.Cache = &Cache{}
 		return
 	}
 
@@ -55,48 +55,37 @@ func (client *Client) initCache(cacheEnabled bool) {
 		return
 	}
 
-	cacheName, err := defaultCacheFilename()
+	path, err := defaultCacheFilename()
 	if err != nil {
 		disableCache(err)
 		return
 	}
 
-	client.Cache, err = LoadCache(cacheName)
+	client.Cache = newCache(path)
+	err = client.Cache.load()
 	if err != nil {
 		disableCache(err)
-		return
 	}
 }
 
-func (client *Client) buildContainerService(account *Account) (common.ClusterService, error) {
-	switch account.CloudType {
-	case CloudMakeSwarm:
-		credentials, _ := account.Credentials.(*makeswarm.UserCredentials)
-		credentials.Token = client.getCachedToken(account)
-		return &makeswarm.MakeSwarm{Credentials: credentials}, nil
-	case CloudMagnum:
-		credentials, _ := account.Credentials.(*magnum.MagnumCredentials)
-		credentials.Token = client.getCachedToken(account)
-		return &magnum.Magnum{Credentials: credentials}, nil
+func (client *Client) buildContainerService(account Account) (common.ClusterService, error) {
+	client.Cache.apply(account)
+
+	switch a := account.(type) {
+	case *makeswarm.CarinaAccount:
+		return &makeswarm.MakeSwarm{Account: a}, nil
+	case *magnum.MagnumAccount:
+		return &magnum.Magnum{Account: a}, nil
 	default:
-		return nil, fmt.Errorf("Invalid cloud type: %s", account.CloudType)
+		return nil, fmt.Errorf("Invalid account type: %T", a)
 	}
-}
-
-func (client *Client) getCachedToken(account *Account) string {
-	accountCache, found := client.Cache.Accounts[account.GetTag()]
-	if found {
-		return accountCache.Tokens[account.Credentials.GetUserName()]
-	}
-
-	return ""
 }
 
 // GetQuotas retrieves the quotas set for the account
-func (client *Client) GetQuotas(account *Account) (common.Quotas, error) {
+func (client *Client) GetQuotas(account Account) (common.Quotas, error) {
 	var quotas common.Quotas
 
-	defer client.Cache.UpdateFromAccount(*account)
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return quotas, err
@@ -106,10 +95,10 @@ func (client *Client) GetQuotas(account *Account) (common.Quotas, error) {
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
-func (client *Client) CreateCluster(account *Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
+func (client *Client) CreateCluster(account Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
-	defer client.Cache.UpdateFromAccount(*account)
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -124,8 +113,8 @@ func (client *Client) CreateCluster(account *Account, name string, nodes int, wa
 }
 
 // GetClusterCredentials downloads the TLS certificates and configuration scripts for a cluster
-func (client *Client) DownloadClusterCredentials(account *Account, name string, customPath string) (credentialsPath string, err error) {
-	defer client.Cache.UpdateFromAccount(*account)
+func (client *Client) DownloadClusterCredentials(account Account, name string, customPath string) (credentialsPath string, err error) {
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return "", err
@@ -161,7 +150,7 @@ func (client *Client) DownloadClusterCredentials(account *Account, name string, 
 }
 
 // GetSourceCommand returns the shell command and appropriate help text to load a cluster's credentials
-func (client *Client) GetSourceCommand(account *Account, shell string, name string, customPath string) (sourceText string, err error) {
+func (client *Client) GetSourceCommand(account Account, shell string, name string, customPath string) (sourceText string, err error) {
 	// We are ignoring errors here, and checking lower down if the creds are missing
 	credentialsPath, _ := buildClusterCredentialsPath(account, name, customPath)
 	creds, _ := common.NewCredentialsBundle(credentialsPath)
@@ -182,8 +171,8 @@ func (client *Client) GetSourceCommand(account *Account, shell string, name stri
 }
 
 // ListClusters retrieves all clusters
-func (client *Client) ListClusters(account *Account) ([]common.Cluster, error) {
-	defer client.Cache.UpdateFromAccount(*account)
+func (client *Client) ListClusters(account Account) ([]common.Cluster, error) {
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return nil, err
@@ -193,10 +182,10 @@ func (client *Client) ListClusters(account *Account) ([]common.Cluster, error) {
 }
 
 // GetCluster retrieves a cluster
-func (client *Client) GetCluster(account *Account, name string, waitUntilActive bool) (common.Cluster, error) {
+func (client *Client) GetCluster(account Account, name string, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
-	defer client.Cache.UpdateFromAccount(*account)
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -211,10 +200,10 @@ func (client *Client) GetCluster(account *Account, name string, waitUntilActive 
 }
 
 // GrowCluster adds nodes to a cluster
-func (client *Client) GrowCluster(account *Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
+func (client *Client) GrowCluster(account Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
-	defer client.Cache.UpdateFromAccount(*account)
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -229,10 +218,10 @@ func (client *Client) GrowCluster(account *Account, name string, nodes int, wait
 }
 
 // RebuildCluster destroys and recreates the cluster
-func (client *Client) RebuildCluster(account *Account, name string, waitUntilActive bool) (common.Cluster, error) {
+func (client *Client) RebuildCluster(account Account, name string, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
-	defer client.Cache.UpdateFromAccount(*account)
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -247,10 +236,10 @@ func (client *Client) RebuildCluster(account *Account, name string, waitUntilAct
 }
 
 // SetAutoScale adds nodes to a cluster
-func (client *Client) SetAutoScale(account *Account, name string, value bool) (common.Cluster, error) {
+func (client *Client) SetAutoScale(account Account, name string, value bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
-	defer client.Cache.UpdateFromAccount(*account)
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -260,10 +249,10 @@ func (client *Client) SetAutoScale(account *Account, name string, value bool) (c
 }
 
 // DeleteCluster deletes a cluster
-func (client *Client) DeleteCluster(account *Account, name string) (common.Cluster, error) {
+func (client *Client) DeleteCluster(account Account, name string) (common.Cluster, error) {
 	var cluster common.Cluster
 
-	defer client.Cache.UpdateFromAccount(*account)
+	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
 		return cluster, err
@@ -278,7 +267,7 @@ func (client *Client) DeleteCluster(account *Account, name string) (common.Clust
 }
 
 // DeleteClusterCredentials removes a cluster's downloaded credentials
-func (client *Client) DeleteClusterCredentials(account *Account, name string, customPath string) error {
+func (client *Client) DeleteClusterCredentials(account Account, name string, customPath string) error {
 	p, err := buildClusterCredentialsPath(account, name, customPath)
 	if err != nil {
 		common.Log.WriteWarning("Unable to locate carina config path, not deleteing credentials on disk.")

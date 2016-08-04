@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/getcarina/carina/common"
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/baymodels"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
 	"github.com/gophercloud/gophercloud/pagination"
@@ -18,32 +17,20 @@ import (
 type Magnum struct {
 	client                *gophercloud.ServiceClient
 	bayModelToFlavorCache map[string]string
-	Credentials           *MagnumCredentials
+	Account               *MagnumAccount
 	Output                *tabwriter.Writer
 }
 
+const httpTimeout = 15 * time.Second
 const clusterPollingInterval = 10 * time.Second
 
-func (magnum *Magnum) authenticate() error {
+func (magnum *Magnum) init() error {
 	if magnum.client == nil {
-		common.Log.WriteDebug("[magnum] Authenticating")
-		auth := gophercloud.AuthOptions{
-			IdentityEndpoint: magnum.Credentials.Endpoint,
-			Username:         magnum.Credentials.UserName,
-			Password:         magnum.Credentials.Password,
-			TenantName:       magnum.Credentials.Project,
-			DomainName:       magnum.Credentials.Domain,
-		}
-		identity, err := openstack.AuthenticatedClient(auth)
+		magnumClient, err := magnum.Account.Authenticate()
 		if err != nil {
-			return errors.Wrap(err, "[magnum] Authentication failed")
+			return err
 		}
-		magnum.client, err = openstack.NewContainerOrchestrationV1(identity, gophercloud.EndpointOpts{Region: magnum.Credentials.Region})
-		if err != nil {
-			return errors.Wrap(err, "[magnum] Unable to create a Magnum client")
-		}
-
-		magnum.Credentials.Token = magnum.client.TokenID
+		magnum.client = magnumClient
 	}
 	return nil
 }
@@ -65,7 +52,7 @@ func (magnum *Magnum) GetClusterCredentials(name string) (common.CredentialsBund
 
 // ListClusters prints out a list of the user's clusters to the console
 func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
-	err := magnum.authenticate()
+	err := magnum.init()
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +84,7 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 	var cluster MagnumCluster
 
-	err := magnum.authenticate()
+	err := magnum.init()
 	if err != nil {
 		return cluster, err
 	}
@@ -159,7 +146,7 @@ func (magnum *Magnum) newCluster(bay bays.Bay) MagnumCluster {
 }
 
 func (magnum *Magnum) listBayModels() ([]baymodels.BayModel, error) {
-	err := magnum.authenticate()
+	err := magnum.init()
 	if err != nil {
 		return nil, err
 	}

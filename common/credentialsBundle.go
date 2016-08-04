@@ -36,26 +36,32 @@ func NewCredentialsBundle(credentialsPath string) (CredentialsBundle, error) {
 	return creds, nil
 }
 
+// GetCA returns the contents of ca.pem
 func (creds CredentialsBundle) GetCA() []byte {
 	return creds.Files["ca.pem"]
 }
 
+// GetCAKey returns the contents of ca-key.pem
 func (creds CredentialsBundle) GetCAKey() []byte {
 	return creds.Files["ca-key.pem"]
 }
 
+// GetCert returns the contents of cert.pem
 func (creds CredentialsBundle) GetCert() []byte {
 	return creds.Files["cert.pem"]
 }
 
+// GetKey returns the contents of key.pem
 func (creds CredentialsBundle) GetKey() []byte {
 	return creds.Files["key.pem"]
 }
 
+// GetDockerEnv returns the contents of docker.env
 func (creds CredentialsBundle) GetDockerEnv() []byte {
 	return creds.Files["docker.env"]
 }
 
+// Verify validates that we can connect to the Docker host specified in the credentials bundle
 func (creds CredentialsBundle) Verify() error {
 	tlsConfig, err := creds.getTLSConfig()
 	if err != nil {
