@@ -1,6 +1,6 @@
 package makeswarm
 
-import "github.com/getcarina/libcarina"
+import "github.com/getcarina/libmakeswarm"
 
 // CarinaQuotas contains the quota information for a CarinaAccount
 type CarinaQuotas libcarina.Quotas

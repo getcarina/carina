@@ -1,6 +1,6 @@
 package makeswarm
 
-import "github.com/getcarina/libcarina"
+import "github.com/getcarina/libmakeswarm"
 
 // Cluster represents a cluster on make-swarm
 type Cluster libcarina.Cluster

@@ -4,7 +4,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/getcarina/carina/common"
-	"github.com/getcarina/libcarina"
+	"github.com/getcarina/libmakeswarm"
 	"github.com/pkg/errors"
 	"net/http"
 )

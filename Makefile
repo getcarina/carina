@@ -11,20 +11,22 @@ LDFLAGS = -w ${XFLAG_PRE}/version.Commit=${COMMIT} ${XFLAG_PRE}/version.Version=
 GOCMD = go
 GOBUILD = $(GOCMD) build -a -tags netgo -ldflags '$(LDFLAGS)'
 
-GOFILES = main.go version/*.go
+GOFILES = $(wildcard **/*.go)
+GOFILES_NOVENDOR = $(shell go list ./... | grep -v /vendor/)
 
 BINDIR = bin/carina/$(VERSION)
 
 default: validate carina
 
 get-deps:
-	go get ./...
+	go get github.com/Masterminds/glide
+	glide install
 
 validate: get-deps
-	go fmt ./...
-	go vet ./...
-	-golint ./...
-	go test ./...
+	go fmt $(GOFILES_NOVENDOR)
+	go vet $(GOFILES_NOVENDOR)
+	-go list ./... | grep -v /vendor/ | xargs -L1 golint
+	go test $(GOFILES_NOVENDOR)
 
 carina-linux: linux
 	cp bin/carina-linux-amd64 carina-linux

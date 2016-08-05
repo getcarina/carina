@@ -1,0 +1,24 @@
+package: github.com/getcarina/carina
+import:
+- package: github.com/fatih/color
+  version: ^1.0.0
+- package: github.com/getcarina/libcarina
+  vcs: git
+  repo: git@github.com:rackerlabs/carina-cli-libcarina.git
+  version: make-coe
+- package: github.com/getcarina/libmakeswarm
+  vcs: git
+  repo: git@github.com:getcarina/libcarina.git
+  version: makeswarm
+- package: github.com/gophercloud/gophercloud
+  vcs: git
+  version: magnum
+  subpackages:
+  - openstack
+  - openstack/containerorchestration/v1/baymodels
+  - openstack/containerorchestration/v1/bays
+  - pagination
+- package: github.com/pkg/errors
+  version: ^0.7.0
+- package: gopkg.in/alecthomas/kingpin.v2
+  version: ^2.2.2
