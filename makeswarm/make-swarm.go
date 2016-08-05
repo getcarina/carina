@@ -12,7 +12,7 @@ import (
 // MakeSwarm is an adapter between the cli and Carina (make-swarm)
 type MakeSwarm struct {
 	client  *libcarina.ClusterClient
-	Account *CarinaAccount
+	Account *Account
 	Output  *tabwriter.Writer
 }
 
@@ -39,6 +39,7 @@ func (carina *MakeSwarm) init() error {
 	return nil
 }
 
+// GetQuotas retrieves the quotas set for the account
 func (carina *MakeSwarm) GetQuotas() (common.Quotas, error) {
 	var quotas CarinaQuotas
 
@@ -59,7 +60,7 @@ func (carina *MakeSwarm) GetQuotas() (common.Quotas, error) {
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (carina *MakeSwarm) CreateCluster(name string, nodes int) (common.Cluster, error) {
-	var cluster CarinaCluster
+	var cluster Cluster
 
 	err := carina.init()
 	if err != nil {
@@ -76,7 +77,7 @@ func (carina *MakeSwarm) CreateCluster(name string, nodes int) (common.Cluster, 
 	if err != nil {
 		return cluster, errors.Wrap(err, "[make-swarm] Unable to create the cluster")
 	}
-	cluster = CarinaCluster(*result)
+	cluster = Cluster(*result)
 
 	return cluster, err
 }
@@ -117,7 +118,7 @@ func (carina *MakeSwarm) ListClusters() ([]common.Cluster, error) {
 	}
 
 	for _, result := range results {
-		clusters = append(clusters, CarinaCluster(result))
+		clusters = append(clusters, Cluster(result))
 	}
 
 	return clusters, err
@@ -125,7 +126,7 @@ func (carina *MakeSwarm) ListClusters() ([]common.Cluster, error) {
 
 // RebuildCluster destroys and recreates the cluster
 func (carina *MakeSwarm) RebuildCluster(name string) (common.Cluster, error) {
-	var cluster CarinaCluster
+	var cluster Cluster
 
 	err := carina.init()
 	if err != nil {
@@ -134,7 +135,7 @@ func (carina *MakeSwarm) RebuildCluster(name string) (common.Cluster, error) {
 
 	common.Log.WriteDebug("[make-swarm] Rebuilding cluster (%s)", name)
 	result, err := carina.client.Rebuild(name)
-	cluster = CarinaCluster(*result)
+	cluster = Cluster(*result)
 
 	if err != nil {
 		return cluster, errors.Wrap(err, "[make-swarm] Unable to rebuild the cluster")
@@ -143,9 +144,9 @@ func (carina *MakeSwarm) RebuildCluster(name string) (common.Cluster, error) {
 	return cluster, nil
 }
 
-// ShowCluster prints out a cluster's information to the console
+// GetCluster prints out a cluster's information to the console
 func (carina *MakeSwarm) GetCluster(name string) (common.Cluster, error) {
-	var cluster CarinaCluster
+	var cluster Cluster
 
 	err := carina.init()
 	if err != nil {
@@ -157,14 +158,14 @@ func (carina *MakeSwarm) GetCluster(name string) (common.Cluster, error) {
 	if err != nil {
 		return cluster, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to retrieve cluster (%s)", name))
 	}
-	cluster = CarinaCluster(*result)
+	cluster = Cluster(*result)
 
 	return cluster, nil
 }
 
 // DeleteCluster permanently deletes a cluster
 func (carina *MakeSwarm) DeleteCluster(name string) (common.Cluster, error) {
-	var cluster CarinaCluster
+	var cluster Cluster
 
 	err := carina.init()
 	if err != nil {
@@ -176,14 +177,14 @@ func (carina *MakeSwarm) DeleteCluster(name string) (common.Cluster, error) {
 	if err != nil {
 		return cluster, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to delete cluster (%s)", name))
 	}
-	cluster = CarinaCluster(*result)
+	cluster = Cluster(*result)
 
 	return cluster, nil
 }
 
 // GrowCluster adds nodes to a cluster
 func (carina *MakeSwarm) GrowCluster(name string, nodes int) (common.Cluster, error) {
-	var cluster CarinaCluster
+	var cluster Cluster
 
 	err := carina.init()
 	if err != nil {
@@ -195,14 +196,14 @@ func (carina *MakeSwarm) GrowCluster(name string, nodes int) (common.Cluster, er
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to grow cluster (%s)", name))
 	}
-	cluster = CarinaCluster(*result)
+	cluster = Cluster(*result)
 
 	return cluster, nil
 }
 
 // SetAutoScale enables or disables autoscaling on a cluster
 func (carina *MakeSwarm) SetAutoScale(name string, value bool) (common.Cluster, error) {
-	var cluster CarinaCluster
+	var cluster Cluster
 
 	err := carina.init()
 	if err != nil {
@@ -214,7 +215,7 @@ func (carina *MakeSwarm) SetAutoScale(name string, value bool) (common.Cluster, 
 	if err != nil {
 		return cluster, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to change the cluster's autoscale setting (%s)", name))
 	}
-	cluster = CarinaCluster(*result)
+	cluster = Cluster(*result)
 
 	return cluster, nil
 }

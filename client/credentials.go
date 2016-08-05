@@ -11,7 +11,7 @@ const defaultNonDotDir = "carina"
 const xdgDataHomeEnvVar = "XDG_DATA_HOME"
 const credentialsBaseDirEnvVar = "CARINA_CREDENTIALS_DIR"
 
-// CarinaCredentialsBaseDir get the current base directory for carina credentials
+// GetCredentialsDir get the current base directory for carina credentials
 func GetCredentialsDir() (string, error) {
 	if os.Getenv(CarinaHomeDirEnvVar) != "" {
 		return os.Getenv(CarinaHomeDirEnvVar), nil

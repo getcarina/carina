@@ -9,15 +9,15 @@ import (
 	"net/http"
 )
 
-// Credentials is a set of authentication credentials accepted by Rackspace Identity
-type CarinaAccount struct {
+// Account is a set of authentication credentials accepted by Rackspace Identity
+type Account struct {
 	Endpoint string
 	UserName string
 	APIKey   string
 	Token    string
 }
 
-func (account *CarinaAccount) getEndpoint() string {
+func (account *Account) getEndpoint() string {
 	if account.Endpoint != "" {
 		return account.Endpoint
 	}
@@ -25,7 +25,7 @@ func (account *CarinaAccount) getEndpoint() string {
 }
 
 // GetID returns a unique id for the account, e.g. public[-custom endpoint hash]-[username]
-func (account *CarinaAccount) GetID() string {
+func (account *Account) GetID() string {
 	if account.Endpoint == "" {
 		return fmt.Sprintf("public-%s", account.UserName)
 	}
@@ -35,7 +35,7 @@ func (account *CarinaAccount) GetID() string {
 }
 
 // Authenticate creates an authenticated client, ready to use to communicate with the Carina API
-func (account *CarinaAccount) Authenticate() (*libcarina.ClusterClient, error) {
+func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 	var carinaClient *libcarina.ClusterClient
 
 	testAuth := func() error {
@@ -91,7 +91,7 @@ func (account *CarinaAccount) Authenticate() (*libcarina.ClusterClient, error) {
 }
 
 // BuildCache builds the set of data to cache
-func (account *CarinaAccount) BuildCache() map[string]string {
+func (account *Account) BuildCache() map[string]string {
 	c := map[string]string{"token": account.Token}
 	if account.Endpoint != "" {
 		c["endpoint"] = account.Endpoint
@@ -100,7 +100,7 @@ func (account *CarinaAccount) BuildCache() map[string]string {
 }
 
 // ApplyCache applies a set of cached data
-func (account *CarinaAccount) ApplyCache(c map[string]string) {
+func (account *Account) ApplyCache(c map[string]string) {
 	account.Token = c["token"]
 
 	// Don't let a cached value nuke the endpoint specified by the user

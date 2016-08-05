@@ -2,23 +2,28 @@ package magnum
 
 import "github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
 
-type MagnumCluster struct {
+// Cluster is a Magnum cluster
+type Cluster struct {
 	bays.Bay
 	FlavorID string
 }
 
-func (cluster MagnumCluster) GetName() string {
+// GetName returns the cluster name
+func (cluster Cluster) GetName() string {
 	return cluster.Name
 }
 
-func (cluster MagnumCluster) GetFlavor() string {
+// GetFlavor returns the flavor of the nodes in the cluster
+func (cluster Cluster) GetFlavor() string {
 	return cluster.FlavorID
 }
 
-func (cluster MagnumCluster) GetNodes() int {
+// GetNodes returns the number of nodes in the cluster
+func (cluster Cluster) GetNodes() int {
 	return cluster.Nodes
 }
 
-func (cluster MagnumCluster) GetStatus() string {
+// GetStatus returns the status of the cluster
+func (cluster Cluster) GetStatus() string {
 	return cluster.Status
 }

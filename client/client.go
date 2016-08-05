@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 )
 
+// Client is the multi-cloud Carina client, which coorindates communication with all Carina-esque clouds
 type Client struct {
 	Cache *Cache
 	Error error
@@ -19,10 +20,16 @@ type Client struct {
 // CarinaHomeDirEnvVar is the environment variable name for carina data, config, etc.
 const CarinaHomeDirEnvVar = "CARINA_HOME"
 
+// CloudMakeSwarm is the v1 Carina (make-swarm) cloud type
 const CloudMakeSwarm = "public"
+
+// CloudMakeCOE is the v2 Carina (make-coe) cloud type
 const CloudMakeCOE = "make-coe"
+
+// CloudMagnum is the Rackspace Private Cloud Magnum cloud type
 const CloudMagnum = "private"
 
+// NewClient builds a new Carina client
 func NewClient(cacheEnabled bool) *Client {
 	client := &Client{}
 	client.initCache(cacheEnabled)
@@ -72,9 +79,9 @@ func (client *Client) buildContainerService(account Account) (common.ClusterServ
 	client.Cache.apply(account)
 
 	switch a := account.(type) {
-	case *makeswarm.CarinaAccount:
+	case *makeswarm.Account:
 		return &makeswarm.MakeSwarm{Account: a}, nil
-	case *magnum.MagnumAccount:
+	case *magnum.Account:
 		return &magnum.Magnum{Account: a}, nil
 	default:
 		return nil, fmt.Errorf("Invalid account type: %T", a)
@@ -112,7 +119,7 @@ func (client *Client) CreateCluster(account Account, name string, nodes int, wai
 	return cluster, err
 }
 
-// GetClusterCredentials downloads the TLS certificates and configuration scripts for a cluster
+// DownloadClusterCredentials downloads the TLS certificates and configuration scripts for a cluster
 func (client *Client) DownloadClusterCredentials(account Account, name string, customPath string) (credentialsPath string, err error) {
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)

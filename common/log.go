@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// Log prints formatted, colored logs to the console
 var Log consoleLogger
 
 func init() {
@@ -17,6 +18,7 @@ type consoleLogger struct {
 	Silent bool
 }
 
+// WriteDebug prints debug information to stdout
 func (log consoleLogger) WriteDebug(format string, a ...interface{}) {
 	if !log.Debug {
 		return
@@ -25,6 +27,7 @@ func (log consoleLogger) WriteDebug(format string, a ...interface{}) {
 	color.Cyan(format, a...)
 }
 
+// WriteInfo prints text to stdout
 func (log consoleLogger) WriteInfo(format string, a ...interface{}) {
 	if log.Silent {
 		return
@@ -33,6 +36,7 @@ func (log consoleLogger) WriteInfo(format string, a ...interface{}) {
 	color.White(format, a...)
 }
 
+// WriteWarning prints highlighted text to stdout
 func (log consoleLogger) WriteWarning(format string, a ...interface{}) {
 	if log.Silent {
 		return
@@ -41,6 +45,7 @@ func (log consoleLogger) WriteWarning(format string, a ...interface{}) {
 	color.Yellow(format, a...)
 }
 
+// WriteError prints highlighted text and an error to stderr
 func (log consoleLogger) WriteError(format string, err error, a ...interface{}) {
 	color.Set(color.FgRed)
 	fmt.Fprintf(os.Stderr, format+"\n", a...)

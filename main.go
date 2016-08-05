@@ -492,7 +492,7 @@ func initCarinaFlags(cmd *Command) error {
 		if cmd.APIKey == "" {
 			cmd.APIKey = os.Getenv(RackspaceAPIKeyEnvVar)
 			if cmd.APIKey == "" {
-				return fmt.Errorf("API Key was not specified. Either use --api-key or set %s or %s.", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
+				return fmt.Errorf("API Key was not specified. Either use --api-key or set %s or %s", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
 			}
 			common.Log.WriteDebug("API Key: %s", RackspaceAPIKeyEnvVar)
 		} else {
@@ -595,13 +595,13 @@ func initMagnumFlags(cmd *Command) error {
 func (cmd *Command) buildAccount() carinaclient.Account {
 	switch cmd.CloudType {
 	case carinaclient.CloudMakeSwarm:
-		return &makeswarm.CarinaAccount{
+		return &makeswarm.Account{
 			Endpoint: cmd.Endpoint,
 			UserName: cmd.Username,
 			APIKey:   cmd.APIKey,
 		}
 	case carinaclient.CloudMagnum:
-		return &magnum.MagnumAccount{
+		return &magnum.Account{
 			AuthEndpoint: cmd.AuthEndpoint,
 			Endpoint:     cmd.Endpoint,
 			UserName:     cmd.Username,
@@ -716,7 +716,7 @@ func (cmd *CreateCommand) Create(pc *kingpin.ParseContext) error {
 	return nil
 }
 
-// Download credentials for a cluster
+// Download credentials for a cluster to the filesystem
 func (cmd *CredentialsCommand) Download(pc *kingpin.ParseContext) error {
 	credentialsPath, err := cmd.client.DownloadClusterCredentials(cmd.buildAccount(), cmd.ClusterName, cmd.Path)
 	if err != nil {
@@ -733,7 +733,7 @@ func (cmd *CredentialsCommand) Download(pc *kingpin.ParseContext) error {
 	return nil
 }
 
-// Show the user's quotas
+// Quotas prints out the user's quotas
 func (cmd *Command) Quotas(pc *kingpin.ParseContext) (err error) {
 	quotas, err := cmd.client.GetQuotas(cmd.buildAccount())
 	if err != nil {

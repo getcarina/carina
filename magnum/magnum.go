@@ -17,7 +17,7 @@ import (
 type Magnum struct {
 	client                *gophercloud.ServiceClient
 	bayModelToFlavorCache map[string]string
-	Account               *MagnumAccount
+	Account               *Account
 	Output                *tabwriter.Writer
 }
 
@@ -37,12 +37,12 @@ func (magnum *Magnum) init() error {
 
 // GetQuotas retrieves the quotas set for the account
 func (magnum *Magnum) GetQuotas() (common.Quotas, error) {
-	return MagnumQuotas{}, errors.New("Not implemented yet")
+	return Quotas{}, errors.New("Not implemented yet")
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (magnum *Magnum) CreateCluster(name string, nodes int) (common.Cluster, error) {
-	return MagnumCluster{}, errors.New("Not implemented yet")
+	return Cluster{}, errors.New("Not implemented yet")
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
@@ -82,7 +82,7 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 
 // GetCluster prints out a cluster's information to the console
 func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
-	var cluster MagnumCluster
+	var cluster Cluster
 
 	err := magnum.init()
 	if err != nil {
@@ -101,22 +101,22 @@ func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 
 // RebuildCluster destroys and recreates the cluster
 func (magnum *Magnum) RebuildCluster(name string) (common.Cluster, error) {
-	return MagnumCluster{}, errors.New("Not implemented yet")
+	return Cluster{}, errors.New("Not implemented yet")
 }
 
 // DeleteCluster permanently deletes a cluster
 func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
-	return MagnumCluster{}, errors.New("Not implemented yet")
+	return Cluster{}, errors.New("Not implemented yet")
 }
 
 // GrowCluster adds nodes to a cluster
 func (magnum *Magnum) GrowCluster(name string, nodes int) (common.Cluster, error) {
-	return MagnumCluster{}, errors.New("Not implemented yet")
+	return Cluster{}, errors.New("Not implemented yet")
 }
 
 // SetAutoScale enables or disables autoscaling on a cluster
 func (magnum *Magnum) SetAutoScale(name string, value bool) (common.Cluster, error) {
-	return MagnumCluster{}, errors.New("Magnum does not support autoscaling.")
+	return Cluster{}, errors.New("Magnum does not support autoscaling.")
 }
 
 // WaitUntilClusterIsActive waits until the prior cluster operation is completed
@@ -134,8 +134,8 @@ func (magnum *Magnum) WaitUntilClusterIsActive(name string) (common.Cluster, err
 	}
 }
 
-func (magnum *Magnum) newCluster(bay bays.Bay) MagnumCluster {
-	cluster := MagnumCluster{Bay: bay}
+func (magnum *Magnum) newCluster(bay bays.Bay) Cluster {
+	cluster := Cluster{Bay: bay}
 	flavor, err := magnum.lookupFlavor(bay.BayModelID)
 	cluster.FlavorID = flavor
 	if err != nil {

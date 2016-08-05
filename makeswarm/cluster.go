@@ -2,20 +2,25 @@ package makeswarm
 
 import "github.com/getcarina/libcarina"
 
-type CarinaCluster libcarina.Cluster
+// Cluster represents a cluster on make-swarm
+type Cluster libcarina.Cluster
 
-func (cluster CarinaCluster) GetName() string {
+// GetName returns the cluster name
+func (cluster Cluster) GetName() string {
 	return cluster.ClusterName
 }
 
-func (cluster CarinaCluster) GetFlavor() string {
+// GetFlavor returns the flavor of the nodes in the cluster
+func (cluster Cluster) GetFlavor() string {
 	return cluster.Flavor
 }
 
-func (cluster CarinaCluster) GetNodes() int {
+// GetNodes returns the number of nodes in the cluster
+func (cluster Cluster) GetNodes() int {
 	return cluster.Nodes.Int()
 }
 
-func (cluster CarinaCluster) GetStatus() string {
+// GetStatus returns the status of the cluster
+func (cluster Cluster) GetStatus() string {
 	return cluster.Status
 }

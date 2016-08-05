@@ -4,15 +4,14 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/getcarina/carina/common"
-	"github.com/getcarina/carina/version"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/pkg/errors"
 	"net/http"
 )
 
-// Credentials is a set of authentication credentials accepted by OpenStack Identity (keystone) v2 and v3
-type MagnumAccount struct {
+// Account is a set of authentication credentials accepted by OpenStack Identity (keystone) v2 and v3
+type Account struct {
 	AuthEndpoint string
 	Endpoint     string
 	UserName     string
@@ -24,13 +23,13 @@ type MagnumAccount struct {
 }
 
 // GetID returns a unique id for the account, e.g. private-[authendpoint hash]-[username]
-func (account *MagnumAccount) GetID() string {
+func (account *Account) GetID() string {
 	hash := sha1.Sum([]byte(account.AuthEndpoint))
 	return fmt.Sprintf("private-%x-%s", hash[:4], account.UserName)
 }
 
 // Authenticate creates an authenticated client, ready to use to communicate with the OpenStack Magnum API
-func (account *MagnumAccount) Authenticate() (*gophercloud.ServiceClient, error) {
+func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 	var magnumClient *gophercloud.ServiceClient
 
 	testAuth := func() error {
@@ -73,7 +72,7 @@ func (account *MagnumAccount) Authenticate() (*gophercloud.ServiceClient, error)
 
 			identity.TokenID = account.Token
 			identity.ReauthFunc = reauthenticate(identity, authOptions)
-			identity.UserAgent.Prepend(fmt.Sprintf("%s %s", common.UserAgent, version.Version))
+			identity.UserAgent.Prepend(common.BuildUserAgent())
 			identity.HTTPClient = http.Client{}
 			identity.EndpointLocator = func(opts gophercloud.EndpointOpts) (string, error) {
 				// Skip the service catalog and use the cached endpoint
@@ -120,7 +119,8 @@ func reauthenticate(identity *gophercloud.ProviderClient, authOptions gopherclou
 	}
 }
 
-func (account *MagnumAccount) BuildCache() map[string]string {
+// BuildCache builds the set of data to cache
+func (account *Account) BuildCache() map[string]string {
 	return map[string]string{
 		"endpoint": account.Endpoint,
 		"token":    account.Token,
@@ -128,7 +128,7 @@ func (account *MagnumAccount) BuildCache() map[string]string {
 }
 
 // ApplyCache applies a set of cached data
-func (account *MagnumAccount) ApplyCache(c map[string]string) {
+func (account *Account) ApplyCache(c map[string]string) {
 	account.Endpoint = c["endpoint"]
 	account.Token = c["token"]
 }

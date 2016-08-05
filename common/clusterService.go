@@ -1,6 +1,6 @@
 package common
 
-// ClusterService is a common interface over multiple cluster APIs (magnum, make-swarm and make-coe)
+// ClusterService is a common interface over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)
 type ClusterService interface {
 	// GetQuotas retrieves the quotas set for the account
 	GetQuotas() (Quotas, error)
@@ -33,14 +33,26 @@ type ClusterService interface {
 	WaitUntilClusterIsActive(name string) (Cluster, error)
 }
 
+// Cluster is a common interface for clusters over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)
 type Cluster interface {
+	// GetName returns the cluster name
 	GetName() string
+
+	// GetFlavor returns the flavor of the nodes in the cluster
 	GetFlavor() string
+
+	// GetNodes returns the number of nodes in the cluster
 	GetNodes() int
+
+	// GetStatus returns the status of the cluster
 	GetStatus() string
 }
 
+// Quotas is a common interface for cluster quotas over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)
 type Quotas interface {
+	// GetMaxClusters returns the maximum number of clusters allowed on the account
 	GetMaxClusters() int
+
+	// GetMaxNodesPerCluster returns the maximum number of nodes allowed in a cluster on the account
 	GetMaxNodesPerCluster() int
 }

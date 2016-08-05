@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// CredentialsBundle is a set of certificates and environment information necessary to connect to a cluster
 type CredentialsBundle struct {
 	Files map[string][]byte
 }
@@ -88,12 +89,12 @@ func (creds CredentialsBundle) Verify() error {
 		}
 	}
 
-	dockerHostUrl, err := url.Parse(dockerHost)
+	dockerHostURL, err := url.Parse(dockerHost)
 	if err != nil {
 		return errors.Wrap(err, "Invalid credentials bundle. Bad DOCKER_HOST URL.")
 	}
 
-	conn, err := tls.Dial("tcp", dockerHostUrl.Host, tlsConfig)
+	conn, err := tls.Dial("tcp", dockerHostURL.Host, tlsConfig)
 	if err != nil {
 		return errors.Wrap(err, "Invalid credentials bundle. Unable to connect to the Docker host.")
 	}

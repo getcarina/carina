@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// CredentialsNextStepsString returns instructions to load the cluster credentials
 func CredentialsNextStepsString(clusterName string) string {
 	return fmt.Sprintf("# To see how to connect to your cluster, run: carina env %s --shell cmd|powershell|bash\n", clusterName)
 }
