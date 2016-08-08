@@ -15,10 +15,10 @@ import (
 
 // Magnum is an adapter between the cli and the OpenStack COE API (Magnum)
 type Magnum struct {
-	client                *gophercloud.ServiceClient
-	bayModelToFlavorCache map[string]string
-	Account               *Account
-	Output                *tabwriter.Writer
+	client        *gophercloud.ServiceClient
+	bayModelCache map[string]baymodels.BayModel
+	Account       *Account
+	Output        *tabwriter.Writer
 }
 
 const httpTimeout = 15 * time.Second
@@ -71,7 +71,10 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 		}
 
 		for _, result := range results {
-			cluster := magnum.newCluster(result)
+			cluster, err := magnum.newCluster(result)
+			if err != nil {
+				return false, err
+			}
 			clusters = append(clusters, cluster)
 		}
 		return true, nil
@@ -94,8 +97,7 @@ func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 	if err != nil {
 		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
 	}
-	cluster = magnum.newCluster(*result)
-
+	cluster, err = magnum.newCluster(*result)
 	return cluster, err
 }
 
@@ -134,15 +136,11 @@ func (magnum *Magnum) WaitUntilClusterIsActive(name string) (common.Cluster, err
 	}
 }
 
-func (magnum *Magnum) newCluster(bay bays.Bay) Cluster {
-	cluster := Cluster{Bay: bay}
-	flavor, err := magnum.lookupFlavor(bay.BayModelID)
-	cluster.FlavorID = flavor
-	if err != nil {
-		common.Log.WriteWarning(err.Error())
-	}
-
-	return cluster
+func (magnum *Magnum) newCluster(bay bays.Bay) (Cluster, error) {
+	cluster := &Cluster{Bay: bay}
+	baymodel, err := magnum.lookupBayModel(bay.BayModelID)
+	cluster.Template = baymodel
+	return *cluster, err
 }
 
 func (magnum *Magnum) listBayModels() ([]baymodels.BayModel, error) {
@@ -173,18 +171,24 @@ func (magnum *Magnum) listBayModels() ([]baymodels.BayModel, error) {
 	return bayModels, err
 }
 
-func (magnum *Magnum) lookupFlavor(bayModelID string) (flavorID string, error error) {
-	if magnum.bayModelToFlavorCache == nil {
+func (magnum *Magnum) lookupBayModel(bayModelID string) (baymodels.BayModel, error) {
+	var baymodel baymodels.BayModel
+
+	if magnum.bayModelCache == nil {
 		bayModels, err := magnum.listBayModels()
 		if err != nil {
-			return "", err
+			return baymodel, err
 		}
 
-		magnum.bayModelToFlavorCache = make(map[string]string)
+		magnum.bayModelCache = make(map[string]baymodels.BayModel)
 		for _, bayModel := range bayModels {
-			magnum.bayModelToFlavorCache[bayModel.ID] = bayModel.FlavorID
+			magnum.bayModelCache[bayModel.ID] = bayModel
 		}
 	}
 
-	return magnum.bayModelToFlavorCache[bayModelID], nil
+	baymodel, exists := magnum.bayModelCache[bayModelID]
+	if !exists {
+		return baymodel, fmt.Errorf("Could not find baymodel: %s", bayModelID)
+	}
+	return baymodel, nil
 }

@@ -29,7 +29,8 @@ func WriteRow(fields []string) {
 // WriteClusterHeader writes the cluster table header to the console
 func WriteClusterHeader() {
 	headerFields := []string{
-		"ClusterName",
+		"Name",
+		"Type",
 		"Flavor",
 		"Nodes",
 		"Status",
@@ -41,6 +42,7 @@ func WriteClusterHeader() {
 func WriteCluster(cluster common.Cluster) {
 	fields := []string{
 		cluster.GetName(),
+		cluster.GetCOE(),
 		cluster.GetFlavor(),
 		strconv.Itoa(cluster.GetNodes()),
 		cluster.GetStatus(),

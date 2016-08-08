@@ -10,6 +10,11 @@ func (cluster Cluster) GetName() string {
 	return cluster.ClusterName
 }
 
+// GetCOE returns the container orchestration engine used by the cluster
+func (cluster Cluster) GetCOE() string {
+	return "swarm"
+}
+
 // GetFlavor returns the flavor of the nodes in the cluster
 func (cluster Cluster) GetFlavor() string {
 	return cluster.Flavor

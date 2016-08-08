@@ -38,6 +38,9 @@ type Cluster interface {
 	// GetName returns the cluster name
 	GetName() string
 
+	// GetCOE returns the container orchestration engine used by the cluster
+	GetCOE() string
+
 	// GetFlavor returns the flavor of the nodes in the cluster
 	GetFlavor() string
 
