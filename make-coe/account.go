@@ -21,7 +21,7 @@ func (account *Account) getEndpoint() string {
 	if account.Endpoint != "" {
 		return account.Endpoint
 	}
-	return libcarina.BetaEndpoint
+	panic("Endpoint not specified and make-coe doesn't have a default public endpoint yet!")
 }
 
 // GetID returns a unique id for the account, e.g. public[-custom endpoint hash]-[username]

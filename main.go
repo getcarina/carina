@@ -119,6 +119,9 @@ const OpenStackPasswordEnvVar = "OS_PASSWORD"
 // OpenStackAuthURLEnvVar is the OpenStack Identity URL (v2 and v3 supported)
 const OpenStackAuthURLEnvVar = "OS_AUTH_URL"
 
+// CarinaEndpointEnvVar overrides the default Carina endpoint
+const CarinaEndpointEnvVar = "CARINA_ENDPOINT"
+
 // OpenStackEndpointEnvVar overrides the default endpoint from the service catalog
 const OpenStackEndpointEnvVar = "OS_ENDPOINT"
 
@@ -184,7 +187,7 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	// --auth-endpoint can also override the authentication endpoint for public Carina as well, but that's only helpful for local development
 	cap.Flag("auth-endpoint", "Private Cloud Authentication endpoint [OS_AUTH_URL]").StringVar(&ctx.AuthEndpoint)
 	// --endpoint can override the API endpoint for both Carina and Magnum, hidden since it's only helpful for local development
-	cap.Flag("endpoint", "Custom API endpoint [OS_ENDPOINT]").Hidden().StringVar(&ctx.Endpoint)
+	cap.Flag("endpoint", "Custom API endpoint [CARINA_ENDPOINT/OS_ENDPOINT]").Hidden().StringVar(&ctx.Endpoint)
 	cap.Flag("cloud", "The cloud type: public or private. This is automatically detected using the provided credentials.").EnumVar(&cap.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm, carinaclient.CloudMakeCOE)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
 	cap.Flag("debug", "Print additional debug messages to stdout.").BoolVar(&common.Log.Debug)
@@ -466,7 +469,12 @@ func initCarinaFlags(cmd *Command) error {
 
 	// endpoint = --endpoint -> public carina endpoint
 	if cmd.Endpoint == "" {
-		common.Log.WriteDebug("Endpoint: default")
+		cmd.Endpoint = os.Getenv(CarinaEndpointEnvVar)
+		if cmd.Endpoint == "" {
+			common.Log.WriteDebug("Endpoint: default")
+		} else {
+			common.Log.WriteDebug("Endpoint: %s", CarinaEndpointEnvVar)
+		}
 	} else {
 		common.Log.WriteDebug("Endpoint: --endpoint")
 	}
