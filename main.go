@@ -14,6 +14,7 @@ import (
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/carina/console"
 	"github.com/getcarina/carina/magnum"
+	"github.com/getcarina/carina/make-coe"
 	"github.com/getcarina/carina/makeswarm"
 	"github.com/getcarina/carina/version"
 	"github.com/pkg/errors"
@@ -184,7 +185,7 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	cap.Flag("auth-endpoint", "Private Cloud Authentication endpoint [OS_AUTH_URL]").StringVar(&ctx.AuthEndpoint)
 	// --endpoint can override the API endpoint for both Carina and Magnum, hidden since it's only helpful for local development
 	cap.Flag("endpoint", "Custom API endpoint [OS_ENDPOINT]").Hidden().StringVar(&ctx.Endpoint)
-	cap.Flag("cloud", "The cloud type: public or private. This is automatically detected using the provided credentials.").EnumVar(&cap.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm)
+	cap.Flag("cloud", "The cloud type: public or private. This is automatically detected using the provided credentials.").EnumVar(&cap.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm, carinaclient.CloudMakeCOE)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
 	cap.Flag("debug", "Print additional debug messages to stdout.").BoolVar(&common.Log.Debug)
 	cap.Flag("silent", "Do not print to stdout.").BoolVar(&common.Log.Silent)
@@ -434,11 +435,11 @@ func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
 	if cmd.CloudType == "" {
 		common.Log.WriteDebug("No cloud type specified, detecting with the provided credentials. Use --cloud to skip detection.")
 		if apikeyFound {
-			cmd.CloudType = carinaclient.CloudMakeSwarm
-			common.Log.WriteDebug("Cloud: make-swarm")
+			cmd.CloudType = carinaclient.CloudMakeCOE
+			common.Log.WriteDebug("Cloud: public")
 		} else {
 			cmd.CloudType = carinaclient.CloudMagnum
-			common.Log.WriteDebug("Cloud: Magnum")
+			common.Log.WriteDebug("Cloud: private")
 		}
 	}
 
@@ -594,6 +595,12 @@ func initMagnumFlags(cmd *Command) error {
 
 func (cmd *Command) buildAccount() carinaclient.Account {
 	switch cmd.CloudType {
+	case carinaclient.CloudMakeCOE:
+		return &makecoe.Account{
+			Endpoint: cmd.Endpoint,
+			UserName: cmd.Username,
+			APIKey:   cmd.APIKey,
+		}
 	case carinaclient.CloudMakeSwarm:
 		return &makeswarm.Account{
 			Endpoint: cmd.Endpoint,

@@ -1,5 +1,5 @@
 hash: c227c9e4bce662283bae62c11e9992566183bc8fd91848b23697b64b280a3f55
-updated: 2016-08-05T10:41:17.503399816-05:00
+updated: 2016-08-08T09:04:36.169166522-05:00
 imports:
 - name: github.com/alecthomas/template
   version: a0175ee3bccc567396460bf5acd36800cb10c49c
@@ -10,7 +10,7 @@ imports:
 - name: github.com/fatih/color
   version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
 - name: github.com/getcarina/libcarina
-  version: ab5c3711c48d4555012ced977e21d23f222dd0b2
+  version: 178561c13af5739cff93e82e6264256d0f612139
   repo: git@github.com:rackerlabs/carina-cli-libcarina.git
   vcs: git
 - name: github.com/getcarina/libmakeswarm

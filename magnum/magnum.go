@@ -114,7 +114,7 @@ func (magnum *Magnum) GrowCluster(name string, nodes int) (common.Cluster, error
 	return Cluster{}, errors.New("Not implemented yet")
 }
 
-// SetAutoScale enables or disables autoscaling on a cluster
+// SetAutoScale is not supported
 func (magnum *Magnum) SetAutoScale(name string, value bool) (common.Cluster, error) {
 	return Cluster{}, errors.New("Magnum does not support autoscaling.")
 }

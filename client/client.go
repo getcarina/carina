@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/carina/magnum"
+	"github.com/getcarina/carina/make-coe"
 	"github.com/getcarina/carina/makeswarm"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -21,10 +22,10 @@ type Client struct {
 const CarinaHomeDirEnvVar = "CARINA_HOME"
 
 // CloudMakeSwarm is the v1 Carina (make-swarm) cloud type
-const CloudMakeSwarm = "public"
+const CloudMakeSwarm = "make-swarm"
 
 // CloudMakeCOE is the v2 Carina (make-coe) cloud type
-const CloudMakeCOE = "make-coe"
+const CloudMakeCOE = "public"
 
 // CloudMagnum is the Rackspace Private Cloud Magnum cloud type
 const CloudMagnum = "private"
@@ -79,6 +80,8 @@ func (client *Client) buildContainerService(account Account) (common.ClusterServ
 	client.Cache.apply(account)
 
 	switch a := account.(type) {
+	case *makecoe.Account:
+		return &makecoe.MakeCOE{Account: a}, nil
 	case *makeswarm.Account:
 		return &makeswarm.MakeSwarm{Account: a}, nil
 	case *magnum.Account:
