@@ -200,14 +200,10 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	createCommand := new(CreateCommand)
 	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "Create a cluster")
 	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
-	createCommand.Flag("segments", "number of nodes for the initial cluster").Default("1").Hidden().IntVar(&createCommand.Nodes)
 	createCommand.Action(createCommand.Create)
 
 	getCommand := cap.NewWaitClusterCommand(ctx, "get", "Get information about a cluster")
 	getCommand.Action(getCommand.Get)
-
-	inspectCommand := cap.NewWaitClusterCommand(ctx, "inspect", "Get information about a cluster")
-	inspectCommand.Action(inspectCommand.Get).Hidden()
 
 	lsCommand := cap.NewCommand(ctx, "ls", "List clusters")
 	lsCommand.Action(lsCommand.List)
@@ -227,10 +223,6 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 
 	credentialsCommand := cap.NewCredentialsCommand(ctx, "credentials", "download credentials")
 	credentialsCommand.Action(credentialsCommand.Download)
-
-	// Hidden shorthand
-	credsCommand := cap.NewCredentialsCommand(ctx, "creds", "download credentials")
-	credsCommand.Action(credsCommand.Download).Hidden()
 
 	envCommand := cap.NewEnvCommand(ctx, "env", "show source command for setting credential environment")
 	envCommand.Action(envCommand.Show)
