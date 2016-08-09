@@ -205,11 +205,11 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	getCommand := cap.NewWaitClusterCommand(ctx, "get", "Get information about a cluster")
 	getCommand.Action(getCommand.Get)
 
-	lsCommand := cap.NewCommand(ctx, "ls", "List clusters")
-	lsCommand.Action(lsCommand.List)
+	lsCommand := cap.NewCommand(ctx, "ls", "List clusters. Alias for list.")
+	lsCommand.Action(lsCommand.List).Hidden()
 
-	listCommand := cap.NewCommand(ctx, "list", "List clusters")
-	listCommand.Action(listCommand.List).Hidden()
+	listCommand := cap.NewCommand(ctx, "list", "List clusters. Aliased to ls.")
+	listCommand.Action(listCommand.List)
 
 	growCommand := new(GrowCommand)
 	growCommand.ClusterCommand = cap.NewClusterCommand(ctx, "grow", "Grow a cluster by the requested number of nodes")
@@ -230,11 +230,11 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
 
-	rmCommand := cap.NewCredentialsCommand(ctx, "rm", "Remove a cluster")
-	rmCommand.Action(rmCommand.Delete)
+	rmCommand := cap.NewCredentialsCommand(ctx, "rm", "Remove a cluster. Alias for delete.")
+	rmCommand.Action(rmCommand.Delete).Hidden()
 
-	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a cluster")
-	deleteCommand.Action(deleteCommand.Delete).Hidden()
+	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a cluster. Aliased to rm.")
+	deleteCommand.Action(deleteCommand.Delete)
 
 	quotasCommand := cap.NewCommand(ctx, "quotas", "Get user quotas")
 	quotasCommand.Action(quotasCommand.Quotas)
