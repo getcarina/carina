@@ -105,7 +105,7 @@ func (client *Client) GetQuotas(account Account) (common.Quotas, error) {
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
-func (client *Client) CreateCluster(account Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
+func (client *Client) CreateCluster(account Account, name string, template string, nodes int, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
 	defer client.Cache.SaveAccount(account)
@@ -114,7 +114,7 @@ func (client *Client) CreateCluster(account Account, name string, nodes int, wai
 		return cluster, err
 	}
 
-	cluster, err = svc.CreateCluster(name, nodes)
+	cluster, err = svc.CreateCluster(name, template, nodes)
 	if waitUntilActive && err != nil {
 		cluster, err = svc.WaitUntilClusterIsActive(name)
 	}

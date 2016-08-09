@@ -6,7 +6,7 @@ type ClusterService interface {
 	GetQuotas() (Quotas, error)
 
 	// CreateCluster creates a new cluster
-	CreateCluster(name string, nodes int) (Cluster, error)
+	CreateCluster(name string, template string, nodes int) (Cluster, error)
 
 	// ListClusters retrieves all clusters
 	ListClusters() ([]Cluster, error)

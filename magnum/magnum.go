@@ -41,8 +41,34 @@ func (magnum *Magnum) GetQuotas() (common.Quotas, error) {
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
-func (magnum *Magnum) CreateCluster(name string, nodes int) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented yet")
+func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
+	var cluster Cluster
+
+	err := magnum.init()
+	if err != nil {
+		return cluster, err
+	}
+
+	common.Log.WriteDebug("[magnum] Creating %d-node %s cluster (%s)", nodes, template, name)
+
+	bayModel, err := magnum.lookupBayModelByName(template)
+	if err != nil {
+		return cluster, err
+	}
+
+	options := bays.CreateOpts{
+		Name:       name,
+		BayModelID: bayModel.ID,
+		Nodes:      nodes,
+	}
+	result := bays.Create(magnum.client, options)
+	if result.Err != nil {
+		return cluster, errors.Wrap(err, "[magnum] Unable to create the cluster")
+	}
+	bay, err := result.Extract()
+	cluster = Cluster{Bay: *bay, Template: bayModel}
+
+	return cluster, err
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
@@ -138,7 +164,7 @@ func (magnum *Magnum) WaitUntilClusterIsActive(name string) (common.Cluster, err
 
 func (magnum *Magnum) newCluster(bay bays.Bay) (Cluster, error) {
 	cluster := &Cluster{Bay: bay}
-	baymodel, err := magnum.lookupBayModel(bay.BayModelID)
+	baymodel, err := magnum.lookupBayModelByID(bay.BayModelID)
 	cluster.Template = baymodel
 	return *cluster, err
 }
@@ -171,13 +197,11 @@ func (magnum *Magnum) listBayModels() ([]baymodels.BayModel, error) {
 	return bayModels, err
 }
 
-func (magnum *Magnum) lookupBayModel(bayModelID string) (baymodels.BayModel, error) {
-	var baymodel baymodels.BayModel
-
+func (magnum *Magnum) getBayModelCache() (map[string]baymodels.BayModel, error) {
 	if magnum.bayModelCache == nil {
 		bayModels, err := magnum.listBayModels()
 		if err != nil {
-			return baymodel, err
+			return nil, err
 		}
 
 		magnum.bayModelCache = make(map[string]baymodels.BayModel)
@@ -186,9 +210,42 @@ func (magnum *Magnum) lookupBayModel(bayModelID string) (baymodels.BayModel, err
 		}
 	}
 
-	baymodel, exists := magnum.bayModelCache[bayModelID]
-	if !exists {
-		return baymodel, fmt.Errorf("Could not find baymodel: %s", bayModelID)
+	return magnum.bayModelCache, nil
+}
+
+func (magnum *Magnum) lookupBayModelByID(bayModelID string) (baymodels.BayModel, error) {
+	var bayModel baymodels.BayModel
+
+	cache, err := magnum.getBayModelCache()
+	if err != nil {
+		return bayModel, err
 	}
-	return baymodel, nil
+
+	bayModel, exists := cache[bayModelID]
+	if !exists {
+		return bayModel, fmt.Errorf("Could not find baymodel: %s", bayModelID)
+	}
+	return bayModel, nil
+}
+
+func (magnum *Magnum) lookupBayModelByName(name string) (baymodels.BayModel, error) {
+	var bayModel baymodels.BayModel
+
+	cache, err := magnum.getBayModelCache()
+	if err != nil {
+		return bayModel, err
+	}
+
+	name = strings.ToLower(name)
+	for _, bayModel = range cache {
+		if strings.ToLower(bayModel.Name) == name {
+			break
+		}
+	}
+
+	if bayModel == (baymodels.BayModel{}) {
+		return bayModel, fmt.Errorf("Could not find baymodel: %s", name)
+	}
+
+	return bayModel, nil
 }

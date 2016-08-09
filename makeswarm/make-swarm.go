@@ -59,12 +59,16 @@ func (carina *MakeSwarm) GetQuotas() (common.Quotas, error) {
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
-func (carina *MakeSwarm) CreateCluster(name string, nodes int) (common.Cluster, error) {
+func (carina *MakeSwarm) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
 	var cluster Cluster
 
 	err := carina.init()
 	if err != nil {
 		return cluster, err
+	}
+
+	if template != "" {
+		common.Log.WriteWarning("[make-swarm] Ignoring --template, not supported.")
 	}
 
 	common.Log.WriteDebug("[make-swarm] Creating %d-node cluster (%s)", nodes, name)

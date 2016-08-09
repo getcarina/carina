@@ -36,7 +36,7 @@ func (carina *MakeCOE) GetQuotas() (common.Quotas, error) {
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
-func (carina *MakeCOE) CreateCluster(name string, nodes int) (common.Cluster, error) {
+func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
 	return Cluster{}, errors.New("Not implemented")
 }
 

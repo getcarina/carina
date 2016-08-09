@@ -76,7 +76,8 @@ type WaitClusterCommand struct {
 // CreateCommand keeps context about the create command
 type CreateCommand struct {
 	*WaitClusterCommand
-	Nodes int
+	Nodes    int
+	Template string
 }
 
 // GrowCommand keeps context about the number of nodes to scale by
@@ -199,6 +200,7 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 
 	createCommand := new(CreateCommand)
 	createCommand.WaitClusterCommand = cap.NewWaitClusterCommand(ctx, "create", "Create a cluster")
+	createCommand.Flag("template", "name of the template, defining the cluster topology and configuration").EnumVar(&createCommand.Template, "swarm-dev", "kubernetes-dev")
 	createCommand.Flag("nodes", "number of nodes for the initial cluster").Default("1").IntVar(&createCommand.Nodes)
 	createCommand.Action(createCommand.Create)
 
@@ -712,7 +714,7 @@ func (cmd *CreateCommand) Create(pc *kingpin.ParseContext) error {
 		return errors.New("--nodes must be >= 1")
 	}
 
-	cluster, err := cmd.client.CreateCluster(cmd.buildAccount(), cmd.ClusterName, cmd.Nodes, cmd.Wait)
+	cluster, err := cmd.client.CreateCluster(cmd.buildAccount(), cmd.ClusterName, cmd.Template, cmd.Nodes, cmd.Wait)
 	if err != nil {
 		return err
 	}
