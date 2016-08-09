@@ -382,7 +382,7 @@ func (app *Application) shouldCheckForUpdate() (bool, error) {
 	}
 
 	if strings.Contains(version.Version, "-dev") || version.Version == "" {
-		common.Log.WriteWarning("# In dev mode, not checking for latest release")
+		common.Log.WriteDebug("# In dev mode, not checking for latest release")
 		return false, nil
 	}
 
