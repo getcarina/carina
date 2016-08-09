@@ -1,5 +1,5 @@
-hash: c227c9e4bce662283bae62c11e9992566183bc8fd91848b23697b64b280a3f55
-updated: 2016-08-08T09:04:36.169166522-05:00
+hash: 173066aad51a7f06705e00853622ea9294db55fe722c900f2a4f251b119c1111
+updated: 2016-08-09T13:56:01.35791021-05:00
 imports:
 - name: github.com/alecthomas/template
   version: a0175ee3bccc567396460bf5acd36800cb10c49c
@@ -18,7 +18,8 @@ imports:
   repo: git@github.com:getcarina/libcarina.git
   vcs: git
 - name: github.com/gophercloud/gophercloud
-  version: ec08a5a45e1d6692efb8d267d9e74d9c6525c67b
+  version: 88de23f1f63979e8e43f1bcb1f7508ec49728f9c
+  repo: git@github.com:carolynvs/gophercloud.git
   vcs: git
   subpackages:
   - openstack

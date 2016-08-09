@@ -12,7 +12,8 @@ import:
   version: makeswarm
 - package: github.com/gophercloud/gophercloud
   vcs: git
-  version: magnum
+  repo: git@github.com:carolynvs/gophercloud.git
+  version: bay-create
   subpackages:
   - openstack
   - openstack/containerorchestration/v1/baymodels
