@@ -31,7 +31,6 @@ func WriteClusterHeader() {
 	headerFields := []string{
 		"Name",
 		"Type",
-		"Flavor",
 		"Nodes",
 		"Status",
 	}
@@ -43,7 +42,6 @@ func WriteCluster(cluster common.Cluster) {
 	fields := []string{
 		cluster.GetName(),
 		cluster.GetCOE(),
-		cluster.GetFlavor(),
 		strconv.Itoa(cluster.GetNodes()),
 		cluster.GetStatus(),
 	}
