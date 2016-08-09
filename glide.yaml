@@ -13,7 +13,7 @@ import:
 - package: github.com/gophercloud/gophercloud
   vcs: git
   repo: git@github.com:carolynvs/gophercloud.git
-  version: bay-create
+  version: bay-delete
   subpackages:
   - openstack
   - openstack/containerorchestration/v1/baymodels
