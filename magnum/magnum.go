@@ -65,6 +65,7 @@ func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (co
 	if result.Err != nil {
 		return cluster, errors.Wrap(err, "[magnum] Unable to create the cluster")
 	}
+
 	bay, err := result.Extract()
 	cluster = Cluster{Bay: *bay, Template: bayModel}
 
@@ -134,7 +135,20 @@ func (magnum *Magnum) RebuildCluster(name string) (common.Cluster, error) {
 
 // DeleteCluster permanently deletes a cluster
 func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented yet")
+	var cluster Cluster
+
+	err := magnum.init()
+	if err != nil {
+		return cluster, err
+	}
+
+	common.Log.WriteDebug("[magnum] Deleting cluster (%s)", name)
+	result := bays.Delete(magnum.client, name)
+	if result.Err != nil {
+		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to delete cluster (%s)", name))
+	}
+
+	return magnum.GetCluster(name)
 }
 
 // GrowCluster adds nodes to a cluster
