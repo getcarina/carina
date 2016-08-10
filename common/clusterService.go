@@ -35,17 +35,20 @@ type ClusterService interface {
 
 // Cluster is a common interface for clusters over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)
 type Cluster interface {
+	// GetID returns the cluster identifier
+	GetID() string
+
 	// GetName returns the cluster name
 	GetName() string
 
 	// GetCOE returns the container orchestration engine used by the cluster
-	GetCOE() string
+	GetType() string
 
 	// GetFlavor returns the flavor of the nodes in the cluster
 	GetFlavor() string
 
 	// GetNodes returns the number of nodes in the cluster
-	GetNodes() int
+	GetNodes() string
 
 	// GetStatus returns the status of the cluster
 	GetStatus() string

@@ -1,6 +1,7 @@
 package magnum
 
 import (
+	"fmt"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/baymodels"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
 )
@@ -11,13 +12,18 @@ type Cluster struct {
 	Template baymodels.BayModel
 }
 
+// GetID returns the cluster identifier
+func (cluster Cluster) GetID() string {
+	return cluster.ID
+}
+
 // GetName returns the cluster name
 func (cluster Cluster) GetName() string {
 	return cluster.Name
 }
 
-// GetCOE returns the container orchestration engine used by the cluster
-func (cluster Cluster) GetCOE() string {
+// GetType returns the container orchestration engine used by the cluster
+func (cluster Cluster) GetType() string {
 	return cluster.Template.COE
 }
 
@@ -27,8 +33,8 @@ func (cluster Cluster) GetFlavor() string {
 }
 
 // GetNodes returns the number of nodes in the cluster
-func (cluster Cluster) GetNodes() int {
-	return cluster.Nodes
+func (cluster Cluster) GetNodes() string {
+	return fmt.Sprintf("%d/%d", cluster.Masters, cluster.Nodes)
 }
 
 // GetStatus returns the status of the cluster

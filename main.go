@@ -630,10 +630,7 @@ func (cmd *Command) List(pc *kingpin.ParseContext) error {
 		return err
 	}
 
-	console.WriteClusterHeader()
-	for _, cluster := range clusters {
-		console.WriteCluster(cluster)
-	}
+	console.WriteClusters(clusters)
 
 	return nil
 }
@@ -645,7 +642,6 @@ func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) error {
 		return err
 	}
 
-	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
 	return nil
@@ -658,7 +654,6 @@ func (cmd *CredentialsCommand) Delete(pc *kingpin.ParseContext) error {
 		return err
 	}
 
-	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
 	return nil
@@ -671,7 +666,6 @@ func (cmd *GrowCommand) Grow(pc *kingpin.ParseContext) error {
 		return err
 	}
 
-	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
 	return nil
@@ -689,7 +683,6 @@ func (cmd *AutoScaleCommand) SetAutoScale(pc *kingpin.ParseContext) (err error) 
 		return err
 	}
 
-	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
 	return nil
@@ -702,7 +695,6 @@ func (cmd *WaitClusterCommand) Rebuild(pc *kingpin.ParseContext) (err error) {
 		return err
 	}
 
-	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
 	return nil
@@ -719,7 +711,6 @@ func (cmd *CreateCommand) Create(pc *kingpin.ParseContext) error {
 		return err
 	}
 
-	console.WriteClusterHeader()
 	console.WriteCluster(cluster)
 
 	return nil

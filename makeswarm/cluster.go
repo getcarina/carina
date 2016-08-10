@@ -1,17 +1,25 @@
 package makeswarm
 
-import "github.com/getcarina/libmakeswarm"
+import (
+	"github.com/getcarina/libmakeswarm"
+	"strconv"
+)
 
 // Cluster represents a cluster on make-swarm
 type Cluster libcarina.Cluster
+
+// GetID returns the cluster identifier
+func (cluster Cluster) GetID() string {
+	return cluster.ClusterName
+}
 
 // GetName returns the cluster name
 func (cluster Cluster) GetName() string {
 	return cluster.ClusterName
 }
 
-// GetCOE returns the container orchestration engine used by the cluster
-func (cluster Cluster) GetCOE() string {
+// GetType returns the container orchestration engine used by the cluster
+func (cluster Cluster) GetType() string {
 	return "swarm"
 }
 
@@ -21,8 +29,8 @@ func (cluster Cluster) GetFlavor() string {
 }
 
 // GetNodes returns the number of nodes in the cluster
-func (cluster Cluster) GetNodes() int {
-	return cluster.Nodes.Int()
+func (cluster Cluster) GetNodes() string {
+	return strconv.Itoa(cluster.Nodes.Int())
 }
 
 // GetStatus returns the status of the cluster
