@@ -63,7 +63,7 @@ func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (co
 	}
 	result := bays.Create(magnum.client, options)
 	if result.Err != nil {
-		return cluster, errors.Wrap(err, "[magnum] Unable to create the cluster")
+		return cluster, errors.Wrap(result.Err, "[magnum] Unable to create the cluster")
 	}
 
 	bay, err := result.Extract()
@@ -145,7 +145,7 @@ func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
 	common.Log.WriteDebug("[magnum] Deleting cluster (%s)", name)
 	result := bays.Delete(magnum.client, name)
 	if result.Err != nil {
-		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to delete cluster (%s)", name))
+		return cluster, errors.Wrap(result.Err, fmt.Sprintf("[magnum] Unable to delete cluster (%s)", name))
 	}
 
 	return magnum.GetCluster(name)
