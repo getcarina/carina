@@ -1,5 +1,5 @@
 hash: 3c6e47891797262dd39bbb59ebd7893ee4cd2b6f5d6dd6d72958d41a9fe26f91
-updated: 2016-08-09T15:28:49.116832644-05:00
+updated: 2016-08-10T08:33:35.263321715-05:00
 imports:
 - name: github.com/alecthomas/template
   version: a0175ee3bccc567396460bf5acd36800cb10c49c
@@ -18,7 +18,7 @@ imports:
   repo: git@github.com:getcarina/libcarina.git
   vcs: git
 - name: github.com/gophercloud/gophercloud
-  version: 99b3853dd90a7978647f6f2e3ab5b86fa9b7481f
+  version: 4933105a0835f5a74d1e6fd587d34deec127f409
   repo: git@github.com:carolynvs/gophercloud.git
   vcs: git
   subpackages:
