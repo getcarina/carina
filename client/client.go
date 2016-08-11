@@ -115,7 +115,8 @@ func (client *Client) CreateCluster(account Account, name string, template strin
 	}
 
 	cluster, err = svc.CreateCluster(name, template, nodes)
-	if waitUntilActive && err != nil {
+
+	if waitUntilActive && err == nil {
 		cluster, err = svc.WaitUntilClusterIsActive(name)
 	}
 
@@ -202,7 +203,8 @@ func (client *Client) GetCluster(account Account, name string, waitUntilActive b
 	}
 
 	cluster, err = svc.GetCluster(name)
-	if waitUntilActive && err != nil {
+
+	if waitUntilActive && err == nil {
 		cluster, err = svc.WaitUntilClusterIsActive(name)
 	}
 
@@ -220,7 +222,8 @@ func (client *Client) GrowCluster(account Account, name string, nodes int, waitU
 	}
 
 	cluster, err = svc.GrowCluster(name, nodes)
-	if waitUntilActive && err != nil {
+
+	if waitUntilActive && err == nil {
 		cluster, err = svc.WaitUntilClusterIsActive(name)
 	}
 
@@ -238,7 +241,8 @@ func (client *Client) RebuildCluster(account Account, name string, waitUntilActi
 	}
 
 	cluster, err = svc.RebuildCluster(name)
-	if waitUntilActive && err != nil {
+
+	if waitUntilActive && err == nil {
 		cluster, err = svc.WaitUntilClusterIsActive(name)
 	}
 
