@@ -104,6 +104,11 @@ func (carina *MakeCOE) SetAutoScale(name string, value bool) (common.Cluster, er
 }
 
 // WaitUntilClusterIsActive waits until the prior cluster operation is completed
-func (carina *MakeCOE) WaitUntilClusterIsActive(name string) (common.Cluster, error) {
+func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.Cluster, error) {
+	return Cluster{}, errors.New("Not implemented")
+}
+
+// WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
+func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) (common.Cluster, error) {
 	return Cluster{}, errors.New("Not implemented")
 }

@@ -117,7 +117,7 @@ func (client *Client) CreateCluster(account Account, name string, template strin
 	cluster, err = svc.CreateCluster(name, template, nodes)
 
 	if waitUntilActive && err == nil {
-		cluster, err = svc.WaitUntilClusterIsActive(name)
+		cluster, err = svc.WaitUntilClusterIsActive(cluster)
 	}
 
 	return cluster, err
@@ -205,7 +205,7 @@ func (client *Client) GetCluster(account Account, name string, waitUntilActive b
 	cluster, err = svc.GetCluster(name)
 
 	if waitUntilActive && err == nil {
-		cluster, err = svc.WaitUntilClusterIsActive(name)
+		cluster, err = svc.WaitUntilClusterIsActive(cluster)
 	}
 
 	return cluster, err
@@ -224,7 +224,7 @@ func (client *Client) GrowCluster(account Account, name string, nodes int, waitU
 	cluster, err = svc.GrowCluster(name, nodes)
 
 	if waitUntilActive && err == nil {
-		cluster, err = svc.WaitUntilClusterIsActive(name)
+		cluster, err = svc.WaitUntilClusterIsActive(cluster)
 	}
 
 	return cluster, err
@@ -243,7 +243,7 @@ func (client *Client) RebuildCluster(account Account, name string, waitUntilActi
 	cluster, err = svc.RebuildCluster(name)
 
 	if waitUntilActive && err == nil {
-		cluster, err = svc.WaitUntilClusterIsActive(name)
+		cluster, err = svc.WaitUntilClusterIsActive(cluster)
 	}
 
 	return cluster, err
@@ -263,7 +263,7 @@ func (client *Client) SetAutoScale(account Account, name string, value bool) (co
 }
 
 // DeleteCluster deletes a cluster
-func (client *Client) DeleteCluster(account Account, name string) (common.Cluster, error) {
+func (client *Client) DeleteCluster(account Account, name string, waitUntilDeleted bool) (common.Cluster, error) {
 	var cluster common.Cluster
 
 	defer client.Cache.SaveAccount(account)
@@ -273,6 +273,11 @@ func (client *Client) DeleteCluster(account Account, name string) (common.Cluste
 	}
 
 	cluster, err = svc.DeleteCluster(name)
+
+	if waitUntilDeleted && err == nil {
+		cluster, err = svc.WaitUntilClusterIsDeleted(cluster)
+	}
+
 	if err == nil {
 		err = client.DeleteClusterCredentials(account, name, "")
 	}

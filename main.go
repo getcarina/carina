@@ -232,10 +232,10 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	rebuildCommand := cap.NewWaitClusterCommand(ctx, "rebuild", "Rebuild a cluster")
 	rebuildCommand.Action(rebuildCommand.Rebuild)
 
-	rmCommand := cap.NewCredentialsCommand(ctx, "rm", "Remove a cluster. Alias for delete.")
+	rmCommand := cap.NewWaitClusterCommand(ctx, "rm", "Remove a cluster. Alias for delete.")
 	rmCommand.Action(rmCommand.Delete).Hidden()
 
-	deleteCommand := cap.NewCredentialsCommand(ctx, "delete", "Delete a cluster. Aliased to rm.")
+	deleteCommand := cap.NewWaitClusterCommand(ctx, "delete", "Delete a cluster. Aliased to rm.")
 	deleteCommand.Action(deleteCommand.Delete)
 
 	quotasCommand := cap.NewCommand(ctx, "quotas", "Get user quotas")
@@ -648,8 +648,8 @@ func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) error {
 }
 
 // Delete a cluster
-func (cmd *CredentialsCommand) Delete(pc *kingpin.ParseContext) error {
-	cluster, err := cmd.client.DeleteCluster(cmd.buildAccount(), cmd.ClusterName)
+func (cmd *WaitClusterCommand) Delete(pc *kingpin.ParseContext) error {
+	cluster, err := cmd.client.DeleteCluster(cmd.buildAccount(), cmd.ClusterName, cmd.Wait)
 	if err != nil {
 		return err
 	}

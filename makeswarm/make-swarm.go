@@ -5,6 +5,7 @@ import (
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libmakeswarm"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -223,18 +224,33 @@ func (carina *MakeSwarm) SetAutoScale(name string, value bool) (common.Cluster, 
 }
 
 // WaitUntilClusterIsActive waits until the prior cluster operation is completed
-func (carina *MakeSwarm) WaitUntilClusterIsActive(name string) (common.Cluster, error) {
+func (carina *MakeSwarm) WaitUntilClusterIsActive(cluster common.Cluster) (common.Cluster, error) {
+	isDone := func(cluster common.Cluster) bool {
+		// Transitions past point of "new" or "building" are assumed to be active states
+		status := strings.ToLower(cluster.GetStatus())
+		return status != StatusNew && status != StatusBuilding && status != StatusRebuilding
+	}
+
+	if isDone(cluster) {
+		return cluster, nil
+	}
+
 	for {
-		cluster, err := carina.GetCluster(name)
+		cluster, err := carina.GetCluster(cluster.GetName())
 		if err != nil {
 			return cluster, err
 		}
 
-		// Transitions past point of "new" or "building" are assumed to be active states
-		status := cluster.GetStatus()
-		if status != StatusNew && status != StatusBuilding && status != StatusRebuilding {
+		if isDone(cluster) {
 			return cluster, nil
 		}
+
+		common.Log.WriteDebug("[make-swarm] Waiting until cluster (%s) is active, currently in %s", cluster.GetName(), cluster.GetStatus())
 		time.Sleep(clusterPollingInterval)
 	}
+}
+
+// WaitUntilClusterIsDeleted returns the specified cluster, as make-swarm deletes immediately
+func (carina *MakeSwarm) WaitUntilClusterIsDeleted(cluster common.Cluster) (common.Cluster, error) {
+	return cluster, nil
 }

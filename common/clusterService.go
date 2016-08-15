@@ -30,7 +30,10 @@ type ClusterService interface {
 	SetAutoScale(name string, value bool) (Cluster, error)
 
 	// WaitUntilClusterIsActive polls the cluster status until either an active or error state is hit
-	WaitUntilClusterIsActive(name string) (Cluster, error)
+	WaitUntilClusterIsActive(cluster Cluster) (Cluster, error)
+
+	// WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
+	WaitUntilClusterIsDeleted(cluster Cluster) (Cluster, error)
 }
 
 // Cluster is a common interface for clusters over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)

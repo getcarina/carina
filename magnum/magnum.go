@@ -6,8 +6,10 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/baymodels"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
+	coe "github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/common"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/pkg/errors"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -147,7 +149,22 @@ func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
 		return cluster, errors.Wrap(result.Err, fmt.Sprintf("[magnum] Unable to delete cluster (%s)", name))
 	}
 
-	return magnum.GetCluster(name)
+	cluster, err = magnum.waitForTaskInitiated(name, "DELETE")
+
+	if err != nil {
+		err = errors.Cause(err)
+
+		// Gracefully handle a 404 Not Found when the cluster is deleted quickly
+		if httpErr, ok := err.(*coe.ErrorResponse); ok {
+			if httpErr.Actual == http.StatusNotFound {
+				cluster = *new(Cluster)
+				cluster.Status = "DELETE_COMPLETE"
+				return cluster, nil
+			}
+		}
+	}
+
+	return cluster, err
 }
 
 // GrowCluster adds nodes to a cluster
@@ -161,17 +178,93 @@ func (magnum *Magnum) SetAutoScale(name string, value bool) (common.Cluster, err
 }
 
 // WaitUntilClusterIsActive waits until the prior cluster operation is completed
-func (magnum *Magnum) WaitUntilClusterIsActive(name string) (common.Cluster, error) {
+func (magnum *Magnum) WaitUntilClusterIsActive(cluster common.Cluster) (common.Cluster, error) {
+	isDone := func(cluster common.Cluster) bool {
+		status := strings.ToLower(cluster.GetStatus())
+		return !strings.HasSuffix(status, "in_progress")
+	}
+
+	if isDone(cluster) {
+		return cluster, nil
+	}
+
+	pollingInterval := 10 * time.Second
 	for {
-		cluster, err := magnum.GetCluster(name)
+		cluster, err := magnum.GetCluster(cluster.GetName())
 		if err != nil {
 			return cluster, err
 		}
 
-		if !strings.HasSuffix(cluster.GetStatus(), "IN_PROGRESS") {
+		if isDone(cluster) {
 			return cluster, nil
 		}
-		time.Sleep(clusterPollingInterval)
+
+		common.Log.WriteDebug("[magnum] Waiting until cluster (%s) is active, currently in %s", cluster.GetName(), cluster.GetStatus())
+		time.Sleep(pollingInterval)
+	}
+}
+
+// WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
+func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) (common.Cluster, error) {
+	isDone := func(cluster common.Cluster) bool {
+		status := strings.ToUpper(cluster.GetStatus())
+		return status == "DELETE_COMPLETE"
+	}
+
+	if isDone(cluster) {
+		return cluster, nil
+	}
+
+	pollingInterval := 5 * time.Second
+	for {
+		cluster, err := magnum.GetCluster(cluster.GetName())
+
+		if err != nil {
+			err = errors.Cause(err)
+
+			// Gracefully handle a 404 Not Found when the cluster is deleted quickly
+			if httpErr, ok := err.(*coe.ErrorResponse); ok {
+				common.Log.Dump(httpErr)
+				if httpErr.Actual == http.StatusNotFound {
+					c := *new(Cluster)
+					c.Status = "DELETE_COMPLETE"
+					return c, nil
+				}
+			}
+
+			return cluster, err
+		}
+
+		if isDone(cluster) {
+			return cluster, nil
+		}
+
+		common.Log.WriteDebug("[magnum] Waiting until cluster (%s) is deleted, currently in %s", cluster.GetName(), cluster.GetStatus())
+		time.Sleep(pollingInterval)
+	}
+}
+
+// waitForClusterStatus waits for a cluster to reach a particular group of states, e.g. delete will
+// wait for DELETE_IN_PROGRESS, DELETE_FAILED or DELETE_COMPLETE. This is necessary as the Magnum API
+// returns immediately and updates the status later
+func (magnum *Magnum) waitForTaskInitiated(name string, task string) (Cluster, error) {
+	task = strings.ToLower(task)
+
+	pollingInterval := 1 * time.Second
+	for {
+		result, err := magnum.GetCluster(name)
+		cluster, _ := result.(Cluster)
+		if err != nil {
+			return cluster, err
+		}
+
+		status := strings.ToLower(cluster.Status)
+		if strings.HasPrefix(status, task) {
+			return cluster, nil
+		}
+
+		common.Log.WriteDebug("[magnum] Waiting for %s_* currently in %s", task, status)
+		time.Sleep(pollingInterval)
 	}
 }
 
