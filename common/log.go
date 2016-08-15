@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/color"
 	"os"
 )
@@ -16,6 +17,13 @@ func init() {
 type consoleLogger struct {
 	Debug  bool
 	Silent bool
+}
+
+// Dump does a deep debug dump of a variable
+func (log consoleLogger) Dump(a ...interface{}) {
+	dumpper := spew.ConfigState{ContinueOnMethod: true}
+	dump := dumpper.Sprintln(a)
+	log.WriteDebug(dump)
 }
 
 // WriteDebug prints debug information to stdout

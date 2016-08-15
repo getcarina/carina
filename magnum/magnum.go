@@ -122,8 +122,10 @@ func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 	common.Log.WriteDebug("[magnum] Retrieving bay (%s)", name)
 	result, err := bays.Get(magnum.client, name).Extract()
 	if err != nil {
+		common.Log.Dump(err)
 		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
 	}
+
 	cluster, err = magnum.newCluster(*result)
 	return cluster, err
 }
