@@ -5,7 +5,6 @@ import (
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libmakeswarm"
 	"github.com/pkg/errors"
-	"text/tabwriter"
 	"time"
 )
 
@@ -13,7 +12,6 @@ import (
 type MakeSwarm struct {
 	client  *libcarina.ClusterClient
 	Account *Account
-	Output  *tabwriter.Writer
 }
 
 // StatusNew is the status of a new, inactive cluster

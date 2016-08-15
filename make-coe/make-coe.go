@@ -5,7 +5,6 @@ import (
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
-	"text/tabwriter"
 	"time"
 )
 
@@ -13,11 +12,9 @@ import (
 type MakeCOE struct {
 	client  *libcarina.ClusterClient
 	Account *Account
-	Output  *tabwriter.Writer
 }
 
 const httpTimeout = 15 * time.Second
-const clusterPollingInterval = 10 * time.Second
 
 func (carina *MakeCOE) init() error {
 	if carina.client == nil {

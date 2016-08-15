@@ -9,7 +9,6 @@ import (
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/pkg/errors"
 	"strings"
-	"text/tabwriter"
 	"time"
 )
 
@@ -18,11 +17,9 @@ type Magnum struct {
 	client        *gophercloud.ServiceClient
 	bayModelCache map[string]baymodels.BayModel
 	Account       *Account
-	Output        *tabwriter.Writer
 }
 
 const httpTimeout = 15 * time.Second
-const clusterPollingInterval = 10 * time.Second
 
 func (magnum *Magnum) init() error {
 	if magnum.client == nil {
