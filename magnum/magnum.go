@@ -93,10 +93,9 @@ func (magnum *Magnum) GetClusterCredentials(name string) (*common.CredentialsBun
 	creds.Files["ca.pem"] = pem.EncodeToMemory(&result.CACertificate)
 	creds.Files["key.pem"] = pem.EncodeToMemory(&result.PrivateKey)
 	creds.Files["cert.pem"] = pem.EncodeToMemory(&result.Certificate)
-	creds.Files["docker.env"] = result.BashScript
-	creds.Files["docker.cmd"] = result.CmdScript
-	creds.Files["docker.ps1"] = result.Ps1Script
-	creds.Files["docker.fish"] = result.FishScript
+	for filename, script := range result.Scripts {
+		creds.Files[filename] = script
+	}
 
 	return creds, nil
 }
