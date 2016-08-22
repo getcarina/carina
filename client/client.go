@@ -2,14 +2,15 @@ package client
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/carina/magnum"
 	"github.com/getcarina/carina/make-coe"
 	"github.com/getcarina/carina/makeswarm"
 	"github.com/pkg/errors"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 // Client is the multi-cloud Carina client, which coorindates communication with all Carina-esque clouds
@@ -164,7 +165,7 @@ func (client *Client) DownloadClusterCredentials(account Account, name string, c
 func (client *Client) GetSourceCommand(account Account, shell string, name string, customPath string) (sourceText string, err error) {
 	// We are ignoring errors here, and checking lower down if the creds are missing
 	credentialsPath, _ := buildClusterCredentialsPath(account, name, customPath)
-	creds, _ := common.NewCredentialsBundle(credentialsPath)
+	creds, _ := common.LoadCredentialsBundle(credentialsPath)
 
 	shellScriptPath := getCredentialFilePath(credentialsPath, shell)
 	_, err = os.Stat(shellScriptPath)

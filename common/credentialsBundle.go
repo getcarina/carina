@@ -3,11 +3,12 @@ package common
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // CredentialsBundle is a set of certificates and environment information necessary to connect to a cluster
@@ -15,8 +16,15 @@ type CredentialsBundle struct {
 	Files map[string][]byte
 }
 
-// NewCredentialsBundle loads a credentials bundle from the filesystem
-func NewCredentialsBundle(credentialsPath string) (CredentialsBundle, error) {
+// NewCredentialsBundle initializes an empty credentials bundle
+func NewCredentialsBundle() *CredentialsBundle {
+	return &CredentialsBundle{
+		Files: make(map[string][]byte),
+	}
+}
+
+// LoadCredentialsBundle loads a credentials bundle from the filesystem
+func LoadCredentialsBundle(credentialsPath string) (CredentialsBundle, error) {
 	var creds CredentialsBundle
 
 	files, err := ioutil.ReadDir(credentialsPath)
@@ -40,11 +48,6 @@ func NewCredentialsBundle(credentialsPath string) (CredentialsBundle, error) {
 // GetCA returns the contents of ca.pem
 func (creds CredentialsBundle) GetCA() []byte {
 	return creds.Files["ca.pem"]
-}
-
-// GetCAKey returns the contents of ca-key.pem
-func (creds CredentialsBundle) GetCAKey() []byte {
-	return creds.Files["ca-key.pem"]
 }
 
 // GetCert returns the contents of cert.pem

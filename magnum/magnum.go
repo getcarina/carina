@@ -2,16 +2,20 @@ package magnum
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"encoding/pem"
+
 	"github.com/getcarina/carina/common"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/baymodels"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
+	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/certificates"
 	coe "github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/common"
 	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/pkg/errors"
-	"net/http"
-	"strings"
-	"time"
 )
 
 // Magnum is an adapter between the cli and the OpenStack COE API (Magnum)
@@ -72,8 +76,29 @@ func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (co
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-func (magnum *Magnum) GetClusterCredentials(name string) (common.CredentialsBundle, error) {
-	return common.CredentialsBundle{}, errors.New("Not implemented yet")
+func (magnum *Magnum) GetClusterCredentials(name string) (*common.CredentialsBundle, error) {
+	err := magnum.init()
+	if err != nil {
+		return nil, err
+	}
+
+	common.Log.WriteDebug("[magnum] Generating credentials bundle for cluster (%s)", name)
+
+	result, err := certificates.CreateCredentialsBundle(magnum.client, name)
+	if err != nil {
+		return nil, errors.Wrap(err, "[magnum] Unable to generate credentials bundle")
+	}
+
+	creds := common.NewCredentialsBundle()
+	creds.Files["ca.pem"] = pem.EncodeToMemory(&result.CACertificate)
+	creds.Files["key.pem"] = pem.EncodeToMemory(&result.PrivateKey)
+	creds.Files["cert.pem"] = pem.EncodeToMemory(&result.Certificate)
+	creds.Files["docker.env"] = result.BashScript
+	creds.Files["docker.cmd"] = result.CmdScript
+	creds.Files["docker.ps1"] = result.Ps1Script
+	creds.Files["docker.fish"] = result.FishScript
+
+	return creds, nil
 }
 
 // ListClusters prints out a list of the user's clusters to the console

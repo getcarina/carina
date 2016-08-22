@@ -15,7 +15,7 @@ type ClusterService interface {
 	GetCluster(name string) (Cluster, error)
 
 	// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-	GetClusterCredentials(name string) (CredentialsBundle, error)
+	GetClusterCredentials(name string) (*CredentialsBundle, error)
 
 	// RebuildCluster destroys and recreates the cluster
 	RebuildCluster(name string) (Cluster, error)

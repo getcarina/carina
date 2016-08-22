@@ -38,8 +38,8 @@ func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (c
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-func (carina *MakeCOE) GetClusterCredentials(name string) (common.CredentialsBundle, error) {
-	return common.CredentialsBundle{}, errors.New("Not implemented")
+func (carina *MakeCOE) GetClusterCredentials(name string) (*common.CredentialsBundle, error) {
+	return nil, errors.New("Not implemented")
 }
 
 // ListClusters prints out a list of the user's clusters to the console

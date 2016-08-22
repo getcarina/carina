@@ -2,11 +2,12 @@ package makeswarm
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libmakeswarm"
 	"github.com/pkg/errors"
-	"strings"
-	"time"
 )
 
 // MakeSwarm is an adapter between the cli and Carina (make-swarm)
@@ -86,21 +87,19 @@ func (carina *MakeSwarm) CreateCluster(name string, template string, nodes int) 
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-func (carina *MakeSwarm) GetClusterCredentials(name string) (common.CredentialsBundle, error) {
-	var creds common.CredentialsBundle
-
+func (carina *MakeSwarm) GetClusterCredentials(name string) (*common.CredentialsBundle, error) {
 	err := carina.init()
 	if err != nil {
-		return creds, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-swarm] Retrieving cluster credentials (%s)", name)
 	result, err := carina.client.GetCredentials(name)
 	if err != nil {
-		return creds, errors.Wrap(err, "[make-swarm] Unable to retrieve the cluster credentials")
+		return nil, errors.Wrap(err, "[make-swarm] Unable to retrieve the cluster credentials")
 	}
 
-	creds = common.CredentialsBundle{Files: result.Files}
+	creds := &common.CredentialsBundle{Files: result.Files}
 
 	return creds, nil
 }
