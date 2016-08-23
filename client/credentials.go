@@ -1,8 +1,10 @@
 package client
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const clusterDirName = "clusters"
@@ -47,4 +49,21 @@ func buildClusterCredentialsPath(account Account, clusterName string, customPath
 
 	credentialsPath = filepath.Clean(credentialsPath)
 	return credentialsPath, nil
+}
+
+// getCredentialScriptPrefix looks at a credentials bundle and identifies the
+// script prefix (e.g. docker or kubectl) used by the shell scripts
+func getCredentialScriptPrefix(credsPath string) (string, error) {
+	scriptPattern := filepath.Join(credsPath, "*.env")
+	results, _ := filepath.Glob(scriptPattern)
+	if len(results) == 0 {
+		return "", fmt.Errorf("Invalid credentials bundle, the bash script (*.env) is missing")
+	}
+	if len(results) > 1 {
+		return "", fmt.Errorf("Invalid credentials bundle, multiple bash scripts (*.env) found")
+	}
+
+	bashScriptName := filepath.Base(results[0])
+
+	return strings.TrimSuffix(bashScriptName, ".env"), nil
 }

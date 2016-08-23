@@ -4,10 +4,11 @@ package client
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"os/user"
 	"path/filepath"
+
+	"github.com/pkg/errors"
 )
 
 // CredentialsNextStepsString returns instructions to load the cluster credentials
@@ -15,12 +16,19 @@ func CredentialsNextStepsString(clusterName string) string {
 	return fmt.Sprintf("# To see how to connect to your cluster, run: carina env %s\n", clusterName)
 }
 
-func getCredentialFilePath(basepath string, shell string) string {
+func getCredentialScriptPath(basepath string, shell string) (string, error) {
+	scriptPrefix, err := getCredentialScriptPrefix(basepath)
+	if err != nil {
+		return "", err
+	}
+
+	pathPrefix := filepath.Join(basepath, scriptPrefix)
+
 	switch shell {
 	case "fish":
-		return filepath.Join(basepath, "docker.fish")
+		return pathPrefix + ".fish", nil
 	default:
-		return filepath.Join(basepath, "docker.env")
+		return pathPrefix + ".env", nil
 	}
 }
 

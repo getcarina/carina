@@ -15,14 +15,21 @@ func CredentialsNextStepsString(clusterName string) string {
 	return fmt.Sprintf("# To see how to connect to your cluster, run: carina env %s --shell cmd|powershell|bash\n", clusterName)
 }
 
-func getCredentialFilePath(basepath string, shell string) string {
+func getCredentialScriptPath(basepath string, shell string) (string, error) {
+	scriptPrefix, err := getCredentialScriptPrefix(basepath)
+	if err != nil {
+		return "", err
+	}
+
+	pathPrefix := filepath.Join(basepath, scriptPrefix)
+
 	switch shell {
 	case "powershell":
-		return filepath.Join(basepath, "docker.ps1")
+		return pathPrefix + ".ps1", nil
 	case "cmd":
-		return filepath.Join(basepath, "docker.cmd")
+		return pathPrefix + ".cmd", nil
 	default: // Windows Bash
-		return filepath.Join(basepath, "docker.env")
+		return pathPrefix + ".env", nil
 	}
 }
 

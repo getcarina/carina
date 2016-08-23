@@ -167,10 +167,13 @@ func (client *Client) GetSourceCommand(account Account, shell string, name strin
 	credentialsPath, _ := buildClusterCredentialsPath(account, name, customPath)
 	creds, _ := common.LoadCredentialsBundle(credentialsPath)
 
-	shellScriptPath := getCredentialFilePath(credentialsPath, shell)
-	_, err = os.Stat(shellScriptPath)
+	shellScriptPath, err := getCredentialScriptPath(credentialsPath, shell)
+	if err != nil {
+		return "", err
+	}
 
 	// Re-download the credentials bundle, if files are missing or the credentials are invalid
+	_, err = os.Stat(shellScriptPath)
 	if os.IsNotExist(err) || creds.Verify() != nil {
 		credentialsPath, err = client.DownloadClusterCredentials(account, name, customPath)
 		if err != nil {
