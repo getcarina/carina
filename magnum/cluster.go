@@ -2,6 +2,8 @@ package magnum
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/baymodels"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
 )
@@ -40,4 +42,14 @@ func (cluster Cluster) GetNodes() string {
 // GetStatus returns the status of the cluster
 func (cluster Cluster) GetStatus() string {
 	return cluster.Status
+}
+
+// GetStatusDetails returns additional information about the cluster's status.
+// For example, why the cluster is in a failed state.
+func (cluster Cluster) GetStatusDetails() string {
+	if strings.HasSuffix(cluster.Status, "FAILED") {
+		return cluster.StatusReason
+	}
+
+	return ""
 }

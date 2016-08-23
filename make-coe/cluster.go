@@ -1,8 +1,9 @@
 package makecoe
 
 import (
-	"github.com/getcarina/libcarina"
 	"strconv"
+
+	"github.com/getcarina/libcarina"
 )
 
 // Cluster represents a cluster on make-coe
@@ -36,4 +37,9 @@ func (cluster Cluster) GetNodes() string {
 // GetStatus returns the status of the cluster
 func (cluster Cluster) GetStatus() string {
 	return cluster.Status
+}
+
+// GetStatusDetails is not supported
+func (cluster Cluster) GetStatusDetails() string {
+	return ""
 }

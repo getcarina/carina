@@ -1,8 +1,9 @@
 package makeswarm
 
 import (
-	"github.com/getcarina/libmakeswarm"
 	"strconv"
+
+	libcarina "github.com/getcarina/libmakeswarm"
 )
 
 // Cluster represents a cluster on make-swarm
@@ -36,4 +37,9 @@ func (cluster Cluster) GetNodes() string {
 // GetStatus returns the status of the cluster
 func (cluster Cluster) GetStatus() string {
 	return cluster.Status
+}
+
+// GetStatusDetails is not supported
+func (cluster Cluster) GetStatusDetails() string {
+	return ""
 }

@@ -35,6 +35,7 @@ func WriteCluster(cluster common.Cluster) {
 		tuple{"Status", cluster.GetStatus()},
 		tuple{"Type", cluster.GetType()},
 		tuple{"Nodes", cluster.GetNodes()},
+		tuple{"Details", cluster.GetStatusDetails()},
 	}
 	writeInRows(output, fields)
 

@@ -55,6 +55,10 @@ type Cluster interface {
 
 	// GetStatus returns the status of the cluster
 	GetStatus() string
+
+	// GetStatusDetails returns additional information about the cluster's status.
+	// For example, why the cluster is in a failed state.
+	GetStatusDetails() string
 }
 
 // Quotas is a common interface for cluster quotas over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)
