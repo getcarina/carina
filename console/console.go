@@ -2,25 +2,43 @@ package console
 
 import (
 	"fmt"
-	"github.com/getcarina/carina/common"
-	"github.com/pkg/errors"
 	"os"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/getcarina/carina/common"
+	"github.com/pkg/errors"
 )
+
+type tuple struct {
+	key   string
+	value interface{}
+}
 
 // WriteRow writes a row of tabular data to the console
 func WriteRow(fields []string) {
 	output := new(tabwriter.Writer)
 	output.Init(os.Stdout, 0, 8, 1, '\t', 0)
 
-	write(output, fields)
+	writeInColumns(output, fields)
 	output.Flush()
 }
 
-// WriteCluster writes teh cluster data to the console
+// WriteCluster writes the cluster data to the console
 func WriteCluster(cluster common.Cluster) {
-	WriteClusters([]common.Cluster{cluster})
+	output := new(tabwriter.Writer)
+	output.Init(os.Stdout, 0, 8, 2, '\t', 0)
+
+	fields := []tuple{
+		tuple{"ID", cluster.GetID()},
+		tuple{"Name", cluster.GetName()},
+		tuple{"Status", cluster.GetStatus()},
+		tuple{"Type", cluster.GetType()},
+		tuple{"Nodes", cluster.GetNodes()},
+	}
+	writeInRows(output, fields)
+
+	output.Flush()
 }
 
 // WriteClusters writes the clusters data to the console
@@ -35,7 +53,7 @@ func WriteClusters(clusters []common.Cluster) {
 		"Type",
 		"Nodes",
 	}
-	write(output, headerFields)
+	writeInColumns(output, headerFields)
 
 	for _, cluster := range clusters {
 		fields := []string{
@@ -45,18 +63,34 @@ func WriteClusters(clusters []common.Cluster) {
 			cluster.GetType(),
 			cluster.GetNodes(),
 		}
-		write(output, fields)
+		writeInColumns(output, fields)
 	}
 
 	output.Flush()
 }
 
-func write(output *tabwriter.Writer, fields []string) {
-	s := strings.Join(fields, "\t")
+func writeInColumns(output *tabwriter.Writer, columns []string) {
+	s := strings.Join(columns, "\t")
 	b := []byte(s + "\n")
 	_, err := output.Write(b)
 	if err != nil {
 		err = errors.Wrap(err, "Unable to write to console.")
 		fmt.Println(err.Error())
+	}
+}
+
+func writeInRows(output *tabwriter.Writer, rows []tuple) {
+	for _, row := range rows {
+		// Use the default string conversion when displaying the value
+		val := fmt.Sprint(row.value)
+
+		// Indent multi-line values
+		val = strings.Replace(val, "\n", "\n\t", -1)
+
+		_, err := fmt.Fprintf(output, "%s\t%s\n", row.key, val)
+		if err != nil {
+			err = errors.Wrap(err, "Unable to write to console.")
+			fmt.Println(err.Error())
+		}
 	}
 }
