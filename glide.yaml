@@ -1,7 +1,12 @@
 package: github.com/getcarina/carina
 import:
-- package: github.com/fatih/color
-  version: ^1.0.0
+- package: github.com/Sirupsen/logrus
+  vcs: git
+  repo: git@github.com:carolynvs/logrus.git
+  version: disable-color-timestamp
+- package: github.com/davecgh/go-spew
+  subpackages:
+  - spew
 - package: github.com/getcarina/libcarina
   vcs: git
   repo: git@github.com:rackerlabs/carina-cli-libcarina.git
@@ -13,11 +18,13 @@ import:
 - package: github.com/gophercloud/gophercloud
   vcs: git
   repo: git@github.com:carolynvs/gophercloud.git
-  version: bay-delete
+  version: bundle-scripts-create
   subpackages:
   - openstack
   - openstack/containerorchestration/v1/baymodels
   - openstack/containerorchestration/v1/bays
+  - openstack/containerorchestration/v1/certificates
+  - openstack/containerorchestration/v1/common
   - pagination
 - package: github.com/pkg/errors
   version: ^0.7.0

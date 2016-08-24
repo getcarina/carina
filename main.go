@@ -45,6 +45,8 @@ type Context struct {
 	AuthEndpoint string
 	Endpoint     string
 	CacheEnabled bool
+	Debug        bool
+	Silent       bool
 }
 
 // ClusterCommand is a Command with a ClusterName set
@@ -56,8 +58,7 @@ type ClusterCommand struct {
 // CredentialsCommand keeps context about the download command
 type CredentialsCommand struct {
 	*ClusterCommand
-	Path   string
-	Silent bool
+	Path string
 }
 
 // ShellCommand keeps context about the currently executing shell
@@ -191,8 +192,8 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	cap.Flag("endpoint", "Custom API endpoint [CARINA_ENDPOINT/OS_ENDPOINT]").Hidden().StringVar(&ctx.Endpoint)
 	cap.Flag("cloud", "The cloud type: public or private. This is automatically detected using the provided credentials.").EnumVar(&cap.CloudType, carinaclient.CloudMagnum, carinaclient.CloudMakeSwarm, carinaclient.CloudMakeCOE)
 	cap.Flag("cache", "Cache API tokens and update times; defaults to true, use --no-cache to turn off").Default("true").BoolVar(&ctx.CacheEnabled)
-	cap.Flag("debug", "Print additional debug messages to stdout.").BoolVar(&common.Log.Debug)
-	cap.Flag("silent", "Do not print to stdout.").BoolVar(&common.Log.Silent)
+	cap.Flag("debug", "Print additional debug messages to stdout.").BoolVar(&ctx.Debug)
+	cap.Flag("silent", "Do not print to stdout.").BoolVar(&ctx.Silent)
 
 	cap.PreAction(cap.initApp)
 
@@ -422,6 +423,12 @@ func (app *Application) initApp(pc *kingpin.ParseContext) error {
 }
 
 func (cmd *Command) initFlags(pc *kingpin.ParseContext) error {
+	if cmd.Silent {
+		common.Log.SetSilent()
+	} else if cmd.Debug {
+		common.Log.SetDebug()
+	}
+
 	// Require either an apikey or password
 	apikeyFound := cmd.APIKey != "" || os.Getenv(CarinaAPIKeyEnvVar) != "" || os.Getenv(RackspaceAPIKeyEnvVar) != ""
 	passwordFound := cmd.Password != "" || os.Getenv(OpenStackPasswordEnvVar) != ""
@@ -723,12 +730,10 @@ func (cmd *CredentialsCommand) Download(pc *kingpin.ParseContext) error {
 		return err
 	}
 
-	if !cmd.Silent {
-		common.Log.WriteInfo("#")
-		common.Log.WriteInfo("# Credentials written to \"%s\"", credentialsPath)
-		common.Log.WriteInfo(carinaclient.CredentialsNextStepsString(cmd.ClusterName))
-		common.Log.WriteInfo("#")
-	}
+	console.Write("#")
+	console.Write("# Credentials written to \"%s\"", credentialsPath)
+	console.Write(carinaclient.CredentialsNextStepsString(cmd.ClusterName))
+	console.Write("#")
 
 	return nil
 }

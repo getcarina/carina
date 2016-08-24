@@ -15,7 +15,20 @@ type tuple struct {
 	value interface{}
 }
 
-// WriteRow writes a row of tabular data to the console
+// Write prints text to the console
+func Write(format string, a ...interface{}) {
+	if common.Log.IsSilent {
+		return
+	}
+
+	if !strings.HasSuffix(format, "\n") {
+		format += "\n"
+	}
+
+	fmt.Printf(format, a...)
+}
+
+// WriteRow prints a row of tabular data to the console
 func WriteRow(fields []string) {
 	output := new(tabwriter.Writer)
 	output.Init(os.Stdout, 0, 8, 1, '\t', 0)
@@ -24,7 +37,7 @@ func WriteRow(fields []string) {
 	output.Flush()
 }
 
-// WriteCluster writes the cluster data to the console
+// WriteCluster prints the cluster data to the console
 func WriteCluster(cluster common.Cluster) {
 	output := new(tabwriter.Writer)
 	output.Init(os.Stdout, 0, 8, 2, '\t', 0)
@@ -38,11 +51,10 @@ func WriteCluster(cluster common.Cluster) {
 		tuple{"Details", cluster.GetStatusDetails()},
 	}
 	writeInRows(output, fields)
-
 	output.Flush()
 }
 
-// WriteClusters writes the clusters data to the console
+// WriteClusters prints the clusters data to the console
 func WriteClusters(clusters []common.Cluster) {
 	output := new(tabwriter.Writer)
 	output.Init(os.Stdout, 0, 8, 1, '\t', 0)
