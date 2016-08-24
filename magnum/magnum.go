@@ -25,8 +25,6 @@ type Magnum struct {
 	Account       *Account
 }
 
-const httpTimeout = 15 * time.Second
-
 func (magnum *Magnum) init() error {
 	if magnum.client == nil {
 		magnumClient, err := magnum.Account.Authenticate()

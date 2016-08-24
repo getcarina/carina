@@ -3,11 +3,12 @@ package magnum
 import (
 	"crypto/sha1"
 	"fmt"
+	"net/http"
+
 	"github.com/getcarina/carina/common"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 // Account is a set of authentication credentials accepted by OpenStack Identity (keystone) v2 and v3
@@ -37,10 +38,10 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 		if err != nil {
 			return err
 		}
-		req.Header.Set("User-Agent", "getcarina/carina dummy request")
+		req.Header.Set("User-Agent", "getcarina/carina")
 		req.Header.Add("X-Auth-Token", account.Token)
 		req.Header.Add("X-Subject-Token", account.Token)
-		resp, err := (&http.Client{Timeout: httpTimeout}).Do(req)
+		resp, err := common.NewHTTPClient().Do(req)
 		if err != nil {
 			return err
 		}
@@ -73,7 +74,7 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 			identity.TokenID = account.Token
 			identity.ReauthFunc = reauthenticate(identity, authOptions)
 			identity.UserAgent.Prepend(common.BuildUserAgent())
-			identity.HTTPClient = http.Client{}
+			identity.HTTPClient = *common.NewHTTPClient()
 			identity.EndpointLocator = func(opts gophercloud.EndpointOpts) (string, error) {
 				// Skip the service catalog and use the cached endpoint
 				return account.Endpoint, nil
@@ -86,7 +87,7 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 
 			common.Log.WriteDebug("[magnum] Authentication sucessful")
 			account.Token = magnumClient.TokenID
-			magnumClient.HTTPClient.Timeout = httpTimeout
+			magnumClient.HTTPClient = *common.NewHTTPClient()
 			return magnumClient, nil
 		}
 
@@ -104,11 +105,11 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "[magnum] Unable to create a Magnum client")
 	}
-
 	common.Log.WriteDebug("[magnum] Authentication sucessful")
+
+	magnumClient.HTTPClient = *common.NewHTTPClient()
 	account.Token = magnumClient.TokenID
 	account.Endpoint = magnumClient.Endpoint
-	magnumClient.HTTPClient.Timeout = httpTimeout
 
 	return magnumClient, nil
 }
