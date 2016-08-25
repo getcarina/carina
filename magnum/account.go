@@ -38,7 +38,6 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 		if err != nil {
 			return err
 		}
-		req.Header.Set("User-Agent", "getcarina/carina")
 		req.Header.Add("X-Auth-Token", account.Token)
 		req.Header.Add("X-Subject-Token", account.Token)
 		resp, err := common.NewHTTPClient().Do(req)

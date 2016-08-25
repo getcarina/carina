@@ -45,7 +45,6 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 		if err != nil {
 			return err
 		}
-		req.Header.Set("User-Agent", "getcarina/carina")
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("X-Auth-Token", account.Token)
 		resp, err := common.NewHTTPClient().Do(req)

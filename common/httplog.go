@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/getcarina/carina/version"
 )
 
 // HTTPLog satisfies the http.RoundTripper interface and is used to
@@ -43,6 +44,9 @@ func (hl *HTTPLog) RoundTrip(request *http.Request) (*http.Response, error) {
 	}()
 
 	var err error
+
+	// Inject user agent
+	request.Header.Add("User-Agent", "getcarina/carina "+version.Version)
 
 	if hl.Logger.Level == logrus.DebugLevel && request.Body != nil {
 		request.Body, err = hl.logRequestBody(request.Body, request.Header)
