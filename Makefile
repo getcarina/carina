@@ -25,7 +25,7 @@ get-deps:
 validate: get-deps
 	go fmt $(GOFILES_NOVENDOR)
 	go vet $(GOFILES_NOVENDOR)
-	-go list ./... | grep -v /vendor/ | xargs -L1 golint
+	go list ./... | grep -v /vendor/ | xargs -L1 golint --set_exit_status
 	go test $(GOFILES_NOVENDOR)
 
 carina-linux: linux
