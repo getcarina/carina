@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -50,7 +51,13 @@ func (hl *HTTPLog) RoundTrip(request *http.Request) (*http.Response, error) {
 		}
 	}
 
-	hl.Logger.Debugf("Request: %s %s", request.Method, request.URL)
+	// Don't log the token embedded in a cached auth token check
+	url := request.URL.String()
+	if strings.Contains(url, "tokens") {
+		url = fmt.Sprintf("%s/%s/***", request.URL.Scheme, request.URL.Host)
+	}
+
+	hl.Logger.Debugf("Request: %s %s", request.Method, url)
 
 	response, err := hl.rt.RoundTrip(request)
 	if response == nil {
