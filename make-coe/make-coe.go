@@ -2,10 +2,10 @@ package makecoe
 
 import (
 	"fmt"
+
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
-	"time"
 )
 
 // MakeCOE is an adapter between the cli and Carina (make-coe)
@@ -13,8 +13,6 @@ type MakeCOE struct {
 	client  *libcarina.ClusterClient
 	Account *Account
 }
-
-const httpTimeout = 15 * time.Second
 
 func (carina *MakeCOE) init() error {
 	if carina.client == nil {

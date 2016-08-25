@@ -3,10 +3,11 @@ package makecoe
 import (
 	"crypto/sha1"
 	"fmt"
+	"net/http"
+
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 // Account is a set of authentication credentials accepted by Rackspace Identity
@@ -43,10 +44,10 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 		if err != nil {
 			return err
 		}
-		req.Header.Set("User-Agent", "getcarina/carina dummy request")
+		req.Header.Set("User-Agent", "getcarina/carina")
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("X-Auth-Token", account.Token)
-		resp, err := (&http.Client{Timeout: httpTimeout}).Do(req)
+		resp, err := common.NewHTTPClient().Do(req)
 		if err != nil {
 			return err
 		}
@@ -64,7 +65,7 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 		if testAuth() == nil {
 			common.Log.WriteDebug("[make-coe] Authentication sucessful")
 			carinaClient = &libcarina.ClusterClient{
-				Client:   &http.Client{Timeout: httpTimeout},
+				Client:   common.NewHTTPClient(),
 				Username: account.UserName,
 				Token:    account.Token,
 				Endpoint: account.getEndpoint(),
@@ -82,10 +83,10 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "[make-coe] Authentication failed")
 	}
-
 	common.Log.WriteDebug("[make-coe] Authentication sucessful")
+
+	carinaClient.Client = common.NewHTTPClient()
 	account.Token = carinaClient.Token
-	carinaClient.Client.Timeout = httpTimeout
 
 	return carinaClient, nil
 }
