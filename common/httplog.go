@@ -12,9 +12,9 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-// HttpLog satisfies the http.RoundTripper interface and is used to
+// HTTPLog satisfies the http.RoundTripper interface and is used to
 // customize the default Gophercloud RoundTripper to allow for logging.
-type HttpLog struct {
+type HTTPLog struct {
 	Logger *logrus.Logger
 	rt     http.RoundTripper
 }
@@ -26,7 +26,7 @@ const httpTimeout = 15 * time.Second
 func NewHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: httpTimeout,
-		Transport: &HttpLog{
+		Transport: &HTTPLog{
 			rt:     http.DefaultTransport,
 			Logger: Log.Logger,
 		},
@@ -34,7 +34,7 @@ func NewHTTPClient() *http.Client {
 }
 
 // RoundTrip performs a round-trip HTTP request and logs relevant information about it.
-func (hl *HttpLog) RoundTrip(request *http.Request) (*http.Response, error) {
+func (hl *HTTPLog) RoundTrip(request *http.Request) (*http.Response, error) {
 	defer func() {
 		if request.Body != nil {
 			request.Body.Close()
@@ -71,7 +71,7 @@ func (hl *HttpLog) RoundTrip(request *http.Request) (*http.Response, error) {
 	return response, err
 }
 
-func (hl *HttpLog) logRequestBody(original io.ReadCloser, headers http.Header) (io.ReadCloser, error) {
+func (hl *HTTPLog) logRequestBody(original io.ReadCloser, headers http.Header) (io.ReadCloser, error) {
 	defer original.Close()
 
 	var bs bytes.Buffer
@@ -91,7 +91,7 @@ func (hl *HttpLog) logRequestBody(original io.ReadCloser, headers http.Header) (
 	return ioutil.NopCloser(strings.NewReader(bs.String())), nil
 }
 
-func (hl *HttpLog) logResponseBody(original io.ReadCloser, headers http.Header) (io.ReadCloser, error) {
+func (hl *HTTPLog) logResponseBody(original io.ReadCloser, headers http.Header) (io.ReadCloser, error) {
 	defer original.Close()
 
 	var bs bytes.Buffer
@@ -113,7 +113,7 @@ func (hl *HttpLog) logResponseBody(original io.ReadCloser, headers http.Header) 
 	return ioutil.NopCloser(strings.NewReader(bs.String())), nil
 }
 
-func (hl *HttpLog) formatJSON(raw []byte) string {
+func (hl *HTTPLog) formatJSON(raw []byte) string {
 	var data map[string]interface{}
 
 	err := json.Unmarshal(raw, &data)
