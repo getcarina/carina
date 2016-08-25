@@ -57,10 +57,10 @@ func getCredentialScriptPrefix(credsPath string) (string, error) {
 	scriptPattern := filepath.Join(credsPath, "*.env")
 	results, _ := filepath.Glob(scriptPattern)
 	if len(results) == 0 {
-		return "", fmt.Errorf("Invalid credentials bundle, the bash script (*.env) is missing")
+		return "", fmt.Errorf("Invalid credentials bundle, could not find the bash script (*.env) in %s", credsPath)
 	}
 	if len(results) > 1 {
-		return "", fmt.Errorf("Invalid credentials bundle, multiple bash scripts (*.env) found")
+		return "", fmt.Errorf("Invalid credentials bundle, multiple bash scripts (*.env) found in %s", credsPath)
 	}
 
 	bashScriptName := filepath.Base(results[0])
