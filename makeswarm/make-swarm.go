@@ -25,7 +25,6 @@ const StatusBuilding = "building"
 // StatusRebuilding is the status of a cluster that is currently rebuilding
 const StatusRebuilding = "rebuilding-swarm"
 
-const httpTimeout = 15 * time.Second
 const clusterPollingInterval = 10 * time.Second
 
 func (carina *MakeSwarm) init() error {
