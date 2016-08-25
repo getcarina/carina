@@ -8,6 +8,7 @@ import (
 	"github.com/getcarina/carina/common"
 	libcarina "github.com/getcarina/libmakeswarm"
 	"github.com/pkg/errors"
+	"github.com/rackspace/gophercloud/rackspace"
 )
 
 // Account is a set of authentication credentials accepted by Rackspace Identity
@@ -40,11 +41,11 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 	var carinaClient *libcarina.ClusterClient
 
 	testAuth := func() error {
-		req, err := http.NewRequest("HEAD", account.getEndpoint()+"/clusters/"+account.UserName, nil)
+		req, err := http.NewRequest("HEAD", rackspace.RackspaceUSIdentity+"tokens/"+account.Token, nil)
 		if err != nil {
 			return err
 		}
-		req.Header.Set("User-Agent", "getcarina/carina dummy request")
+		req.Header.Set("User-Agent", "getcarina/carina")
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("X-Auth-Token", account.Token)
 		resp, err := common.NewHTTPClient().Do(req)
@@ -54,7 +55,7 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 		_ = resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			return fmt.Errorf("Unable to auth on %s", "/clusters"+account.UserName)
+			return fmt.Errorf("Cached token is invalid")
 		}
 
 		return nil
