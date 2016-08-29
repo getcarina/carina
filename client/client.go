@@ -270,26 +270,24 @@ func (client *Client) SetAutoScale(account Account, name string, value bool) (co
 }
 
 // DeleteCluster deletes a cluster
-func (client *Client) DeleteCluster(account Account, name string, waitUntilDeleted bool) (common.Cluster, error) {
-	var cluster common.Cluster
-
+func (client *Client) DeleteCluster(account Account, name string, waitUntilDeleted bool) error {
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
-		return cluster, err
+		return err
 	}
 
-	cluster, err = svc.DeleteCluster(name)
+	cluster, err := svc.DeleteCluster(name)
 
 	if waitUntilDeleted && err == nil {
-		cluster, err = svc.WaitUntilClusterIsDeleted(cluster)
+		err = svc.WaitUntilClusterIsDeleted(cluster)
 	}
 
 	if err == nil {
 		err = client.DeleteClusterCredentials(account, name, "")
 	}
 
-	return cluster, err
+	return err
 }
 
 // DeleteClusterCredentials removes a cluster's downloaded credentials

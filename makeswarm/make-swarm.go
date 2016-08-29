@@ -249,6 +249,6 @@ func (carina *MakeSwarm) WaitUntilClusterIsActive(cluster common.Cluster) (commo
 }
 
 // WaitUntilClusterIsDeleted returns the specified cluster, as make-swarm deletes immediately
-func (carina *MakeSwarm) WaitUntilClusterIsDeleted(cluster common.Cluster) (common.Cluster, error) {
-	return cluster, nil
+func (carina *MakeSwarm) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
+	return nil
 }

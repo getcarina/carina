@@ -107,6 +107,6 @@ func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.
 }
 
 // WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
-func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented")
+func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
+	return errors.New("Not implemented")
 }

@@ -21,7 +21,7 @@ import (
 // Magnum is an adapter between the cli and the OpenStack COE API (Magnum)
 type Magnum struct {
 	client        *gophercloud.ServiceClient
-	bayModelCache map[string]baymodels.BayModel
+	bayModelCache map[string]*baymodels.BayModel
 	Account       *Account
 }
 
@@ -68,7 +68,7 @@ func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (co
 	}
 
 	bay, err := result.Extract()
-	cluster = Cluster{Bay: *bay, Template: bayModel}
+	cluster = Cluster{Bay: bay, Template: bayModel}
 
 	return cluster, err
 }
@@ -118,8 +118,8 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 			return false, errors.Wrap(err, "[magnum] Unable to read the Magnum bays from the results page")
 		}
 
-		for _, result := range results {
-			cluster, err := magnum.newCluster(result)
+		for i := range results {
+			cluster, err := magnum.newCluster(&results[i])
 			if err != nil {
 				return false, err
 			}
@@ -147,7 +147,7 @@ func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
 	}
 
-	cluster, err = magnum.newCluster(*result)
+	cluster, err = magnum.newCluster(result)
 	return cluster, err
 }
 
@@ -179,7 +179,7 @@ func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
 		// Gracefully handle a 404 Not Found when the cluster is deleted quickly
 		if httpErr, ok := err.(*coe.ErrorResponse); ok {
 			if httpErr.Actual == http.StatusNotFound {
-				cluster = *new(Cluster)
+				cluster = *newCluster()
 				cluster.Status = "DELETE_COMPLETE"
 				return cluster, nil
 			}
@@ -227,14 +227,14 @@ func (magnum *Magnum) WaitUntilClusterIsActive(cluster common.Cluster) (common.C
 }
 
 // WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
-func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) (common.Cluster, error) {
+func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 	isDone := func(cluster common.Cluster) bool {
 		status := strings.ToUpper(cluster.GetStatus())
 		return status == "DELETE_COMPLETE"
 	}
 
 	if isDone(cluster) {
-		return cluster, nil
+		return nil
 	}
 
 	pollingInterval := 5 * time.Second
@@ -248,17 +248,15 @@ func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) (common.
 			if httpErr, ok := err.(*coe.ErrorResponse); ok {
 				common.Log.Dump(httpErr)
 				if httpErr.Actual == http.StatusNotFound {
-					c := *new(Cluster)
-					c.Status = "DELETE_COMPLETE"
-					return c, nil
+					return nil
 				}
 			}
 
-			return cluster, err
+			return err
 		}
 
 		if isDone(cluster) {
-			return cluster, nil
+			return nil
 		}
 
 		common.Log.WriteDebug("[magnum] Waiting until cluster (%s) is deleted, currently in %s", cluster.GetName(), cluster.GetStatus())
@@ -290,14 +288,14 @@ func (magnum *Magnum) waitForTaskInitiated(name string, task string) (Cluster, e
 	}
 }
 
-func (magnum *Magnum) newCluster(bay bays.Bay) (Cluster, error) {
+func (magnum *Magnum) newCluster(bay *bays.Bay) (Cluster, error) {
 	cluster := &Cluster{Bay: bay}
 	baymodel, err := magnum.lookupBayModelByID(bay.BayModelID)
 	cluster.Template = baymodel
 	return *cluster, err
 }
 
-func (magnum *Magnum) listBayModels() ([]baymodels.BayModel, error) {
+func (magnum *Magnum) listBayModels() ([]*baymodels.BayModel, error) {
 	err := magnum.init()
 	if err != nil {
 		return nil, err
@@ -309,15 +307,15 @@ func (magnum *Magnum) listBayModels() ([]baymodels.BayModel, error) {
 		return nil, errors.Wrap(pager.Err, "[magnum] Unabe to list baymodels")
 	}
 
-	var bayModels []baymodels.BayModel
+	var bayModels []*baymodels.BayModel
 	err = pager.EachPage(func(page pagination.Page) (bool, error) {
 		results, err := baymodels.ExtractBayModels(page)
 		if err != nil {
 			return false, errors.Wrap(err, "[magnum] Unable to read the Magnum baymodels from the results page")
 		}
 
-		for _, result := range results {
-			bayModels = append(bayModels, result)
+		for i := range results {
+			bayModels = append(bayModels, &results[i])
 		}
 		return true, nil
 	})
@@ -325,14 +323,14 @@ func (magnum *Magnum) listBayModels() ([]baymodels.BayModel, error) {
 	return bayModels, err
 }
 
-func (magnum *Magnum) getBayModelCache() (map[string]baymodels.BayModel, error) {
+func (magnum *Magnum) getBayModelCache() (map[string]*baymodels.BayModel, error) {
 	if magnum.bayModelCache == nil {
 		bayModels, err := magnum.listBayModels()
 		if err != nil {
 			return nil, err
 		}
 
-		magnum.bayModelCache = make(map[string]baymodels.BayModel)
+		magnum.bayModelCache = make(map[string]*baymodels.BayModel)
 		for _, bayModel := range bayModels {
 			magnum.bayModelCache[bayModel.ID] = bayModel
 		}
@@ -341,38 +339,36 @@ func (magnum *Magnum) getBayModelCache() (map[string]baymodels.BayModel, error) 
 	return magnum.bayModelCache, nil
 }
 
-func (magnum *Magnum) lookupBayModelByID(bayModelID string) (baymodels.BayModel, error) {
-	var bayModel baymodels.BayModel
-
+func (magnum *Magnum) lookupBayModelByID(bayModelID string) (*baymodels.BayModel, error) {
 	cache, err := magnum.getBayModelCache()
 	if err != nil {
-		return bayModel, err
+		return nil, err
 	}
 
 	bayModel, exists := cache[bayModelID]
 	if !exists {
-		return bayModel, fmt.Errorf("Could not find baymodel: %s", bayModelID)
+		return nil, fmt.Errorf("Could not find baymodel with id %s", bayModelID)
 	}
 	return bayModel, nil
 }
 
-func (magnum *Magnum) lookupBayModelByName(name string) (baymodels.BayModel, error) {
-	var bayModel baymodels.BayModel
-
+func (magnum *Magnum) lookupBayModelByName(name string) (*baymodels.BayModel, error) {
 	cache, err := magnum.getBayModelCache()
 	if err != nil {
-		return bayModel, err
+		return nil, err
 	}
 
 	name = strings.ToLower(name)
-	for _, bayModel = range cache {
-		if strings.ToLower(bayModel.Name) == name {
+	var bayModel *baymodels.BayModel
+	for _, m := range cache {
+		if strings.ToLower(m.Name) == name {
+			bayModel = m
 			break
 		}
 	}
 
-	if bayModel == (baymodels.BayModel{}) {
-		return bayModel, fmt.Errorf("Could not find baymodel: %s", name)
+	if bayModel == nil {
+		return nil, fmt.Errorf("Could not find baymodel named %s", name)
 	}
 
 	return bayModel, nil

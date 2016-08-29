@@ -656,7 +656,7 @@ func (cmd *WaitClusterCommand) Get(pc *kingpin.ParseContext) error {
 
 // Delete a cluster
 func (cmd *WaitClusterCommand) Delete(pc *kingpin.ParseContext) error {
-	_, err := cmd.client.DeleteCluster(cmd.buildAccount(), cmd.ClusterName, cmd.Wait)
+	err := cmd.client.DeleteCluster(cmd.buildAccount(), cmd.ClusterName, cmd.Wait)
 	if err != nil {
 		return err
 	}

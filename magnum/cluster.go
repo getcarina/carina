@@ -10,8 +10,12 @@ import (
 
 // Cluster is a Magnum cluster
 type Cluster struct {
-	bays.Bay
-	Template baymodels.BayModel
+	*bays.Bay
+	Template *baymodels.BayModel
+}
+
+func newCluster() *Cluster {
+	return &Cluster{Bay: &bays.Bay{}}
 }
 
 // GetID returns the cluster identifier
