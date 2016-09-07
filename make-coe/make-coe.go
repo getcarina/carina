@@ -3,6 +3,8 @@ package makecoe
 import (
 	"fmt"
 
+	"strings"
+
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
@@ -32,7 +34,40 @@ func (carina *MakeCOE) GetQuotas() (common.Quotas, error) {
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented")
+	err := carina.init()
+	if err != nil {
+		return Cluster{}, err
+	}
+
+	coe, hostType, err := getTemplateValues(template)
+	if err != nil {
+		return Cluster{}, err
+	}
+
+	common.Log.WriteDebug("[make-coe] Creating a %d-node %s cluster hosted on %s named %s", nodes, coe, hostType, name)
+	createOpts := libcarina.Cluster{
+		Name:     name,
+		COE:      coe,
+		HostType: hostType,
+		Nodes:    nodes,
+	}
+	result, err := carina.client.Create(createOpts)
+	if err != nil {
+		return Cluster{}, errors.Wrap(err, "[make-coe] Unable to create cluster")
+	}
+
+	return Cluster(*result), nil
+}
+
+func getTemplateValues(template string) (coe string, hostType string, err error) {
+	switch strings.ToLower(template) {
+	case "kubernetes-dev":
+		return "kubernetes", "vm", nil
+	case "swarm-dev":
+		return "swarm", "vm", nil
+	default:
+		return "", "", fmt.Errorf("Invalid template: %s", template)
+	}
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
