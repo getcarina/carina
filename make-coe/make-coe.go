@@ -2,8 +2,11 @@ package makecoe
 
 import (
 	"fmt"
+	"net/http"
 
 	"strings"
+
+	"time"
 
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libcarina"
@@ -123,7 +126,21 @@ func (carina *MakeCOE) GetCluster(name string) (common.Cluster, error) {
 
 // DeleteCluster permanently deletes a cluster
 func (carina *MakeCOE) DeleteCluster(name string) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented")
+	err := carina.init()
+	if err != nil {
+		return Cluster{}, err
+	}
+
+	common.Log.WriteDebug("[make-coe] Deleting cluster (%s)", name)
+	result, err := carina.client.Delete(name)
+	if err != nil {
+		if strings.Contains(err.Error(), "not find cluster") {
+			return Cluster{Status: "deleted"}, nil
+		}
+		return Cluster{}, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", name))
+	}
+
+	return Cluster(*result), nil
 }
 
 // GrowCluster adds nodes to a cluster
@@ -143,5 +160,37 @@ func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.
 
 // WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
 func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
-	return errors.New("Not implemented")
+	isDone := func(cluster common.Cluster) bool {
+		status := strings.ToUpper(cluster.GetStatus())
+		return status == "deleted"
+	}
+
+	if isDone(cluster) {
+		return nil
+	}
+
+	pollingInterval := 5 * time.Second
+	for {
+		cluster, err := carina.GetCluster(cluster.GetID())
+
+		if err != nil {
+			err = errors.Cause(err)
+
+			// Gracefully handle a 404 Not Found when the cluster is deleted quickly
+			if httpErr, ok := err.(libcarina.HTTPErr); ok {
+				if httpErr.StatusCode == http.StatusNotFound {
+					return nil
+				}
+			}
+
+			return err
+		}
+
+		if isDone(cluster) {
+			return nil
+		}
+
+		common.Log.WriteDebug("[make-coe] Waiting until cluster (%s) is deleted, currently in %s", cluster.GetID(), cluster.GetStatus())
+		time.Sleep(pollingInterval)
+	}
 }
