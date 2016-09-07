@@ -58,7 +58,7 @@ func (hl *HTTPLog) RoundTrip(request *http.Request) (*http.Response, error) {
 	// Don't log the token embedded in a cached auth token check
 	url := request.URL.String()
 	if strings.Contains(url, "tokens") {
-		url = fmt.Sprintf("%s/%s/***", request.URL.Scheme, request.URL.Host)
+		url = fmt.Sprintf("%s://%s/***", request.URL.Scheme, request.URL.Host)
 	}
 
 	hl.Logger.Debugf("Request: %s %s", request.Method, url)
