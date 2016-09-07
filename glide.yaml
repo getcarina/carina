@@ -18,7 +18,7 @@ import:
 - package: github.com/gophercloud/gophercloud
   vcs: git
   repo: git@github.com:carolynvs/gophercloud.git
-  version: bundle-scripts-create
+  version: magnum
   subpackages:
   - openstack
   - openstack/containerorchestration/v1/baymodels

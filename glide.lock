@@ -1,5 +1,5 @@
-hash: d6c7346e50348ad69c6dda4c4a1624bd0514af703f914ff21b1370970ac48a54
-updated: 2016-08-24T17:02:28.860834614-05:00
+hash: 3833f14ac4a952185bcb290c9fc21df67b5f68257806a5d31f23f1e7aad2bc6a
+updated: 2016-09-07T13:46:22.775182312-05:00
 imports:
 - name: github.com/alecthomas/template
   version: a0175ee3bccc567396460bf5acd36800cb10c49c
@@ -12,7 +12,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/getcarina/libcarina
-  version: 178561c13af5739cff93e82e6264256d0f612139
+  version: c6a37d28f6242f2f313acb80691b12524d22fd47
   repo: git@github.com:rackerlabs/carina-cli-libcarina.git
   vcs: git
 - name: github.com/getcarina/libmakeswarm
@@ -20,7 +20,7 @@ imports:
   repo: git@github.com:getcarina/libcarina.git
   vcs: git
 - name: github.com/gophercloud/gophercloud
-  version: 9a2171ceea5c2cf9da50b5e31b9e5bf7337aa344
+  version: 5f13c1e3bf6d92492f3ae170540a201d8f53f95a
   repo: git@github.com:carolynvs/gophercloud.git
   vcs: git
   subpackages:
@@ -55,7 +55,7 @@ imports:
   - testhelper/client
   - pagination
 - name: github.com/Sirupsen/logrus
-  version: 35530e5e742a45930e55748019ad66c5f131f08f
+  version: 98b74aac5b7a98855050754bab2631a4a8ea92e3
   repo: git@github.com:carolynvs/logrus.git
   vcs: git
 - name: golang.org/x/sys
@@ -63,5 +63,5 @@ imports:
   subpackages:
   - unix
 - name: gopkg.in/alecthomas/kingpin.v2
-  version: e5900212cbf65b181d3d8e08308ef06a01d117cf
+  version: e9044be3ab2a8e11d4e1f418d12f0790d57e8d70
 testImports: []
