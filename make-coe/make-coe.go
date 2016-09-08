@@ -134,9 +134,13 @@ func (carina *MakeCOE) DeleteCluster(name string) (common.Cluster, error) {
 	common.Log.WriteDebug("[make-coe] Deleting cluster (%s)", name)
 	result, err := carina.client.Delete(name)
 	if err != nil {
-		if strings.Contains(err.Error(), "not find cluster") {
-			return Cluster{Status: "deleted"}, nil
+		if httpErr, ok := err.(libcarina.HTTPErr); ok {
+			if httpErr.StatusCode == http.StatusNotFound {
+				common.Log.WriteWarning("Could not find the cluster (%s) to delete", name)
+				return Cluster{Status: "deleted"}, nil
+			}
 		}
+
 		return Cluster{}, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", name))
 	}
 

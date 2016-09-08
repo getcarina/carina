@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"net"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/getcarina/carina/version"
 )
@@ -21,15 +23,21 @@ type HTTPLog struct {
 	rt     http.RoundTripper
 }
 
-const httpTimeout = 15 * time.Second
-
 // NewHTTPClient return a custom HTTP client that allows for logging relevant
 // information before and after the HTTP request.
 func NewHTTPClient() *http.Client {
 	return &http.Client{
-		Timeout: httpTimeout,
+		Timeout: 5 * time.Second,
 		Transport: &HTTPLog{
-			rt:     http.DefaultTransport,
+			rt: &http.Transport{
+				Proxy:             http.ProxyFromEnvironment,
+				DisableKeepAlives: true, // KeepAlive was causing "connection reset by peer" errors when issuing multiple requests
+				Dial: (&net.Dialer{
+					Timeout: 5 * time.Second,
+				}).Dial,
+				TLSHandshakeTimeout:   5 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+			},
 			Logger: Log.Logger,
 		},
 	}
@@ -80,9 +88,10 @@ func (hl *HTTPLog) RoundTrip(request *http.Request) (*http.Response, error) {
 	response.Body = responseBody
 
 	if response.StatusCode >= 400 {
+		hl.Logger.Debugf("Response Code: %d %s", response.StatusCode, response.Status)
 		buf := bytes.NewBuffer([]byte{})
 		body, _ := ioutil.ReadAll(io.TeeReader(response.Body, buf))
-		hl.Logger.Infof("Response Error: %+v", string(body))
+		hl.Logger.Debugf("Response Error: %+v", string(body))
 		bufWithClose := ioutil.NopCloser(buf)
 		response.Body = bufWithClose
 	}
