@@ -75,7 +75,18 @@ func getTemplateValues(template string) (coe string, hostType string, err error)
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
 func (carina *MakeCOE) GetClusterCredentials(name string) (*libcarina.CredentialsBundle, error) {
-	return nil, errors.New("Not implemented")
+	err := carina.init()
+	if err != nil {
+		return nil, err
+	}
+
+	common.Log.WriteDebug("[make-coe] Retrieving cluster credentials (%s)", name)
+	creds, err := carina.client.GetCredentials(name)
+	if err != nil {
+		return nil, errors.Wrap(err, "[make-coe] Unable to retrieve the cluster credentials")
+	}
+
+	return creds, nil
 }
 
 // ListClusters prints out a list of the user's clusters to the console
