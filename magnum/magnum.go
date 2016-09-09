@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 
 	"github.com/getcarina/carina/common"
+	"github.com/getcarina/libcarina"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/baymodels"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
@@ -74,7 +75,7 @@ func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (co
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-func (magnum *Magnum) GetClusterCredentials(name string) (*common.CredentialsBundle, error) {
+func (magnum *Magnum) GetClusterCredentials(name string) (*libcarina.CredentialsBundle, error) {
 	err := magnum.init()
 	if err != nil {
 		return nil, err
@@ -87,7 +88,7 @@ func (magnum *Magnum) GetClusterCredentials(name string) (*common.CredentialsBun
 		return nil, errors.Wrap(err, "[magnum] Unable to generate credentials bundle")
 	}
 
-	creds := common.NewCredentialsBundle()
+	creds := libcarina.NewCredentialsBundle()
 	creds.Files["ca.pem"] = pem.EncodeToMemory(&result.CACertificate)
 	creds.Files["key.pem"] = pem.EncodeToMemory(&result.PrivateKey)
 	creds.Files["cert.pem"] = pem.EncodeToMemory(&result.Certificate)

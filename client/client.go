@@ -10,6 +10,7 @@ import (
 	"github.com/getcarina/carina/magnum"
 	"github.com/getcarina/carina/make-coe"
 	"github.com/getcarina/carina/makeswarm"
+	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
 )
 
@@ -165,7 +166,7 @@ func (client *Client) DownloadClusterCredentials(account Account, name string, c
 func (client *Client) GetSourceCommand(account Account, shell string, name string, customPath string) (sourceText string, err error) {
 	// We are ignoring errors here, and checking lower down if the creds are missing
 	credentialsPath, _ := buildClusterCredentialsPath(account, name, customPath)
-	creds := common.LoadCredentialsBundle(credentialsPath)
+	creds := libcarina.LoadCredentialsBundle(credentialsPath)
 
 	// Re-download the credentials bundle, if the credentials are invalid
 	err = creds.Verify()

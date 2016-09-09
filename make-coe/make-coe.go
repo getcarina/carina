@@ -74,7 +74,7 @@ func getTemplateValues(template string) (coe string, hostType string, err error)
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-func (carina *MakeCOE) GetClusterCredentials(name string) (*common.CredentialsBundle, error) {
+func (carina *MakeCOE) GetClusterCredentials(name string) (*libcarina.CredentialsBundle, error) {
 	return nil, errors.New("Not implemented")
 }
 

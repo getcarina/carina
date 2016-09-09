@@ -1,5 +1,9 @@
 package common
 
+import (
+	"github.com/getcarina/libcarina"
+)
+
 // ClusterService is a common interface over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)
 type ClusterService interface {
 	// GetQuotas retrieves the quotas set for the account
@@ -15,7 +19,7 @@ type ClusterService interface {
 	GetCluster(name string) (Cluster, error)
 
 	// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-	GetClusterCredentials(name string) (*CredentialsBundle, error)
+	GetClusterCredentials(name string) (*libcarina.CredentialsBundle, error)
 
 	// RebuildCluster destroys and recreates the cluster
 	RebuildCluster(name string) (Cluster, error)

@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/getcarina/carina/common"
-	"github.com/getcarina/libmakeswarm"
+	libcarina "github.com/getcarina/libcarina"
+	libmakeswarm "github.com/getcarina/libmakeswarm"
 	"github.com/pkg/errors"
 )
 
 // MakeSwarm is an adapter between the cli and Carina (make-swarm)
 type MakeSwarm struct {
-	client  *libcarina.ClusterClient
+	client  *libmakeswarm.ClusterClient
 	Account *Account
 }
 
@@ -71,9 +72,9 @@ func (carina *MakeSwarm) CreateCluster(name string, template string, nodes int) 
 	}
 
 	common.Log.WriteDebug("[make-swarm] Creating %d-node cluster (%s)", nodes, name)
-	options := libcarina.Cluster{
+	options := libmakeswarm.Cluster{
 		ClusterName: name,
-		Nodes:       libcarina.Number(nodes),
+		Nodes:       libmakeswarm.Number(nodes),
 		AutoScale:   false, // Not exposing this since we are removing autoscale in make-coe
 	}
 	result, err := carina.client.Create(options)
@@ -86,7 +87,7 @@ func (carina *MakeSwarm) CreateCluster(name string, template string, nodes int) 
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-func (carina *MakeSwarm) GetClusterCredentials(name string) (*common.CredentialsBundle, error) {
+func (carina *MakeSwarm) GetClusterCredentials(name string) (*libcarina.CredentialsBundle, error) {
 	err := carina.init()
 	if err != nil {
 		return nil, err
@@ -98,7 +99,7 @@ func (carina *MakeSwarm) GetClusterCredentials(name string) (*common.Credentials
 		return nil, errors.Wrap(err, "[make-swarm] Unable to retrieve the cluster credentials")
 	}
 
-	creds := &common.CredentialsBundle{Files: result.Files}
+	creds := &libcarina.CredentialsBundle{Files: result.Files}
 
 	return creds, nil
 }
