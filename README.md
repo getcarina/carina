@@ -53,18 +53,22 @@ Be sure to move `carina.exe` to a directory on your `%PATH%`.
 ```
 $ export CARINA_USERNAME=trythingsout
 $ export CARINA_APIKEY=$RACKSPACE_APIKEY
+
 $ carina list
 ClusterName Flavor        Nodes AutoScale Status
 mycluster   container1-4G 1     false     active
+
 $ carina create newone
 newone      container1-4G 1     false     new
 $ carina create another --wait --autoscale
 another     container1-4G 1     true      active
+
 $ carina list
 ClusterName Flavor        Nodes AutoScale Status
 mycluster   container1-4G 1     false     active
 newone      container1-4G 1     false     active
 another     container1-4G 1     true      active
+
 $ carina credentials another
 #
 # Credentials written to "/Users/rgbkrk/.carina/clusters/trythingsout/another"
@@ -72,7 +76,9 @@ $ carina credentials another
 source "/Users/rgbkrk/.carina/clusters/trythingsout/another/docker.env"
 # Run the command above to get your Docker environment variables set
 
-$ eval "$( carina credentials another )"
+$ eval "$( carina env another )"
+$ echo Conencted to: $CARINA_CLUSTER_NAME
+
 $ docker ps
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 $ docker run -d --name whoa -p 8080:8080 whoa/tiny
@@ -134,6 +140,13 @@ Commands:
   delete <cluster-name>
     Delete a swarm cluster
 ```
+
+## Environment Variables
+When you source the result of `carina env` a few helpful environment variables are set for you:
+
+ * `DOCKER_HOST`, `DOCKER_CERT_PATH` and `DOCKER_TLS_VERIFY` are used by the Docker client to connect to your cluster.
+ * `DOCKER_VERSION` is designed to work with the Docker Version Manager (dvm). Run `dvm use` and it will use that environment variable to load the right Docker client binary into the current session.
+ * `CARINA_CLUSTER_NAME` helps you remember which cluster is currently connected
 
 ## Building
 
