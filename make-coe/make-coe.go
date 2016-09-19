@@ -48,12 +48,13 @@ func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (c
 	}
 
 	common.Log.WriteDebug("[make-coe] Creating a %d-node %s cluster hosted on %s named %s", nodes, coe, hostType, name)
-	createOpts := libcarina.Cluster{
+	createOpts := &libcarina.Cluster{
 		Name:     name,
 		COE:      coe,
 		HostType: hostType,
 		Nodes:    nodes,
 	}
+
 	result, err := carina.client.Create(createOpts)
 	if err != nil {
 		return Cluster{}, errors.Wrap(err, "[make-coe] Unable to create cluster")
@@ -105,7 +106,8 @@ func (carina *MakeCOE) ListClusters() ([]common.Cluster, error) {
 	}
 
 	for _, result := range results {
-		clusters = append(clusters, Cluster(result))
+		cluster := Cluster(*result)
+		clusters = append(clusters, &cluster)
 	}
 
 	return clusters, err
