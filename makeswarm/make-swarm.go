@@ -41,30 +41,26 @@ func (carina *MakeSwarm) init() error {
 
 // GetQuotas retrieves the quotas set for the account
 func (carina *MakeSwarm) GetQuotas() (common.Quotas, error) {
-	var quotas CarinaQuotas
-
 	err := carina.init()
 	if err != nil {
-		return quotas, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-swarm] Retrieving account quotas")
 	result, err := carina.client.GetQuotas()
 	if err != nil {
-		return quotas, errors.Wrap(err, "[make-swarm] Unable to retrieve account quotas")
+		return nil, errors.Wrap(err, "[make-swarm] Unable to retrieve account quotas")
 	}
-	quotas = CarinaQuotas(*result)
+	quotas := CarinaQuotas(*result)
 
-	return quotas, err
+	return &quotas, err
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (carina *MakeSwarm) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := carina.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	if template != "" {
@@ -79,9 +75,9 @@ func (carina *MakeSwarm) CreateCluster(name string, template string, nodes int) 
 	}
 	result, err := carina.client.Create(options)
 	if err != nil {
-		return cluster, errors.Wrap(err, "[make-swarm] Unable to create the cluster")
+		return nil, errors.Wrap(err, "[make-swarm] Unable to create the cluster")
 	}
-	cluster = Cluster(*result)
+	cluster := &Cluster{Cluster: result}
 
 	return cluster, err
 }
@@ -106,21 +102,21 @@ func (carina *MakeSwarm) GetClusterCredentials(name string) (*libcarina.Credenti
 
 // ListClusters prints out a list of the user's clusters to the console
 func (carina *MakeSwarm) ListClusters() ([]common.Cluster, error) {
-	var clusters []common.Cluster
-
 	err := carina.init()
 	if err != nil {
-		return clusters, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-swarm] Listing clusters")
 	results, err := carina.client.List()
 	if err != nil {
-		return clusters, errors.Wrap(err, "[make-swarm] Unable to list clusters")
+		return nil, errors.Wrap(err, "[make-swarm] Unable to list clusters")
 	}
 
-	for _, result := range results {
-		clusters = append(clusters, Cluster(result))
+	var clusters []common.Cluster
+	for i := range results {
+		cluster := &Cluster{Cluster: &results[i]}
+		clusters = append(clusters, cluster)
 	}
 
 	return clusters, err
@@ -128,96 +124,90 @@ func (carina *MakeSwarm) ListClusters() ([]common.Cluster, error) {
 
 // RebuildCluster destroys and recreates the cluster
 func (carina *MakeSwarm) RebuildCluster(name string) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := carina.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-swarm] Rebuilding cluster (%s)", name)
 	result, err := carina.client.Rebuild(name)
-	cluster = Cluster(*result)
-
 	if err != nil {
-		return cluster, errors.Wrap(err, "[make-swarm] Unable to rebuild the cluster")
+		return nil, errors.Wrap(err, "[make-swarm] Unable to rebuild the cluster")
 	}
+
+	cluster := &Cluster{Cluster: result}
 
 	return cluster, nil
 }
 
 // GetCluster prints out a cluster's information to the console
 func (carina *MakeSwarm) GetCluster(name string) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := carina.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-swarm] Retrieving cluster (%s)", name)
 	result, err := carina.client.Get(name)
 	if err != nil {
-		return cluster, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to retrieve cluster (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to retrieve cluster (%s)", name))
 	}
-	cluster = Cluster(*result)
+
+	cluster := &Cluster{Cluster: result}
 
 	return cluster, nil
 }
 
 // DeleteCluster permanently deletes a cluster
 func (carina *MakeSwarm) DeleteCluster(name string) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := carina.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-swarm] Deleting cluster (%s)", name)
 	result, err := carina.client.Delete(name)
 	if err != nil {
-		return cluster, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to delete cluster (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to delete cluster (%s)", name))
 	}
-	cluster = Cluster(*result)
+
+	cluster := &Cluster{Cluster: result}
 
 	return cluster, nil
 }
 
 // GrowCluster adds nodes to a cluster
 func (carina *MakeSwarm) GrowCluster(name string, nodes int) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := carina.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-swarm] Growing cluster (%s) by %d nodes", name, nodes)
 	result, err := carina.client.Grow(name, nodes)
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to grow cluster (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to grow cluster (%s)", name))
 	}
-	cluster = Cluster(*result)
+
+	cluster := &Cluster{Cluster: result}
 
 	return cluster, nil
 }
 
 // SetAutoScale enables or disables autoscaling on a cluster
 func (carina *MakeSwarm) SetAutoScale(name string, value bool) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := carina.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-swarm] Changing the autoscale setting on the cluster (%s) to %t", name, value)
 	result, err := carina.client.SetAutoScale(name, value)
 	if err != nil {
-		return cluster, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to change the cluster's autoscale setting (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-swarm] Unable to change the cluster's autoscale setting (%s)", name))
 	}
-	cluster = Cluster(*result)
+
+	cluster := &Cluster{Cluster: result}
 
 	return cluster, nil
 }

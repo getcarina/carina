@@ -32,19 +32,19 @@ func (carina *MakeCOE) init() error {
 
 // GetQuotas retrieves the quotas set for the account
 func (carina *MakeCOE) GetQuotas() (common.Quotas, error) {
-	return Quotas{}, errors.New("Not implemented")
+	return nil, errors.New("Not implemented")
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
 	err := carina.init()
 	if err != nil {
-		return Cluster{}, err
+		return nil, err
 	}
 
 	coe, hostType, err := getTemplateValues(template)
 	if err != nil {
-		return Cluster{}, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-coe] Creating a %d-node %s cluster hosted on %s named %s", nodes, coe, hostType, name)
@@ -57,10 +57,12 @@ func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (c
 
 	result, err := carina.client.Create(createOpts)
 	if err != nil {
-		return Cluster{}, errors.Wrap(err, "[make-coe] Unable to create cluster")
+		return nil, errors.Wrap(err, "[make-coe] Unable to create cluster")
 	}
 
-	return Cluster(*result), nil
+	cluster := &Cluster{Cluster: result}
+
+	return cluster, nil
 }
 
 func getTemplateValues(template string) (coe string, hostType string, err error) {
@@ -106,8 +108,8 @@ func (carina *MakeCOE) ListClusters() ([]common.Cluster, error) {
 	}
 
 	for _, result := range results {
-		cluster := Cluster(*result)
-		clusters = append(clusters, &cluster)
+		cluster := &Cluster{Cluster: result}
+		clusters = append(clusters, cluster)
 	}
 
 	return clusters, err
@@ -115,24 +117,22 @@ func (carina *MakeCOE) ListClusters() ([]common.Cluster, error) {
 
 // RebuildCluster destroys and recreates the cluster
 func (carina *MakeCOE) RebuildCluster(name string) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented")
+	return nil, errors.New("Not implemented")
 }
 
 // GetCluster prints out a cluster's information to the console
 func (carina *MakeCOE) GetCluster(name string) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := carina.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-coe] Retrieving cluster (%s)", name)
 	result, err := carina.client.Get(name)
 	if err != nil {
-		return cluster, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to retrieve cluster (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to retrieve cluster (%s)", name))
 	}
-	cluster = Cluster(*result)
+	cluster := &Cluster{Cluster: result}
 
 	return cluster, nil
 }
@@ -141,7 +141,7 @@ func (carina *MakeCOE) GetCluster(name string) (common.Cluster, error) {
 func (carina *MakeCOE) DeleteCluster(name string) (common.Cluster, error) {
 	err := carina.init()
 	if err != nil {
-		return Cluster{}, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[make-coe] Deleting cluster (%s)", name)
@@ -150,29 +150,33 @@ func (carina *MakeCOE) DeleteCluster(name string) (common.Cluster, error) {
 		if httpErr, ok := err.(libcarina.HTTPErr); ok {
 			if httpErr.StatusCode == http.StatusNotFound {
 				common.Log.WriteWarning("Could not find the cluster (%s) to delete", name)
-				return Cluster{Status: "deleted"}, nil
+				cluster := newCluster()
+				cluster.Status = "deleted"
+				return cluster, nil
 			}
 		}
 
-		return Cluster{}, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", name))
 	}
 
-	return Cluster(*result), nil
+	cluster := &Cluster{Cluster: result}
+
+	return cluster, nil
 }
 
 // GrowCluster adds nodes to a cluster
 func (carina *MakeCOE) GrowCluster(name string, nodes int) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented")
+	return nil, errors.New("Not implemented")
 }
 
 // SetAutoScale is not supported
 func (carina *MakeCOE) SetAutoScale(name string, value bool) (common.Cluster, error) {
-	return Cluster{}, errors.New("make-coe does not support autoscaling")
+	return nil, errors.New("make-coe does not support autoscaling")
 }
 
 // WaitUntilClusterIsActive waits until the prior cluster operation is completed
 func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented")
+	return nil, errors.New("Not implemented")
 }
 
 // WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit

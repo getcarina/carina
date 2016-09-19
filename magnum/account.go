@@ -53,7 +53,7 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 		return nil
 	}
 
-	authOptions := gophercloud.AuthOptions{
+	authOptions := &gophercloud.AuthOptions{
 		IdentityEndpoint: account.AuthEndpoint,
 		Username:         account.UserName,
 		Password:         account.Password,
@@ -96,7 +96,7 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 	}
 
 	common.Log.WriteDebug("[magnum] Attempting to authenticate with a password")
-	identity, err := openstack.AuthenticatedClient(authOptions)
+	identity, err := openstack.AuthenticatedClient(*authOptions)
 	if err != nil {
 		return nil, errors.Wrap(err, "[magnum] Authentication failed")
 	}
@@ -113,9 +113,9 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 	return magnumClient, nil
 }
 
-func reauthenticate(identity *gophercloud.ProviderClient, authOptions gophercloud.AuthOptions) func() error {
+func reauthenticate(identity *gophercloud.ProviderClient, authOptions *gophercloud.AuthOptions) func() error {
 	return func() error {
-		return openstack.Authenticate(identity, authOptions)
+		return openstack.Authenticate(identity, *authOptions)
 	}
 }
 

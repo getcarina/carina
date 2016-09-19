@@ -6,11 +6,11 @@ import libcarina "github.com/getcarina/libmakeswarm"
 type CarinaQuotas libcarina.Quotas
 
 // GetMaxClusters returns the maximum number of clusters allowed on the account
-func (quotas CarinaQuotas) GetMaxClusters() int {
+func (quotas *CarinaQuotas) GetMaxClusters() int {
 	return quotas.MaxClusters.Int()
 }
 
 // GetMaxNodesPerCluster returns the maximum number of nodes allowed in a cluster on the account
-func (quotas CarinaQuotas) GetMaxNodesPerCluster() int {
+func (quotas *CarinaQuotas) GetMaxNodesPerCluster() int {
 	return quotas.MaxNodesPerCluster.Int()
 }

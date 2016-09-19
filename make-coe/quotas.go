@@ -6,11 +6,11 @@ import "github.com/getcarina/libcarina"
 type Quotas libcarina.Quotas
 
 // GetMaxClusters returns the maximum number of clusters allowed on the account
-func (quotas Quotas) GetMaxClusters() int {
+func (quotas *Quotas) GetMaxClusters() int {
 	return quotas.MaxClusters
 }
 
 // GetMaxNodesPerCluster returns the maximum number of nodes allowed in a cluster on the account
-func (quotas Quotas) GetMaxNodesPerCluster() int {
+func (quotas *Quotas) GetMaxNodesPerCluster() int {
 	return quotas.MaxNodesPerCluster
 }

@@ -39,23 +39,21 @@ func (magnum *Magnum) init() error {
 
 // GetQuotas retrieves the quotas set for the account
 func (magnum *Magnum) GetQuotas() (common.Quotas, error) {
-	return Quotas{}, errors.New("Not implemented yet")
+	return nil, errors.New("Not implemented yet")
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := magnum.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[magnum] Creating %d-node %s cluster (%s)", nodes, template, name)
 
 	bayModel, err := magnum.lookupBayModelByName(template)
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	options := bays.CreateOpts{
@@ -65,11 +63,11 @@ func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (co
 	}
 	result := bays.Create(magnum.client, options)
 	if result.Err != nil {
-		return cluster, errors.Wrap(result.Err, "[magnum] Unable to create the cluster")
+		return nil, errors.Wrap(result.Err, "[magnum] Unable to create the cluster")
 	}
 
 	bay, err := result.Extract()
-	cluster = Cluster{Bay: bay, Template: bayModel}
+	cluster := &Cluster{Bay: bay, Template: bayModel}
 
 	return cluster, err
 }
@@ -134,56 +132,53 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 
 // GetCluster prints out a cluster's information to the console
 func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := magnum.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[magnum] Retrieving bay (%s)", name)
 	result, err := bays.Get(magnum.client, name).Extract()
 	if err != nil {
 		common.Log.Dump(err)
-		return cluster, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
 	}
 
-	cluster, err = magnum.newCluster(result)
+	cluster, err := magnum.newCluster(result)
 	return cluster, err
 }
 
 // RebuildCluster destroys and recreates the cluster
 func (magnum *Magnum) RebuildCluster(name string) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented yet")
+	return nil, errors.New("Not implemented yet")
 }
 
 // DeleteCluster permanently deletes a cluster
 func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
-	var cluster Cluster
-
 	err := magnum.init()
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
 	common.Log.WriteDebug("[magnum] Deleting cluster (%s)", name)
 	result := bays.Delete(magnum.client, name)
 	if result.Err != nil {
-		return cluster, errors.Wrap(result.Err, fmt.Sprintf("[magnum] Unable to delete cluster (%s)", name))
+		return nil, errors.Wrap(result.Err, fmt.Sprintf("[magnum] Unable to delete cluster (%s)", name))
 	}
 
-	cluster, err = magnum.waitForTaskInitiated(name, "DELETE")
-
+	cluster, err := magnum.waitForTaskInitiated(name, "DELETE")
 	if err != nil {
 		err = errors.Cause(err)
 
 		// Gracefully handle a 404 Not Found when the cluster is deleted quickly
 		if httpErr, ok := err.(*coe.ErrorResponse); ok {
 			if httpErr.Actual == http.StatusNotFound {
-				cluster = *newCluster()
+				cluster = newCluster()
 				cluster.Status = "DELETE_COMPLETE"
 				return cluster, nil
 			}
+		} else {
+			return nil, err
 		}
 	}
 
@@ -192,12 +187,12 @@ func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
 
 // GrowCluster adds nodes to a cluster
 func (magnum *Magnum) GrowCluster(name string, nodes int) (common.Cluster, error) {
-	return Cluster{}, errors.New("Not implemented yet")
+	return nil, errors.New("Not implemented yet")
 }
 
 // SetAutoScale is not supported
 func (magnum *Magnum) SetAutoScale(name string, value bool) (common.Cluster, error) {
-	return Cluster{}, errors.New("Magnum does not support autoscaling.")
+	return nil, errors.New("Magnum does not support autoscaling.")
 }
 
 // WaitUntilClusterIsActive waits until the prior cluster operation is completed
@@ -268,13 +263,13 @@ func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 // waitForClusterStatus waits for a cluster to reach a particular group of states, e.g. delete will
 // wait for DELETE_IN_PROGRESS, DELETE_FAILED or DELETE_COMPLETE. This is necessary as the Magnum API
 // returns immediately and updates the status later
-func (magnum *Magnum) waitForTaskInitiated(name string, task string) (Cluster, error) {
+func (magnum *Magnum) waitForTaskInitiated(name string, task string) (*Cluster, error) {
 	task = strings.ToLower(task)
 
 	pollingInterval := 1 * time.Second
 	for {
 		result, err := magnum.GetCluster(name)
-		cluster, _ := result.(Cluster)
+		cluster, _ := result.(*Cluster)
 		if err != nil {
 			return cluster, err
 		}
@@ -289,11 +284,11 @@ func (magnum *Magnum) waitForTaskInitiated(name string, task string) (Cluster, e
 	}
 }
 
-func (magnum *Magnum) newCluster(bay *bays.Bay) (Cluster, error) {
+func (magnum *Magnum) newCluster(bay *bays.Bay) (*Cluster, error) {
 	cluster := &Cluster{Bay: bay}
 	baymodel, err := magnum.lookupBayModelByID(bay.BayModelID)
 	cluster.Template = baymodel
-	return *cluster, err
+	return cluster, err
 }
 
 func (magnum *Magnum) listBayModels() ([]*baymodels.BayModel, error) {
