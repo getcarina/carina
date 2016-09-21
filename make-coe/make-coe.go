@@ -15,7 +15,7 @@ import (
 
 // MakeCOE is an adapter between the cli and Carina (make-coe)
 type MakeCOE struct {
-	client  *libcarina.ClusterClient
+	client  *libcarina.CarinaClient
 	Account *Account
 }
 

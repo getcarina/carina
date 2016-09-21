@@ -37,8 +37,8 @@ func (account *Account) GetID() string {
 }
 
 // Authenticate creates an authenticated client, ready to use to communicate with the Carina API
-func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
-	var carinaClient *libcarina.ClusterClient
+func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
+	var carinaClient *libcarina.CarinaClient
 
 	testAuth := func() error {
 		req, err := http.NewRequest("HEAD", rackspace.RackspaceUSIdentity+"tokens/"+account.Token, nil)
@@ -64,11 +64,11 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 		common.Log.WriteDebug("[make-coe] Attempting to authenticate with a cached token")
 		if testAuth() == nil {
 			common.Log.WriteDebug("[make-coe] Authentication sucessful")
-			carinaClient = &libcarina.ClusterClient{
-				Client:   common.NewHTTPClient(),
-				Username: account.UserName,
-				Token:    account.Token,
-				Endpoint: account.getEndpoint(),
+			carinaClient = &libcarina.CarinaClient{
+				Client:    common.NewHTTPClient(),
+				Username:  account.UserName,
+				Token:     account.Token,
+				Endpoint:  account.getEndpoint(),
 			}
 			return carinaClient, nil
 		}
@@ -79,7 +79,7 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 	}
 
 	common.Log.WriteDebug("[make-coe] Attempting to authenticate with an apikey")
-	carinaClient, err := libcarina.NewClusterClient(account.getEndpoint(), account.UserName, account.APIKey)
+	carinaClient, err := libcarina.NewClient(account.getEndpoint(), account.UserName, account.APIKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "[make-coe] Authentication failed")
 	}
