@@ -45,13 +45,17 @@ func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
 		if err != nil {
 			return err
 		}
+
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("X-Auth-Token", account.Token)
+		req.Header.Add("User-Agent", common.BuildUserAgent())
+
 		resp, err := common.NewHTTPClient().Do(req)
 		if err != nil {
 			return err
 		}
-		_ = resp.Body.Close()
+
+		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
 			return fmt.Errorf("Cached token is invalid")

@@ -45,13 +45,17 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 		if err != nil {
 			return err
 		}
+
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("X-Auth-Token", account.Token)
+		req.Header.Add("User-Agent", common.BuildUserAgent())
+
 		resp, err := common.NewHTTPClient().Do(req)
 		if err != nil {
 			return err
 		}
-		_ = resp.Body.Close()
+
+		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
 			return fmt.Errorf("Cached token is invalid")
@@ -65,10 +69,11 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 		if testAuth() == nil {
 			common.Log.WriteDebug("[make-swarm] Authentication sucessful")
 			carinaClient = &libcarina.ClusterClient{
-				Client:   common.NewHTTPClient(),
-				Username: account.UserName,
-				Token:    account.Token,
-				Endpoint: account.getEndpoint(),
+				Client:    common.NewHTTPClient(),
+				Username:  account.UserName,
+				Token:     account.Token,
+				Endpoint:  account.getEndpoint(),
+				UserAgent: common.BuildUserAgent(),
 			}
 			return carinaClient, nil
 		}
@@ -83,8 +88,10 @@ func (account *Account) Authenticate() (*libcarina.ClusterClient, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "[make-swarm] Authentication failed")
 	}
-
 	common.Log.WriteDebug("[make-swarm] Authentication sucessful")
+
+	carinaClient.Client = common.NewHTTPClient()
+	carinaClient.UserAgent = common.BuildUserAgent()
 	account.Token = carinaClient.Token
 
 	return carinaClient, nil

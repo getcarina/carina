@@ -86,6 +86,7 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 
 			common.Log.WriteDebug("[magnum] Authentication sucessful")
 			account.Token = magnumClient.TokenID
+			magnumClient.UserAgent.Prepend(common.BuildUserAgent())
 			magnumClient.HTTPClient = *common.NewHTTPClient()
 			return magnumClient, nil
 		}
@@ -107,6 +108,7 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 	common.Log.WriteDebug("[magnum] Authentication sucessful")
 
 	magnumClient.HTTPClient = *common.NewHTTPClient()
+	magnumClient.UserAgent.Prepend(common.BuildUserAgent())
 	account.Token = magnumClient.TokenID
 	account.Endpoint = magnumClient.Endpoint
 
