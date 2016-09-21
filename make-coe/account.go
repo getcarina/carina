@@ -69,6 +69,7 @@ func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
 				Username:  account.UserName,
 				Token:     account.Token,
 				Endpoint:  account.getEndpoint(),
+				UserAgent: common.BuildUserAgent(),
 			}
 			return carinaClient, nil
 		}
@@ -86,6 +87,7 @@ func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
 	common.Log.WriteDebug("[make-coe] Authentication sucessful")
 
 	carinaClient.Client = common.NewHTTPClient()
+	carinaClient.UserAgent = common.BuildUserAgent()
 	account.Token = carinaClient.Token
 
 	return carinaClient, nil
