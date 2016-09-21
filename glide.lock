@@ -1,5 +1,5 @@
-hash: 3833f14ac4a952185bcb290c9fc21df67b5f68257806a5d31f23f1e7aad2bc6a
-updated: 2016-09-21T12:28:15.948502483-05:00
+hash: 70cc4cd9f5962b9bf5b3ab453e3a7b4c5882c647c5a514eff5eae3b1792cd9d7
+updated: 2016-09-21T14:48:50.61056667-05:00
 imports:
 - name: github.com/alecthomas/template
   version: a0175ee3bccc567396460bf5acd36800cb10c49c
@@ -16,8 +16,8 @@ imports:
   repo: git@github.com:rackerlabs/carina-cli-libcarina.git
   vcs: git
 - name: github.com/getcarina/libmakeswarm
-  version: ab5c3711c48d4555012ced977e21d23f222dd0b2
-  repo: git@github.com:getcarina/libcarina.git
+  version: 037e157233e882f99e9c236d860f6d32c445104d
+  repo: git@github.com:rackerlabs/carina-cli-libcarina.git
   vcs: git
 - name: github.com/gophercloud/gophercloud
   version: 5f13c1e3bf6d92492f3ae170540a201d8f53f95a
