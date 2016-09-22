@@ -62,13 +62,14 @@ func (cache *Cache) load() error {
 	if os.IsNotExist(err) {
 		return nil
 	}
+	defer f.Close()
 
 	err = json.NewDecoder(f).Decode(cache)
 	if err != nil {
-		_ = f.Close()
-		return errors.Wrap(err, "Unable to deserialize cache file")
+		common.Log.WriteDebug(errors.Wrap(err, "Unable to deserialize cache file, starting over with a fresh cache").Error())
 	}
-	return f.Close()
+
+	return nil
 }
 
 // Save writes the in memory cache to disk
