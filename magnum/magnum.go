@@ -140,7 +140,6 @@ func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
 	common.Log.WriteDebug("[magnum] Retrieving bay (%s)", name)
 	result, err := bays.Get(magnum.client, name).Extract()
 	if err != nil {
-		common.Log.Dump(err)
 		return nil, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
 	}
 
@@ -242,7 +241,6 @@ func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 
 			// Gracefully handle a 404 Not Found when the cluster is deleted quickly
 			if httpErr, ok := err.(*coe.ErrorResponse); ok {
-				common.Log.Dump(httpErr)
 				if httpErr.Actual == http.StatusNotFound {
 					return nil
 				}
