@@ -72,16 +72,16 @@ func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (co
 	return cluster, err
 }
 
-// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-func (magnum *Magnum) GetClusterCredentials(name string) (*libcarina.CredentialsBundle, error) {
+// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster by its id or name (if unique)
+func (magnum *Magnum) GetClusterCredentials(token string) (*libcarina.CredentialsBundle, error) {
 	err := magnum.init()
 	if err != nil {
 		return nil, err
 	}
 
-	common.Log.WriteDebug("[magnum] Generating credentials bundle for cluster (%s)", name)
+	common.Log.WriteDebug("[magnum] Generating credentials bundle for cluster (%s)", token)
 
-	result, err := certificates.CreateCredentialsBundle(magnum.client, name)
+	result, err := certificates.CreateCredentialsBundle(magnum.client, token)
 	if err != nil {
 		return nil, errors.Wrap(err, "[magnum] Unable to generate credentials bundle")
 	}
@@ -130,42 +130,42 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 	return clusters, err
 }
 
-// GetCluster prints out a cluster's information to the console
-func (magnum *Magnum) GetCluster(name string) (common.Cluster, error) {
+// GetCluster prints out a cluster's information to the console by its id or name (if unique)
+func (magnum *Magnum) GetCluster(token string) (common.Cluster, error) {
 	err := magnum.init()
 	if err != nil {
 		return nil, err
 	}
 
-	common.Log.WriteDebug("[magnum] Retrieving bay (%s)", name)
-	result, err := bays.Get(magnum.client, name).Extract()
+	common.Log.WriteDebug("[magnum] Retrieving bay (%s)", token)
+	result, err := bays.Get(magnum.client, token).Extract()
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[magnum] Unable to retrieve bay (%s)", token))
 	}
 
 	cluster, err := magnum.newCluster(result)
 	return cluster, err
 }
 
-// RebuildCluster destroys and recreates the cluster
-func (magnum *Magnum) RebuildCluster(name string) (common.Cluster, error) {
+// RebuildCluster destroys and recreates the cluster by its id or name (if unique)
+func (magnum *Magnum) RebuildCluster(token string) (common.Cluster, error) {
 	return nil, errors.New("Not implemented yet")
 }
 
-// DeleteCluster permanently deletes a cluster
-func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
+// DeleteCluster permanently deletes a cluster by its id or name (if unique)
+func (magnum *Magnum) DeleteCluster(token string) (common.Cluster, error) {
 	err := magnum.init()
 	if err != nil {
 		return nil, err
 	}
 
-	common.Log.WriteDebug("[magnum] Deleting cluster (%s)", name)
-	result := bays.Delete(magnum.client, name)
+	common.Log.WriteDebug("[magnum] Deleting cluster (%s)", token)
+	result := bays.Delete(magnum.client, token)
 	if result.Err != nil {
-		return nil, errors.Wrap(result.Err, fmt.Sprintf("[magnum] Unable to delete cluster (%s)", name))
+		return nil, errors.Wrap(result.Err, fmt.Sprintf("[magnum] Unable to delete cluster (%s)", token))
 	}
 
-	cluster, err := magnum.waitForTaskInitiated(name, "DELETE")
+	cluster, err := magnum.waitForTaskInitiated(token, "DELETE")
 	if err != nil {
 		err = errors.Cause(err)
 
@@ -184,13 +184,13 @@ func (magnum *Magnum) DeleteCluster(name string) (common.Cluster, error) {
 	return cluster, err
 }
 
-// GrowCluster adds nodes to a cluster
-func (magnum *Magnum) GrowCluster(name string, nodes int) (common.Cluster, error) {
+// GrowCluster adds nodes to a cluster by its id or name (if unique)
+func (magnum *Magnum) GrowCluster(token string, nodes int) (common.Cluster, error) {
 	return nil, errors.New("Not implemented yet")
 }
 
 // SetAutoScale is not supported
-func (magnum *Magnum) SetAutoScale(name string, value bool) (common.Cluster, error) {
+func (magnum *Magnum) SetAutoScale(token string, value bool) (common.Cluster, error) {
 	return nil, errors.New("Magnum does not support autoscaling.")
 }
 
@@ -207,7 +207,7 @@ func (magnum *Magnum) WaitUntilClusterIsActive(cluster common.Cluster) (common.C
 
 	pollingInterval := 10 * time.Second
 	for {
-		cluster, err := magnum.GetCluster(cluster.GetName())
+		cluster, err := magnum.GetCluster(cluster.GetID())
 		if err != nil {
 			return cluster, err
 		}
@@ -234,7 +234,7 @@ func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 
 	pollingInterval := 5 * time.Second
 	for {
-		cluster, err := magnum.GetCluster(cluster.GetName())
+		cluster, err := magnum.GetCluster(cluster.GetID())
 
 		if err != nil {
 			err = errors.Cause(err)
@@ -261,12 +261,12 @@ func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 // waitForClusterStatus waits for a cluster to reach a particular group of states, e.g. delete will
 // wait for DELETE_IN_PROGRESS, DELETE_FAILED or DELETE_COMPLETE. This is necessary as the Magnum API
 // returns immediately and updates the status later
-func (magnum *Magnum) waitForTaskInitiated(name string, task string) (*Cluster, error) {
+func (magnum *Magnum) waitForTaskInitiated(token string, task string) (*Cluster, error) {
 	task = strings.ToLower(task)
 
 	pollingInterval := 1 * time.Second
 	for {
-		result, err := magnum.GetCluster(name)
+		result, err := magnum.GetCluster(token)
 		cluster, _ := result.(*Cluster)
 		if err != nil {
 			return cluster, err

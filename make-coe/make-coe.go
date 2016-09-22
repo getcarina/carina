@@ -76,15 +76,15 @@ func getTemplateValues(template string) (coe string, hostType string, err error)
 	}
 }
 
-// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-func (carina *MakeCOE) GetClusterCredentials(name string) (*libcarina.CredentialsBundle, error) {
+// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster by its id or name (if unique)
+func (carina *MakeCOE) GetClusterCredentials(token string) (*libcarina.CredentialsBundle, error) {
 	err := carina.init()
 	if err != nil {
 		return nil, err
 	}
 
-	common.Log.WriteDebug("[make-coe] Retrieving cluster credentials (%s)", name)
-	creds, err := carina.client.GetCredentials(name)
+	common.Log.WriteDebug("[make-coe] Retrieving cluster credentials (%s)", token)
+	creds, err := carina.client.GetCredentials(token)
 	if err != nil {
 		return nil, errors.Wrap(err, "[make-coe] Unable to retrieve the cluster credentials")
 	}
@@ -92,7 +92,7 @@ func (carina *MakeCOE) GetClusterCredentials(name string) (*libcarina.Credential
 	return creds, nil
 }
 
-// ListClusters prints out a list of the user's clusters to the console
+// ListClusters prints out a list of the user's clusters to the console by its id or name (if unique)
 func (carina *MakeCOE) ListClusters() ([]common.Cluster, error) {
 	var clusters []common.Cluster
 
@@ -115,48 +115,48 @@ func (carina *MakeCOE) ListClusters() ([]common.Cluster, error) {
 	return clusters, err
 }
 
-// RebuildCluster destroys and recreates the cluster
-func (carina *MakeCOE) RebuildCluster(name string) (common.Cluster, error) {
+// RebuildCluster destroys and recreates the cluster by its id or name (if unique)
+func (carina *MakeCOE) RebuildCluster(token string) (common.Cluster, error) {
 	return nil, errors.New("Not implemented")
 }
 
-// GetCluster prints out a cluster's information to the console
-func (carina *MakeCOE) GetCluster(name string) (common.Cluster, error) {
+// GetCluster prints out a cluster's information to the console by its id or name (if unique)
+func (carina *MakeCOE) GetCluster(token string) (common.Cluster, error) {
 	err := carina.init()
 	if err != nil {
 		return nil, err
 	}
 
-	common.Log.WriteDebug("[make-coe] Retrieving cluster (%s)", name)
-	result, err := carina.client.Get(name)
+	common.Log.WriteDebug("[make-coe] Retrieving cluster (%s)", token)
+	result, err := carina.client.Get(token)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to retrieve cluster (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to retrieve cluster (%s)", token))
 	}
 	cluster := &Cluster{Cluster: result}
 
 	return cluster, nil
 }
 
-// DeleteCluster permanently deletes a cluster
-func (carina *MakeCOE) DeleteCluster(name string) (common.Cluster, error) {
+// DeleteCluster permanently deletes a cluster by its id or name (if unique)
+func (carina *MakeCOE) DeleteCluster(token string) (common.Cluster, error) {
 	err := carina.init()
 	if err != nil {
 		return nil, err
 	}
 
-	common.Log.WriteDebug("[make-coe] Deleting cluster (%s)", name)
-	result, err := carina.client.Delete(name)
+	common.Log.WriteDebug("[make-coe] Deleting cluster (%s)", token)
+	result, err := carina.client.Delete(token)
 	if err != nil {
 		if httpErr, ok := err.(libcarina.HTTPErr); ok {
 			if httpErr.StatusCode == http.StatusNotFound {
-				common.Log.WriteWarning("Could not find the cluster (%s) to delete", name)
+				common.Log.WriteWarning("Could not find the cluster (%s) to delete", token)
 				cluster := newCluster()
 				cluster.Status = "deleted"
 				return cluster, nil
 			}
 		}
 
-		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", name))
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", token))
 	}
 
 	cluster := &Cluster{Cluster: result}
@@ -164,13 +164,13 @@ func (carina *MakeCOE) DeleteCluster(name string) (common.Cluster, error) {
 	return cluster, nil
 }
 
-// GrowCluster adds nodes to a cluster
-func (carina *MakeCOE) GrowCluster(name string, nodes int) (common.Cluster, error) {
+// GrowCluster adds nodes to a cluster by its id or name (if unique)
+func (carina *MakeCOE) GrowCluster(token string, nodes int) (common.Cluster, error) {
 	return nil, errors.New("Not implemented")
 }
 
 // SetAutoScale is not supported
-func (carina *MakeCOE) SetAutoScale(name string, value bool) (common.Cluster, error) {
+func (carina *MakeCOE) SetAutoScale(token string, value bool) (common.Cluster, error) {
 	return nil, errors.New("make-coe does not support autoscaling")
 }
 
@@ -211,7 +211,7 @@ func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 			return nil
 		}
 
-		common.Log.WriteDebug("[make-coe] Waiting until cluster (%s) is deleted, currently in %s", cluster.GetID(), cluster.GetStatus())
+		common.Log.WriteDebug("[make-coe] Waiting until cluster (%s) is deleted, currently in %s", cluster.GetName(), cluster.GetStatus())
 		time.Sleep(pollingInterval)
 	}
 }

@@ -15,23 +15,23 @@ type ClusterService interface {
 	// ListClusters retrieves all clusters
 	ListClusters() ([]Cluster, error)
 
-	// GetCluster retrieves a cluster
-	GetCluster(name string) (Cluster, error)
+	// GetCluster retrieves a cluster by its id or name (if unique)
+	GetCluster(token string) (Cluster, error)
 
-	// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster
-	GetClusterCredentials(name string) (*libcarina.CredentialsBundle, error)
+	// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster by its id or name (if unique)
+	GetClusterCredentials(token string) (*libcarina.CredentialsBundle, error)
 
-	// RebuildCluster destroys and recreates the cluster
-	RebuildCluster(name string) (Cluster, error)
+	// RebuildCluster destroys and recreates the cluster by its id or name (if unique)
+	RebuildCluster(token string) (Cluster, error)
 
-	// DeleteCluster permanently deletes a cluster
-	DeleteCluster(name string) (Cluster, error)
+	// DeleteCluster permanently deletes a cluster by its id or name (if unique)
+	DeleteCluster(token string) (Cluster, error)
 
-	// GrowCluster adds nodes to a cluster
-	GrowCluster(name string, nodes int) (Cluster, error)
+	// GrowCluster adds nodes to a cluster by its id or name (if unique)
+	GrowCluster(token string, nodes int) (Cluster, error)
 
-	// SetAutoScale enables or disables autoscaling on a cluster
-	SetAutoScale(name string, value bool) (Cluster, error)
+	// SetAutoScale enables or disables autoscaling on a cluster by its id or name (if unique)
+	SetAutoScale(token string, value bool) (Cluster, error)
 
 	// WaitUntilClusterIsActive polls the cluster status until either an active or error state is hit
 	WaitUntilClusterIsActive(cluster Cluster) (Cluster, error)
