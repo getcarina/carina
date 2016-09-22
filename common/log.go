@@ -38,7 +38,9 @@ func (log *consoleLogger) SetSilent() {
 
 // Dump does a deep debug dump of a variable
 func (log *consoleLogger) Dump(a ...interface{}) {
-	log.Debugln(a)
+	dumpper := getDumpper()
+	dump := dumpper.Sdump(a...)
+	log.Debug(dump)
 }
 
 // WriteDebug prints debug information to stdout
@@ -61,8 +63,15 @@ func (log *consoleLogger) WriteError(format string, err error, a ...interface{})
 	log.Errorf(format, a...)
 
 	if err != nil {
-		dumpper := spew.ConfigState{ContinueOnMethod: true}
-		dump := dumpper.Sprintln(err)
+		dumpper := getDumpper()
+		dump := dumpper.Sdump(err)
 		log.Error(dump)
+	}
+}
+func getDumpper() spew.ConfigState {
+	return spew.ConfigState{
+		ContinueOnMethod: true,
+		Indent:           "  ",
+		MaxDepth:         2,
 	}
 }

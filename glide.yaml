@@ -30,3 +30,4 @@ import:
   version: ^0.7.0
 - package: gopkg.in/alecthomas/kingpin.v2
   version: ^2.2.2
+- package: github.com/spf13/cobra
