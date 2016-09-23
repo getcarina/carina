@@ -27,8 +27,10 @@ func getCredentialScriptPath(basepath string, shell string) (string, error) {
 	switch shell {
 	case "fish":
 		return pathPrefix + ".fish", nil
-	default:
+	case "bash":
 		return pathPrefix + ".env", nil
+	default:
+		return "", fmt.Errorf("Invalid shell specified: %s", shell)
 	}
 }
 
