@@ -28,6 +28,17 @@ func Write(format string, a ...interface{}) {
 	fmt.Printf(format, a...)
 }
 
+// WriteTable prints rows of tabular data to the console
+func WriteTable(fields [][]string) {
+	output := new(tabwriter.Writer)
+	output.Init(os.Stdout, 0, 8, 1, '\t', 0)
+
+	for _, row := range fields {
+		writeInColumns(output, row)
+	}
+	output.Flush()
+}
+
 // WriteRow prints a row of tabular data to the console
 func WriteRow(fields []string) {
 	output := new(tabwriter.Writer)

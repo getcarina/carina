@@ -28,8 +28,10 @@ func getCredentialScriptPath(basepath string, shell string) (string, error) {
 		return pathPrefix + ".ps1", nil
 	case "cmd":
 		return pathPrefix + ".cmd", nil
-	default: // Windows Bash
+	case "bash":
 		return pathPrefix + ".env", nil
+	default:
+		return "", fmt.Errorf("Invalid shell specified: %s", shell)
 	}
 }
 
