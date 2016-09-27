@@ -2,6 +2,7 @@ package version
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
@@ -71,4 +72,9 @@ func (s *SemVer) Greater(s2 *SemVer) bool {
 	}
 
 	return s.Major > s2.Major
+}
+
+// String returns the string representation of the semver
+func (s *SemVer) String() string {
+	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
 }
