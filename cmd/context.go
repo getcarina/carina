@@ -11,6 +11,7 @@ import (
 	"github.com/getcarina/carina/magnum"
 	"github.com/getcarina/carina/make-coe"
 	"github.com/getcarina/carina/makeswarm"
+	"github.com/spf13/viper"
 )
 
 // CarinaUserNameEnvVar is the Carina username environment variable (1st)
@@ -29,7 +30,6 @@ const CarinaAPIKeyEnvVar = "CARINA_APIKEY"
 const RackspaceAPIKeyEnvVar = "RS_API_KEY"
 
 // OpenStackPasswordEnvVar is OpenStack password environment variable
-// When set, this instructs the cli to communicate with Carina (private cloud) instead of the default Carina (public cloud)
 const OpenStackPasswordEnvVar = "OS_PASSWORD"
 
 // OpenStackAuthURLEnvVar is the OpenStack Identity URL (v2 and v3 supported)
@@ -62,6 +62,7 @@ type context struct {
 	Silent       bool
 
 	// Account Flags
+	Profile      string
 	CloudType    string
 	Username     string
 	APIKey       string
@@ -108,14 +109,76 @@ func (cxt *context) initialize() error {
 		common.Log.SetDebug()
 	}
 
-	// Verify that we have enough information to identity the account: apikey or password
+	ok, err := cxt.loadProfile()
+	if err != nil {
+		return err
+	}
+
+	// Build-up to the authentication information from flags and environment variables
+	if !ok {
+		// Detect the cloud provider
+		err := cxt.detectCloud()
+		if err != nil {
+			return err
+		}
+
+		// Initialize the remaining flags based on the cloud provider
+		switch cxt.CloudType {
+		case client.CloudMakeSwarm, client.CloudMakeCOE:
+			err = cxt.initCarinaFlags()
+		case client.CloudMagnum:
+			err = cxt.initMagnumFlags()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	cxt.Client = client.NewClient(cxt.CacheEnabled)
+	cxt.Account = cxt.buildAccount()
+
+	return nil
+}
+
+func (cxt *context) loadProfile() (ok bool, err error) {
+	configFile := viper.ConfigFileUsed()
+	if configFile == "" {
+		return false, nil
+	}
+
+	if cxt.Profile == "" {
+		return false, nil
+	}
+
+	profile := viper.GetStringMapString(cxt.Profile)
+	if profile == nil {
+		return false, fmt.Errorf("Profile, %s, not found in %s", cxt.Profile, viper.ConfigFileUsed())
+	}
+	common.Log.WriteDebug("Reading %s profile from %s", cxt.Profile, viper.ConfigFileUsed())
+
+	cxt.CloudType = profile["cloud"]
+	switch cxt.CloudType {
+	case client.CloudMakeSwarm, client.CloudMakeCOE:
+		err = cxt.loadCarinaProfile(profile)
+	case client.CloudMagnum:
+		err = cxt.loadMagnumProfile(profile)
+	case "":
+		err = fmt.Errorf("Invalid profile: cloud is missing")
+	default:
+		err = fmt.Errorf("Invalid profile: %s is not a valid cloud type", cxt.CloudType)
+	}
+
+	return err == nil, err
+}
+
+func (cxt *context) detectCloud() error {
+	// Verify that we have enough information: apikey or password
 	apikeyFound := cxt.APIKey != "" || os.Getenv(CarinaAPIKeyEnvVar) != "" || os.Getenv(RackspaceAPIKeyEnvVar) != ""
 	passwordFound := cxt.Password != "" || os.Getenv(OpenStackPasswordEnvVar) != ""
 	if !apikeyFound && !passwordFound {
-		return errors.New("No credentials provided. An --apikey or --password must either be specified or the equivalent environment variables must be set. Run carina --help for more information.")
+		return errors.New("No credentials provided. A --profile, --apikey or --password must be specified or the equivalent environment variables set. Run carina --help for more information.")
 	}
 
-	// Detect the cloud provider
 	switch cxt.CloudType {
 	case client.CloudMakeCOE, client.CloudMagnum, client.CloudMakeSwarm:
 		break
@@ -132,24 +195,10 @@ func (cxt *context) initialize() error {
 		return fmt.Errorf("Invalid --cloud value: %s. Allowed values are public, private and make-swarm", cxt.CloudType)
 	}
 
-	// Initialize the remaining flags based on the cloud provider
-	var err error
-	switch cxt.CloudType {
-	case client.CloudMakeSwarm, client.CloudMakeCOE:
-		err = initCarinaFlags(cxt)
-	case client.CloudMagnum:
-		err = initMagnumFlags(cxt)
-	}
-	if err != nil {
-		return err
-	}
-
-	cxt.Client = client.NewClient(cxt.CacheEnabled)
-	cxt.Account = cxt.buildAccount()
 	return nil
 }
 
-func initCarinaFlags(cxt *context) error {
+func (cxt *context) initCarinaFlags() error {
 	// auth-endpoint = --auth-endpoint -> rackspace identity endpoint
 	if cxt.AuthEndpoint == "" {
 		common.Log.WriteDebug("AuthEndpoint: default")
@@ -204,7 +253,7 @@ func initCarinaFlags(cxt *context) error {
 	return nil
 }
 
-func initMagnumFlags(cxt *context) error {
+func (cxt *context) initMagnumFlags() error {
 	// auth-endpoint = --auth-endpoint -> OS_AUTH_URL
 	if cxt.AuthEndpoint == "" {
 		cxt.AuthEndpoint = os.Getenv(OpenStackAuthURLEnvVar)
@@ -289,4 +338,88 @@ func initMagnumFlags(cxt *context) error {
 	}
 
 	return nil
+}
+
+func (cxt *context) loadCarinaProfile(profile map[string]string) (err error) {
+	cxt.AuthEndpoint, err = cxt.getProfileSetting(profile, "auth-endpoint", "", false)
+	if err != nil {
+		return err
+	}
+
+	cxt.Endpoint, err = cxt.getProfileSetting(profile, "endpoint", "", false)
+	if err != nil {
+		return err
+	}
+
+	cxt.Username, err = cxt.getProfileSetting(profile, "username", "", true)
+	if err != nil {
+		return err
+	}
+
+	cxt.APIKey, err = cxt.getProfileSetting(profile, "apikey", "", true)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cxt *context) loadMagnumProfile(profile map[string]string) (err error) {
+	cxt.AuthEndpoint, err = cxt.getProfileSetting(profile, "auth-endpoint", "", true)
+	if err != nil {
+		return err
+	}
+
+	cxt.Endpoint, err = cxt.getProfileSetting(profile, "endpoint", "", false)
+	if err != nil {
+		return err
+	}
+
+	cxt.Username, err = cxt.getProfileSetting(profile, "username", "", true)
+	if err != nil {
+		return err
+	}
+
+	cxt.Password, err = cxt.getProfileSetting(profile, "password", "", true)
+	if err != nil {
+		return err
+	}
+
+	cxt.Project, err = cxt.getProfileSetting(profile, "project", "", true)
+	if err != nil {
+		return err
+	}
+
+	cxt.Domain, err = cxt.getProfileSetting(profile, "domain", "default", true)
+	if err != nil {
+		return err
+	}
+
+	cxt.Region, err = cxt.getProfileSetting(profile, "region", "RegionOne", true)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cxt *context) getProfileSetting(profile map[string]string, key string, defaultValue string, required bool) (string, error) {
+	envVar := profile[key+"-var"]
+	value := profile[key]
+
+	if envVar != "" {
+		value = os.Getenv(envVar)
+		common.Log.WriteSetting(key, envVar, value)
+	} else if value != "" {
+		common.Log.WriteSetting(key, "profile", value)
+	} else if defaultValue != "" {
+		value = defaultValue
+		common.Log.WriteSetting(key, "using default value", value)
+	}
+
+	if required && value == "" {
+		return "", fmt.Errorf("Invalid Profile: %s is missing", key)
+	}
+
+	return value, nil
 }

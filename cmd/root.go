@@ -45,13 +45,36 @@ func init() {
 The user credentials are used to automatically detect the cloud with which the cli should communicate. First, it looks for the Rackspace Public Cloud environment variables, such as CARINA_USERNAME/CARINA_APIKEY or RS_USERNAME/RS_API_KEY. Then it looks for Rackspace Private Cloud environment variables, such as OS_USERNAME/OS_PASSWORD. Use --cloud flag to explicitly select a cloud.
 
 In the following example, the detected cloud is 'private' because --password is specified:
-    carina --username bob --password --project admin --auth-endpoint http://example.com/auth/v3 ilovepuppies ls
+    carina --username bob --password ilovepuppies --project admin --auth-endpoint http://example.com/auth/v3 ls
 
 In the following example, the detected cloud is 'public' because --apikey is specified:
     carina --username bob --apikey abc123 ls
 
 In the following example, 'private' is used, even though the Rackspace Public Cloud environment variables are present, because the --cloud is specified:
     carina --cloud private ls
+
+Profiles:
+Credentials can be saved under a profile name in CARINA_HOME/config then used with the --profile flag. If --profile is not specified, and the config file contains a profile named 'default', it will be used when no other credential flags are provided.
+
+Below is a sample config file:
+
+    [default]
+    cloud=public
+    username=bob
+    apikey=abc123
+
+    [dev]
+    cloud=private
+    username=bob
+    password-var=DEV_OS_PASSWORD
+    project=admin
+    auth-endpoint=http://example.com/auth/v3
+
+In the following example, the default profile is used to authenticate because no other credentials were provided:
+    carina ls
+
+In the following example, the dev profile is used to authenticate:
+    carina --profile dev ls
 
 See https://github.com/getcarina/carina for additional documentation, FAQ and examples
 `
@@ -66,16 +89,16 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
     current setting: %s
 `, baseDir)
 	rootCmd.SetUsageTemplate(fmt.Sprintf("%s\n%s\n\n%s", rootCmd.UsageTemplate(), envHelp, authHelp))
-
 	cobra.OnInitialize(initConfig)
 
 	// Global configuration flags
-	//rootCmd.PersistentFlags().StringVar(&cxt.ConfigFile, "config", "", "config file (default is $HOME/.carina/config)")
+	rootCmd.PersistentFlags().StringVar(&cxt.ConfigFile, "config", "", "config file (default is CARINA_HOME/config.toml)")
 	rootCmd.PersistentFlags().BoolVar(&cxt.CacheEnabled, "cache", true, "Cache API tokens and update times")
 	rootCmd.PersistentFlags().BoolVar(&cxt.Debug, "debug", false, "Print additional debug messages to stdout")
 	rootCmd.PersistentFlags().BoolVar(&cxt.Silent, "silent", false, "Do not print to stdout")
 
 	// Account flags
+	rootCmd.PersistentFlags().StringVar(&cxt.Profile, "profile", "", "Use saved credentials for the specified profile")
 	rootCmd.PersistentFlags().StringVar(&cxt.Username, "username", "", "Username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]")
 	rootCmd.PersistentFlags().StringVar(&cxt.APIKey, "api-key", "", "Public Cloud API Key [CARINA_APIKEY/RS_API_KEY]")
 	rootCmd.PersistentFlags().StringVar(&cxt.Password, "password", "", "Private Cloud Password [OS_PASSWORD]")
@@ -96,17 +119,22 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cxt.ConfigFile != "" { // enable ability to specify config file via flag
+	if cxt.ConfigFile != "" {
+		common.Log.WriteDebug("CONFIG: --config %s", cxt.ConfigFile)
 		viper.SetConfigFile(cxt.ConfigFile)
-	}
 
-	viper.SetConfigName("carina")        // name of config file (without extension)
-	viper.AddConfigPath("$HOME/.carina") // adding home directory as first search path
-	viper.AutomaticEnv()                 // read in environment variables that match
+		err := viper.ReadInConfig()
+		if err != nil {
+			common.Log.WriteError("Unable to read configuration file: %s", err, cxt.ConfigFile)
+		}
+	} else {
+		viper.SetConfigName("config")
+		viper.AddConfigPath("$HOME/.carina")
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		err := viper.ReadInConfig()
+		if err != nil {
+			common.Log.WriteDebug("CONFIG: %s", cxt.ConfigFile)
+		}
 	}
 }
 

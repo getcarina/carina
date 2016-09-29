@@ -3,23 +3,22 @@ package common
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/davecgh/go-spew/spew"
 )
 
 // Log prints formatted, colored logs to the console
-var Log *consoleLogger
-
-func init() {
-	Log = &consoleLogger{Logger: &logrus.Logger{
+var Log = &consoleLogger{
+	Logger: &logrus.Logger{
 		Out: os.Stdout,
 		Formatter: &logrus.TextFormatter{
 			DisableTimestamp: true,
 		},
 		Hooks: make(logrus.LevelHooks),
 		Level: logrus.WarnLevel,
-	}}
+	},
 }
 
 type consoleLogger struct {
@@ -41,6 +40,15 @@ func (log *consoleLogger) Dump(a ...interface{}) {
 	dumpper := getDumpper()
 	dump := dumpper.Sdump(a...)
 	log.Debug(dump)
+}
+
+func (log *consoleLogger) WriteSetting(setting string, source string, value string) {
+	s := strings.ToLower(setting)
+	if strings.Contains(s, "password") || strings.Contains(s, "key") {
+		value = "***"
+	}
+
+	log.WriteDebug("%s: %s (%s)", setting, source, value)
 }
 
 // WriteDebug prints debug information to stdout
@@ -68,6 +76,7 @@ func (log *consoleLogger) WriteError(format string, err error, a ...interface{})
 		log.Error(dump)
 	}
 }
+
 func getDumpper() spew.ConfigState {
 	return spew.ConfigState{
 		ContinueOnMethod: true,
