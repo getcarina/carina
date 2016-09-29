@@ -62,16 +62,17 @@ type context struct {
 	Silent       bool
 
 	// Account Flags
-	Profile      string
-	CloudType    string
-	Username     string
-	APIKey       string
-	Password     string
-	Project      string
-	Domain       string
-	Region       string
-	AuthEndpoint string
-	Endpoint     string
+	Profile         string
+	ProfileDisabled bool
+	CloudType       string
+	Username        string
+	APIKey          string
+	Password        string
+	Project         string
+	Domain          string
+	Region          string
+	AuthEndpoint    string
+	Endpoint        string
 }
 
 func (cxt *context) buildAccount() client.Account {
@@ -141,20 +142,27 @@ func (cxt *context) initialize() error {
 }
 
 func (cxt *context) loadProfile() (ok bool, err error) {
+	if cxt.ProfileDisabled {
+		return false, nil
+	}
+
+	// Skip, no config file found
 	configFile := viper.ConfigFileUsed()
 	if configFile == "" {
 		return false, nil
 	}
 
-	if cxt.Profile == "" {
-		return false, nil
+	// Try to use the default profile
+	if cxt.Profile == "" && viper.InConfig("default") {
+		cxt.Profile = "default"
+		return cxt.loadProfile()
 	}
 
 	profile := viper.GetStringMapString(cxt.Profile)
 	if profile == nil {
-		return false, fmt.Errorf("Profile, %s, not found in %s", cxt.Profile, viper.ConfigFileUsed())
+		return false, fmt.Errorf("Profile, %s, not found in %s", cxt.Profile, configFile)
 	}
-	common.Log.WriteDebug("Reading %s profile from %s", cxt.Profile, viper.ConfigFileUsed())
+	common.Log.WriteDebug("Reading %s profile from %s", cxt.Profile, configFile)
 
 	cxt.CloudType = profile["cloud"]
 	switch cxt.CloudType {
@@ -183,7 +191,7 @@ func (cxt *context) detectCloud() error {
 	case client.CloudMakeCOE, client.CloudMagnum, client.CloudMakeSwarm:
 		break
 	case "":
-		common.Log.WriteDebug("No cloud type specified, detecting with the provided credentials. Use --cloud to skip detection.")
+		common.Log.WriteDebug("No cloud type specified, detecting with the provided credentials. Use --cloud or --profile to skip detection.")
 		if apikeyFound {
 			cxt.CloudType = client.CloudMakeCOE
 			common.Log.WriteDebug("Cloud: public")

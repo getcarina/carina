@@ -99,6 +99,7 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 
 	// Account flags
 	rootCmd.PersistentFlags().StringVar(&cxt.Profile, "profile", "", "Use saved credentials for the specified profile")
+	rootCmd.PersistentFlags().BoolVar(&cxt.ProfileDisabled, "no-profile", false, "Ignore profiles and use flags and/or environment variables only")
 	rootCmd.PersistentFlags().StringVar(&cxt.Username, "username", "", "Username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]")
 	rootCmd.PersistentFlags().StringVar(&cxt.APIKey, "api-key", "", "Public Cloud API Key [CARINA_APIKEY/RS_API_KEY]")
 	rootCmd.PersistentFlags().StringVar(&cxt.Password, "password", "", "Private Cloud Password [OS_PASSWORD]")
