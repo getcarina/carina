@@ -36,7 +36,7 @@ func getCredentialScriptPath(basepath string, shell string) (string, error) {
 
 func sourceHelpString(credentialFile string, clusterName string, shell string) string {
 	s := fmt.Sprintf("source %s\n", credentialFile)
-	s += fmt.Sprintf("# Run the command below to get your Docker environment variables set:\n")
+	s += fmt.Sprintf("# Run the command below to load environment variables for docker or kubectl:\n")
 	s += fmt.Sprintf("# eval $(carina env %s)", clusterName)
 	return s
 }
