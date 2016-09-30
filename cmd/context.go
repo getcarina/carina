@@ -398,12 +398,12 @@ func (cxt *context) loadMagnumProfile(profile map[string]string) (err error) {
 		return err
 	}
 
-	cxt.Domain, err = cxt.getProfileSetting(profile, "domain", "default", true)
+	cxt.Domain, err = cxt.getProfileSetting(profile, "domain", "default", false)
 	if err != nil {
 		return err
 	}
 
-	cxt.Region, err = cxt.getProfileSetting(profile, "region", "RegionOne", true)
+	cxt.Region, err = cxt.getProfileSetting(profile, "region", "RegionOne", false)
 	if err != nil {
 		return err
 	}
