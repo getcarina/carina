@@ -2,7 +2,7 @@
 # Define profiles in this file to quickly switch
 # between multiple accounts.
 #
-# Custom environment variables can be used by appending `-var`
+# Environment variables can be used by appending `-var`
 # to the setting name, such as apikey-var or password-var.
 #
 # Example Usage:
@@ -18,11 +18,15 @@
 # api-key="abc123"
 #
 # The following profile retrieves its credentials from environment variables
-# [dev]
-# cloud="private"
-# endpoint="http://10.0.0.3:8080"
-# username-var="DEV_USERNAME"
-# password-var="DEV_PASSWORD"
+# defined in your openrc
+#[dev]
+#cloud="private"
+#username-var="OS_USERNAME"
+#password-var="OS_PASSWORD"
+#auth-endpoint-var="OS_AUTH_URL"
+#tenant-var="OS_TENANT_NAME"
+#project-var="OS_PROJECT_NAME"
+#domain-var="OS_PROJECT_DOMAIN_NAME"
 #
 # The following profile is used when no --profile is specified
 # The default profile takes precedence over auto-discovered environment variables
