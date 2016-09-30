@@ -44,6 +44,12 @@ const OpenStackEndpointEnvVar = "OS_ENDPOINT"
 // OpenStackProjectEnvVar is the OpenStack project name, required for identity v3
 const OpenStackProjectEnvVar = "OS_PROJECT_NAME"
 
+// OpenStackProjectDomainEnvVar is the OpenStack _project_ domain name, optional for identity v3
+const OpenStackProjectDomainEnvVar = "OS_PROJECT_DOMAIN_NAME"
+
+// OpenStackDomainEnvVar is the OpenStack _user_ domain name, optional for identity v3
+const OpenStackUserDomainEnvVar = "OS_USER_DOMAIN_NAME"
+
 // OpenStackDomainEnvVar is the OpenStack domain name, optional for identity v3
 const OpenStackDomainEnvVar = "OS_DOMAIN_NAME"
 
@@ -319,14 +325,24 @@ func (cxt *context) initMagnumFlags() error {
 		common.Log.WriteDebug("Project: --project")
 	}
 
-	// domain = --domain -> OS_DOMAIN_NAME -> "default"
+	// domain = --domain -> OS_PROJECT_DOMAIN_NAME -> OS_USER_DOMAIN_NAME -> OS_DOMAIN_NAME -> "default"
 	if cxt.Domain == "" {
-		cxt.Domain = os.Getenv(OpenStackDomainEnvVar)
+		domainVar := OpenStackProjectDomainEnvVar
+		cxt.Domain = os.Getenv(OpenStackProjectDomainEnvVar)
+		if cxt.Domain == "" {
+			domainVar = OpenStackUserDomainEnvVar
+			cxt.Domain = os.Getenv(OpenStackUserDomainEnvVar)
+		}
+		if cxt.Domain == "" {
+			domainVar = OpenStackDomainEnvVar
+			cxt.Domain = os.Getenv(OpenStackDomainEnvVar)
+		}
+
 		if cxt.Domain == "" {
 			cxt.Domain = "default"
-			common.Log.WriteDebug("Domain: default. Either use --domain or set %s.", OpenStackDomainEnvVar)
+			common.Log.WriteDebug("Domain: default. Either use --domain or set %s/%s/%s.", OpenStackProjectDomainEnvVar, OpenStackUserDomainEnvVar, OpenStackDomainEnvVar)
 		} else {
-			common.Log.WriteDebug("Domain: %s", OpenStackDomainEnvVar)
+			common.Log.WriteDebug("Domain: %s", domainVar)
 		}
 	} else {
 		common.Log.WriteDebug("Domain: --domain")
