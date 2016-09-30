@@ -59,18 +59,20 @@ Credentials can be saved under a profile name in CARINA_HOME/config then used wi
 Below is a sample config file:
 
     [default]
-    cloud=public
-    username=bob
-    apikey=abc123
+    cloud="public"
+    username="alicia"
+    apikey="abc123"
 
     [dev]
-    cloud=private
-    username=bob
-    password-var=DEV_OS_PASSWORD
-    project=admin
-    auth-endpoint=http://example.com/auth/v3
+    cloud="private"
+    username-var="OS_USERNAME"
+    password-var="OS_PASSWORD"
+    auth-endpoint-var="OS_AUTH_URL"
+    tenant-var="OS_TENANT_NAME"
+    project-var="OS_PROJECT_NAME"
+    domain-var="OS_PROJECT_DOMAIN_NAME"
 
-In the following example, the default profile is used to authenticate because no other credentials were provided:
+In the following example, the default profile is used to authenticate because no other credentials were explicitly provided:
     carina ls
 
 In the following example, the dev profile is used to authenticate:
