@@ -26,16 +26,17 @@ type HTTPLog struct {
 // NewHTTPClient return a custom HTTP client that allows for logging relevant
 // information before and after the HTTP request.
 func NewHTTPClient() *http.Client {
+	timeout := 10 * time.Second
 	return &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: timeout,
 		Transport: &HTTPLog{
 			rt: &http.Transport{
 				Proxy:             http.ProxyFromEnvironment,
 				DisableKeepAlives: true, // KeepAlive was causing "connection reset by peer" errors when issuing multiple requests
 				Dial: (&net.Dialer{
-					Timeout: 5 * time.Second,
+					Timeout: timeout,
 				}).Dial,
-				TLSHandshakeTimeout:   5 * time.Second,
+				TLSHandshakeTimeout:   timeout,
 				ExpectContinueTimeout: 1 * time.Second,
 			},
 			Logger: Log.Logger,
