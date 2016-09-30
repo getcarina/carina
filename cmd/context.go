@@ -47,7 +47,7 @@ const OpenStackProjectEnvVar = "OS_PROJECT_NAME"
 // OpenStackProjectDomainEnvVar is the OpenStack _project_ domain name, optional for identity v3
 const OpenStackProjectDomainEnvVar = "OS_PROJECT_DOMAIN_NAME"
 
-// OpenStackDomainEnvVar is the OpenStack _user_ domain name, optional for identity v3
+// OpenStackUserDomainEnvVar is the OpenStack _user_ domain name, optional for identity v3
 const OpenStackUserDomainEnvVar = "OS_USER_DOMAIN_NAME"
 
 // OpenStackDomainEnvVar is the OpenStack domain name, optional for identity v3
@@ -79,6 +79,29 @@ type context struct {
 	Region          string
 	AuthEndpoint    string
 	Endpoint        string
+}
+
+func (cxt *context) shouldTryProfile() bool {
+	if cxt.ProfileDisabled {
+		return false
+	}
+
+	if cxt.userSpecifiedAuthFlagsExist() {
+		return false
+	}
+
+	configFile := viper.ConfigFileUsed()
+	return configFile != ""
+}
+
+func (cxt *context) userSpecifiedAuthFlagsExist() bool {
+	return cxt.CloudType != "" ||
+		cxt.Username != "" ||
+		cxt.Password != "" ||
+		cxt.APIKey != "" ||
+		cxt.Domain != "" ||
+		cxt.Project != "" ||
+		cxt.Region != ""
 }
 
 func (cxt *context) buildAccount() client.Account {
@@ -116,13 +139,17 @@ func (cxt *context) initialize() error {
 		common.Log.SetDebug()
 	}
 
-	ok, err := cxt.loadProfile()
-	if err != nil {
-		return err
+	var profileLoaded bool
+	var err error
+	if cxt.shouldTryProfile() {
+		profileLoaded, err = cxt.loadProfile()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Build-up to the authentication information from flags and environment variables
-	if !ok {
+	if !profileLoaded {
 		// Detect the cloud provider
 		err := cxt.detectCloud()
 		if err != nil {
@@ -148,15 +175,7 @@ func (cxt *context) initialize() error {
 }
 
 func (cxt *context) loadProfile() (ok bool, err error) {
-	if cxt.ProfileDisabled {
-		return false, nil
-	}
-
-	// Skip, no config file found
 	configFile := viper.ConfigFileUsed()
-	if configFile == "" {
-		return false, nil
-	}
 
 	// Try to use the default profile
 	if cxt.Profile == "" && viper.InConfig("default") {
