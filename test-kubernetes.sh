@@ -10,7 +10,7 @@ fi
 CLOUD=$1
 
 echo -e "\n1. Checking that the binary is present and runs successfully..."
-./carina --version
+./carina version
 
 echo -e "\n2. Creating a kubernetes cluster named ci on the $CLOUD cloud..."
 ./carina --cloud=$CLOUD create --wait --template kubernetes-dev ci
