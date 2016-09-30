@@ -1,9 +1,8 @@
+# !!!! PRIVATE RELEASE !!!!
+See the [GitHub releases](https://github.com/rackerlabs/carina-cli/releases) for the private binaries. You can't use curl easily to get them because the repo is private.
+
 # Carina™ client
-
-[![Travis Build Status](https://travis-ci.org/getcarina/carina.svg)](https://travis-ci.org/getcarina/carina)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/8qjckvi0cvfgf1qr?svg=true)](https://ci.appveyor.com/project/rgbkrk/carina)
-
-Command line client for [Carina by Rackspace](https://getcarina.com), a container service that's currently in Beta.
+Create and interact with clusters on both Rackspace Public and Private Cloud.
 
 ![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
 
@@ -11,128 +10,149 @@ Command line client for [Carina by Rackspace](https://getcarina.com), a containe
 
 To download and install the `carina` CLI, use the appropriate instructions for your operating system.
 
-#### OS X with Homebrew
+#### Linux and OS X
 
-If you're using [Homebrew](http://brew.sh/), run the following commands:
-
-```bash
-$ brew update
-$ brew install carina
-```
-
-#### Linux and OS X (without Homebrew)
-
-Downloads for the latest release of `carina` are available in [releases](https://github.com/getcarina/carina/releases/latest) for 64-bit Linux and OS X. You can use `curl` to download the binary, move it to a directory on your `$PATH`, and make it executable:
+Downloads for the latest release of `carina` are available in [releases](https://github.com/rackerlabs/carina-cli/releases) for 64-bit Linux and OS X. Manually download the zip file, unzip, grab the right binary for your OS, move it to a directory on your `$PATH`, and make it executable:
 
 ```bash
-$ curl -L https://download.getcarina.com/carina/latest/$(uname -s)/$(uname -m)/carina -o carina
-$ mv carina ~/bin/carina
+$ mv v2.0.0-alpha.3/Linux/x86_64/carina ~/bin/carina
 $ chmod u+x ~/bin/carina
 ```
 
-#### Windows with Chocolatey
+#### Windows
 
-If you are using [Chocolatey](http://chocolatey.org/), run the following command:
+Downloads for the latest release of `carina` are available in [releases](https://github.com/rackerlabs/carina-cli/releases). Manually download the zip file, unzip, and move the carina to a directory on your `$PATH`:
 
-```powershell
-> choco install carina
+```plain
+> mv v2.0.0-alpha.3\Windows\x86_64\carina.exe C:\some\place\on\the\windows\path\carina.exe
 ```
 
-#### Windows (without Chocolatey)
+## Authentication
+The user credentials are used to automatically detect the cloud with which the cli should communicate. First, it looks for the Rackspace Public Cloud environment variables, such as CARINA_USERNAME/CARINA_APIKEY or RS_USERNAME/RS_API_KEY. Then it looks for Rackspace Private Cloud environment variables, such as OS_USERNAME/OS_PASSWORD. Use --cloud flag to explicitly select a cloud.
 
-Downloads for the latest release of `carina` are available in [releases](https://github.com/getcarina/carina/releases/latest). For quick installation, open PowerShell and run the following command:
+In the following example, the detected cloud is 'private' because --password is specified:
+```carina --username bob --password ilovepuppies --project admin --auth-endpoint http://example.com/auth/v3 ls```
 
-```powershell
-> wget 'https://download.getcarina.com/carina/latest/Windows/x86_64/carina.exe' -OutFile carina.exe
+In the following example, the detected cloud is 'public' because --apikey is specified:
+```carina --username bob --apikey abc123 ls```
+
+In the following example, 'private' is used, even though the Rackspace Public Cloud environment variables may be present, because the --cloud is specified:
+```carina --cloud private ls```
+
+### Profiles
+Credentials can be saved under a profile name in ~/.carina/config then used with the --profile flag. If --profile is not specified, and the config file contains a profile named 'default', it will be used when no other credential flags are provided. Use `--no-profile` to disable profiles.
+
+The configuration file is in [TOML](https://github.com/toml-lang/toml) syntax.
+
+Below is a sample config file:
+
+```toml
+# The following profile stores its credentials in plain text.
+[prod]
+cloud="public"
+username="alicia"
+api-key="abc123"
+
+# The following profile retrieves its credentials from environment variables defined in your openrc file.
+[dev]
+cloud="private"
+username-var="OS_USERNAME"
+password-var="OS_PASSWORD"
+auth-endpoint-var="OS_AUTH_URL"
+tenant-var="OS_TENANT_NAME"
+project-var="OS_PROJECT_NAME"
+domain-var="OS_PROJECT_DOMAIN_NAME"
+
+# The following profile is used when no --profile is specified.
+# The default profile takes precedence over auto-discovered environment variables
+[default]
+cloud="public"
+username-var="RS_USERNAME"
+apikey-var="RS_API_KEY"
 ```
 
-Be sure to move `carina.exe` to a directory on your `%PATH%`.
+In the following example, the default profile is used to authenticate because no other credentials were explicitly provided:
+```carina ls```
+
+In the following example, the dev profile is used to authenticate:
+```carina --profile dev ls```
 
 ## Getting started
 
 ```
-$ export CARINA_USERNAME=trythingsout
-$ export CARINA_APIKEY=$RACKSPACE_APIKEY
 $ carina list
-ClusterName Flavor        Nodes AutoScale Status
-mycluster   container1-4G 1     false     active
-$ carina create newone
-newone      container1-4G 1     false     new
-$ carina create another --wait --autoscale
-another     container1-4G 1     true      active
-$ carina list
-ClusterName Flavor        Nodes AutoScale Status
-mycluster   container1-4G 1     false     active
-newone      container1-4G 1     false     active
-another     container1-4G 1     true      active
-$ carina credentials another
-#
-# Credentials written to "/Users/rgbkrk/.carina/clusters/trythingsout/another"
-#
-source "/Users/rgbkrk/.carina/clusters/trythingsout/another/docker.env"
-# Run the command above to get your Docker environment variables set
+ID		Name		Status	Type		Nodes
+abc123	mycluster	active	kubernetes	1
 
-$ eval "$( carina credentials another )"
-$ docker ps
-CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
-$ docker run -d --name whoa -p 8080:8080 whoa/tiny
-0e857826144194fd089310279915b1a052de9fb878d6d4f61420a0c64ee06c53
-$ curl $( docker port whoa 8080 )
-👊  I know kung fu  👊
+$ carina create --template swarm-dev newone
+ID		Name		Status	Type		Nodes
+def456	newone		active	swarm		1
+
+$ carina create --template kubernetes-dev --nodes 3 --wait another
+ID		Name		Status	Type		Nodes
+geh978	another		active	kubernetes	3
+
+$ carina list
+ID		Name		Status	Type		Nodes
+abc123	mycluster	active	kubernetes	1
+def456	newone		active	swarm		1
+geh978	another		active	kubernetes	3
+
+$ carina credentials mycluster
+#
+# Credentials written to "~/.carina/clusters/public-alicia/mycluster"
+# To see how to connect to your cluster, run: carina env mycluster
+#
+
+$ eval "$( carina env mycluster )"
+$ kubectl cluster-info
+
+$ eval "$( carina env newone )"
+$ docker info
 ```
 
 
 ## Usage
 
 ```
-usage: carina [<flags>] <command> [<args> ...]
+Create and interact with clusters on both Rackspace Public and Private Cloud
 
-command line interface to launch and work with Carina clusters
+Usage:
+  carina [command]
+
+Available Commands:
+  create          Create a cluster
+  credentials     Download a cluster's credentials
+  delete          Delete a cluster
+  env             Show the command to load a cluster's credentials
+  get             Show information about a cluster
+  grow            Add nodes to a cluster
+  list            List clusters
+  quotas          Show the user's quotas
+  rebuild         Rebuild a cluster
+  version         Show the application version
 
 Flags:
-  --help               Show context-sensitive help (also try --help-long and --help-man).
-  --version            Show application version.
-  --username=USERNAME  Carina username - can also set env var CARINA_USERNAME
-  --api-key=CARINA_APIKEY
-                       Carina API Key - can also set env var CARINA_APIKEY
-  --endpoint="https://app.getcarina.com"
-                       Carina API endpoint
+      --api-key string         Public Cloud API Key [CARINA_APIKEY/RS_API_KEY]
+      --auth-endpoint string   Private Cloud Authentication endpoint [OS_AUTH_URL]
+      --cache                  Cache API tokens and update times (default true)
+      --cloud string           The cloud type: public or private
+      --config string          config file (default is CARINA_HOME/config.toml)
+      --debug                  Print additional debug messages to stdout
+      --domain string          Private Cloud Domain Name [OS_DOMAIN_NAME]
+  -h, --help                   help for carina
+      --no-profile             Ignore profiles and use flags and/or environment variables only
+      --password string        Private Cloud Password [OS_PASSWORD]
+      --profile string         Use saved credentials for the specified profile
+      --project string         Private Cloud Project Name [OS_PROJECT_NAME]
+      --region string          Private Cloud Region Name [OS_REGION_NAME]
+      --silent                 Do not print to stdout
+      --username string        Username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]
 
-Commands:
-  help [<command>...]
-    Show help.
-
-  create [<flags>] <cluster-name>
-    Create a swarm cluster
-
-    --wait       wait for swarm cluster to come online (or error)
-    --nodes=1    number of nodes for the initial cluster
-    --autoscale  whether autoscale is on or off
-
-  get <cluster-name>
-    Get information about a swarm cluster
-
-  list
-    List swarm clusters
-
-  grow --nodes=NODES <cluster-name>
-    Grow a cluster by the requested number of nodes
-
-    --nodes=NODES  number of nodes to increase the cluster by
-
-  credentials [<flags>] <cluster-name>
-    download credentials
-
-    --path=<cluster-name>
-      path to write credentials out to
-
-  rebuild [<flags>] <cluster-name>
-    Rebuild a swarm cluster
-
-    --wait  wait for swarm cluster to come online (or error)
-
-  delete <cluster-name>
-    Delete a swarm cluster
+Environment Variables:
+  CARINA_HOME
+    directory that stores your cluster tokens and credentials
+    current setting: ~/.carina
 ```
 
 ## Building
@@ -141,40 +161,9 @@ The build script assumes you're running go 1.5 or later. If not, upgrade or use
 something like [gimme](https://github.com/travis-ci/gimme).
 
 ```bash
-make carina
+make
 ```
 
 This creates `carina` in the current directory (there is no `make install` currently).
 
-If you want it to build on prior releases of go, we'd need a PR to change up how
-the `Makefile` sets the `LDFLAGS` conditionally based on Go version.
-
-## Releasing
-
-### Prerequisites
-
-The release script relies on [github-release](https://github.com/aktau/github-release). Get it, configure it.
-
-This script assumes you have pulled down this repository via `go get github.com/getcarina/carina`
-and are currently working out of the `${GOPATH}/src/github.com/getcarina/carina` directory.
-
-It's also important that you have a "release" remote set up to point at the main repository.
-
-```
-git remote add release git@github.com:getcarina/carina.git
-```
-
-Make sure you're on `master` then run `release.sh` with the next tag and release name.
-
-```bash
-./release.sh v0.2.0 "Acute Aquarius"
-```
-
-How do you pick the release name?
-
-### Naming things
-
-The hardest problem in computer science is picking names. For releases, we take
-an adjective combined with the next constellation from an
-[alphabetical list of constellations](http://www.astro.wisc.edu/~dolan/constellations/constellation_list.html).
-It can be alliterative if you like.
+If you want to build without running validation or tests, use `make quick`.
