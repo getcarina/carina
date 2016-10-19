@@ -27,7 +27,7 @@ func (cluster *Cluster) GetName() string {
 
 // GetType returns the container orchestration engine used by the cluster
 func (cluster *Cluster) GetType() string {
-	return cluster.COE
+	return cluster.Type.COE
 }
 
 // GetFlavor returns the flavor of the nodes in the cluster

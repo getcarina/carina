@@ -15,8 +15,9 @@ import (
 
 // MakeCOE is an adapter between the cli and Carina (make-coe)
 type MakeCOE struct {
-	client  *libcarina.CarinaClient
-	Account *Account
+	client           *libcarina.CarinaClient
+	clusterTypeCache map[int]*libcarina.ClusterType
+	Account          *Account
 }
 
 func (carina *MakeCOE) init() error {
@@ -42,17 +43,16 @@ func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (c
 		return nil, err
 	}
 
-	coe, hostType, err := getTemplateValues(template)
+	clusterType, err := carina.lookupClusterTypeByName(template)
 	if err != nil {
 		return nil, err
 	}
 
-	common.Log.WriteDebug("[make-coe] Creating a %d-node %s cluster hosted on %s named %s", nodes, coe, hostType, name)
-	createOpts := &libcarina.Cluster{
-		Name:     name,
-		COE:      coe,
-		HostType: hostType,
-		Nodes:    nodes,
+	common.Log.WriteDebug("[make-coe] Creating a %d-node %s cluster hosted on %s named %s", nodes, clusterType.COE, clusterType.HostType, name)
+	createOpts := &libcarina.CreateClusterOpts{
+		Name:          name,
+		ClusterTypeID: clusterType.ID,
+		Nodes:         nodes,
 	}
 
 	result, err := carina.client.Create(createOpts)
@@ -63,17 +63,6 @@ func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (c
 	cluster := &Cluster{Cluster: result}
 
 	return cluster, nil
-}
-
-func getTemplateValues(template string) (coe string, hostType string, err error) {
-	switch strings.ToLower(template) {
-	case "kubernetes-dev":
-		return "kubernetes", "vm", nil
-	case "swarm-dev":
-		return "swarm", "vm", nil
-	default:
-		return "", "", fmt.Errorf("Invalid template: %s", template)
-	}
 }
 
 // GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster by its id or name (if unique)
@@ -214,4 +203,57 @@ func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 		common.Log.WriteDebug("[make-coe] Waiting until cluster (%s) is deleted, currently in %s", cluster.GetName(), cluster.GetStatus())
 		time.Sleep(pollingInterval)
 	}
+}
+
+func (carina *MakeCOE) listClusterTypes() ([]*libcarina.ClusterType, error) {
+	err := carina.init()
+	if err != nil {
+		return nil, err
+	}
+
+	common.Log.WriteDebug("[carina] Listing cluster types")
+	clusterTypes, err := carina.client.ListClusterTypes()
+	if err != nil {
+		return nil, errors.Wrap(err, "[carina] Unabe to list cluster types")
+	}
+
+	return clusterTypes, err
+}
+
+func (carina *MakeCOE) getClusterTypeCache() (map[int]*libcarina.ClusterType, error) {
+	if carina.clusterTypeCache == nil {
+		clusterTypes, err := carina.listClusterTypes()
+		if err != nil {
+			return nil, err
+		}
+
+		carina.clusterTypeCache = make(map[int]*libcarina.ClusterType)
+		for _, clusterType := range clusterTypes {
+			carina.clusterTypeCache[clusterType.ID] = clusterType
+		}
+	}
+
+	return carina.clusterTypeCache, nil
+}
+
+func (carina *MakeCOE) lookupClusterTypeByName(name string) (*libcarina.ClusterType, error) {
+	cache, err := carina.getClusterTypeCache()
+	if err != nil {
+		return nil, err
+	}
+
+	name = strings.ToLower(name)
+	var clusterType *libcarina.ClusterType
+	for _, m := range cache {
+		if strings.ToLower(m.Name) == name {
+			clusterType = m
+			break
+		}
+	}
+
+	if clusterType == nil {
+		return nil, fmt.Errorf("Could not find cluster type named %s", name)
+	}
+
+	return clusterType, nil
 }
