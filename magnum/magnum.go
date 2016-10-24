@@ -130,6 +130,26 @@ func (magnum *Magnum) ListClusters() ([]common.Cluster, error) {
 	return clusters, err
 }
 
+// ListClusterTemplates retrieves available templates for creating a new cluster
+func (magnum *Magnum) ListClusterTemplates() ([]common.ClusterTemplate, error) {
+	err := magnum.init()
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := magnum.listBayModels()
+	if err != nil {
+		return nil, err
+	}
+
+	var templates []common.ClusterTemplate
+	for _, result := range results {
+		template := &ClusterTemplate{BayModel: result}
+		templates = append(templates, template)
+	}
+	return templates, err
+}
+
 // GetCluster prints out a cluster's information to the console by its id or name (if unique)
 func (magnum *Magnum) GetCluster(token string) (common.Cluster, error) {
 	err := magnum.init()
@@ -290,11 +310,6 @@ func (magnum *Magnum) newCluster(bay *bays.Bay) (*Cluster, error) {
 }
 
 func (magnum *Magnum) listBayModels() ([]*baymodels.BayModel, error) {
-	err := magnum.init()
-	if err != nil {
-		return nil, err
-	}
-
 	common.Log.WriteDebug("[magnum] Listing baymodels")
 	pager := baymodels.List(magnum.client, baymodels.ListOpts{})
 	if pager.Err != nil {
@@ -302,7 +317,7 @@ func (magnum *Magnum) listBayModels() ([]*baymodels.BayModel, error) {
 	}
 
 	var bayModels []*baymodels.BayModel
-	err = pager.EachPage(func(page pagination.Page) (bool, error) {
+	err := pager.EachPage(func(page pagination.Page) (bool, error) {
 		results, err := baymodels.ExtractBayModels(page)
 		if err != nil {
 			return false, errors.Wrap(err, "[magnum] Unable to read the Magnum baymodels from the results page")

@@ -81,22 +81,27 @@ In the following example, the dev profile is used to authenticate:
 
 ```
 $ carina list
-ID		Name		Status	Type		Nodes
-abc123	mycluster	active	kubernetes	1
+ID		Name		Status	Template	    Nodes
+abc123	mycluster	active	kubernetes-dev	1
+
+$ carina list-templates
+Name		    COE		    Host Type
+swarm-dev       swarm		vm
+kubernetes-dev  kubernetes	vm
 
 $ carina create --template swarm-dev newone
-ID		Name		Status	Type		Nodes
-def456	newone		active	swarm		1
+ID		Name		Status	Template		Nodes
+def456	newone		active	swarm-dev		1
 
 $ carina create --template kubernetes-dev --nodes 3 --wait another
-ID		Name		Status	Type		Nodes
-geh978	another		active	kubernetes	3
+ID		Name		Status	Template		Nodes
+geh978	another		active	kubernetes-dev  3
 
 $ carina list
-ID		Name		Status	Type		Nodes
-abc123	mycluster	active	kubernetes	1
-def456	newone		active	swarm		1
-geh978	another		active	kubernetes	3
+ID		Name		Status	Template		Nodes
+abc123	mycluster	active	kubernetes-dev	1
+def456	newone		active	swarm-dev		1
+geh978	another		active	kubernetes-dev	3
 
 $ carina credentials mycluster
 #
@@ -128,6 +133,7 @@ Available Commands:
   get             Show information about a cluster
   grow            Add nodes to a cluster
   list            List clusters
+  list-templates  List cluster templates
   quotas          Show the user's quotas
   rebuild         Rebuild a cluster
   version         Show the application version

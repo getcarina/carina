@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/getcarina/carina/common"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/baymodels"
 	"github.com/gophercloud/gophercloud/openstack/containerorchestration/v1/bays"
 )
@@ -28,9 +29,9 @@ func (cluster *Cluster) GetName() string {
 	return cluster.Name
 }
 
-// GetType returns the container orchestration engine used by the cluster
-func (cluster *Cluster) GetType() string {
-	return cluster.Template.COE
+// GetTemplate returns the template used to create the cluster
+func (cluster *Cluster) GetTemplate() common.ClusterTemplate {
+	return &ClusterTemplate{BayModel: cluster.Template}
 }
 
 // GetFlavor returns the flavor of the nodes in the cluster

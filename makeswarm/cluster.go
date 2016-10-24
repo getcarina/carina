@@ -3,16 +3,21 @@ package makeswarm
 import (
 	"strconv"
 
+	"github.com/getcarina/carina/common"
 	libcarina "github.com/getcarina/libmakeswarm"
 )
 
 // Cluster represents a cluster on make-swarm
 type Cluster struct {
 	*libcarina.Cluster
+	Template *ClusterTemplate
 }
 
 func newCluster() *Cluster {
-	return &Cluster{Cluster: &libcarina.Cluster{}}
+	return &Cluster{
+		Cluster:  &libcarina.Cluster{},
+		Template: &ClusterTemplate{},
+	}
 }
 
 // GetID returns the cluster identifier
@@ -25,9 +30,9 @@ func (cluster *Cluster) GetName() string {
 	return cluster.ClusterName
 }
 
-// GetType returns the container orchestration engine used by the cluster
-func (cluster *Cluster) GetType() string {
-	return "swarm"
+// GetTemplate returns the template used to create the cluster
+func (cluster *Cluster) GetTemplate() common.ClusterTemplate {
+	return cluster.Template
 }
 
 // GetFlavor returns the flavor of the nodes in the cluster

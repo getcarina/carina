@@ -200,6 +200,17 @@ func (client *Client) ListClusters(account Account) ([]common.Cluster, error) {
 	return svc.ListClusters()
 }
 
+// ListClusterTemplates retrieves available templates for creating a new cluster
+func (client *Client) ListClusterTemplates(account Account) ([]common.ClusterTemplate, error) {
+	defer client.Cache.SaveAccount(account)
+	svc, err := client.buildContainerService(account)
+	if err != nil {
+		return nil, err
+	}
+
+	return svc.ListClusterTemplates()
+}
+
 // GetCluster retrieves a cluster
 func (client *Client) GetCluster(account Account, name string, waitUntilActive bool) (common.Cluster, error) {
 	var cluster common.Cluster

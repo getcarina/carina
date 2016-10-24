@@ -81,7 +81,7 @@ func (carina *MakeCOE) GetClusterCredentials(token string) (*libcarina.Credentia
 	return creds, nil
 }
 
-// ListClusters prints out a list of the user's clusters to the console by its id or name (if unique)
+// ListClusters prints out a list of the user's clusters to the console
 func (carina *MakeCOE) ListClusters() ([]common.Cluster, error) {
 	var clusters []common.Cluster
 
@@ -102,6 +102,27 @@ func (carina *MakeCOE) ListClusters() ([]common.Cluster, error) {
 	}
 
 	return clusters, err
+}
+
+// ListClusterTemplates retrieves available templates for creating a new cluster
+func (carina *MakeCOE) ListClusterTemplates() ([]common.ClusterTemplate, error) {
+	err := carina.init()
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := carina.listClusterTypes()
+	if err != nil {
+		return nil, err
+	}
+
+	var templates []common.ClusterTemplate
+	for _, result := range results {
+		template := &ClusterTemplate{ClusterType: result}
+		templates = append(templates, template)
+	}
+
+	return templates, err
 }
 
 // RebuildCluster destroys and recreates the cluster by its id or name (if unique)
@@ -206,15 +227,10 @@ func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 }
 
 func (carina *MakeCOE) listClusterTypes() ([]*libcarina.ClusterType, error) {
-	err := carina.init()
-	if err != nil {
-		return nil, err
-	}
-
-	common.Log.WriteDebug("[carina] Listing cluster types")
+	common.Log.WriteDebug("[make-coe] Listing cluster types")
 	clusterTypes, err := carina.client.ListClusterTypes()
 	if err != nil {
-		return nil, errors.Wrap(err, "[carina] Unabe to list cluster types")
+		return nil, errors.Wrap(err, "[make-coe] Unabe to list cluster types")
 	}
 
 	return clusterTypes, err

@@ -15,6 +15,9 @@ type ClusterService interface {
 	// ListClusters retrieves all clusters
 	ListClusters() ([]Cluster, error)
 
+	// ListClusterTemplates retrieves available templates for creating a new cluster
+	ListClusterTemplates() ([]ClusterTemplate, error)
+
 	// GetCluster retrieves a cluster by its id or name (if unique)
 	GetCluster(token string) (Cluster, error)
 
@@ -48,8 +51,8 @@ type Cluster interface {
 	// GetName returns the cluster name
 	GetName() string
 
-	// GetCOE returns the container orchestration engine used by the cluster
-	GetType() string
+	// GetTemplate returns the template used to create the cluster
+	GetTemplate() ClusterTemplate
 
 	// GetFlavor returns the flavor of the nodes in the cluster
 	GetFlavor() string
@@ -63,6 +66,18 @@ type Cluster interface {
 	// GetStatusDetails returns additional information about the cluster's status.
 	// For example, why the cluster is in a failed state.
 	GetStatusDetails() string
+}
+
+// ClusterTemplate is a common interface for templates over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)
+type ClusterTemplate interface {
+	// GetName returns the unique template name
+	GetName() string
+
+	// GetCOE returns the container orchestration engine used by the cluster
+	GetCOE() string
+
+	// GetHostType returns the underlying type of the host nodes, such as lxc or vm
+	GetHostType() string
 }
 
 // Quotas is a common interface for cluster quotas over multiple container orchestration engine APIs (magnum, make-swarm and make-coe)

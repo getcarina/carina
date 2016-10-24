@@ -122,6 +122,11 @@ func (carina *MakeSwarm) ListClusters() ([]common.Cluster, error) {
 	return clusters, err
 }
 
+// ListClusterTemplates is not supported by make-swarm
+func (carina *MakeSwarm) ListClusterTemplates() ([]common.ClusterTemplate, error) {
+	return nil, errors.New("make-swarm does not support templates, use `carina create [cluster-name]` and omit the --template flag")
+}
+
 // RebuildCluster destroys and recreates the cluster
 func (carina *MakeSwarm) RebuildCluster(name string) (common.Cluster, error) {
 	err := carina.init()

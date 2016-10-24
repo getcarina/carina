@@ -39,15 +39,6 @@ func WriteTable(fields [][]string) {
 	output.Flush()
 }
 
-// WriteRow prints a row of tabular data to the console
-func WriteRow(fields []string) {
-	output := new(tabwriter.Writer)
-	output.Init(os.Stdout, 0, 8, 1, '\t', 0)
-
-	writeInColumns(output, fields)
-	output.Flush()
-}
-
 // WriteCluster prints the cluster data to the console
 func WriteCluster(cluster common.Cluster) {
 	output := new(tabwriter.Writer)
@@ -57,7 +48,7 @@ func WriteCluster(cluster common.Cluster) {
 		tuple{"ID", cluster.GetID()},
 		tuple{"Name", cluster.GetName()},
 		tuple{"Status", cluster.GetStatus()},
-		tuple{"Type", cluster.GetType()},
+		tuple{"Template", cluster.GetTemplate().GetName()},
 		tuple{"Nodes", cluster.GetNodes()},
 		tuple{"Details", cluster.GetStatusDetails()},
 	}
@@ -74,7 +65,7 @@ func WriteClusters(clusters []common.Cluster) {
 		"ID",
 		"Name",
 		"Status",
-		"Type",
+		"Template",
 		"Nodes",
 	}
 	writeInColumns(output, headerFields)
@@ -84,7 +75,7 @@ func WriteClusters(clusters []common.Cluster) {
 			cluster.GetID(),
 			cluster.GetName(),
 			cluster.GetStatus(),
-			cluster.GetType(),
+			cluster.GetTemplate().GetName(),
 			cluster.GetNodes(),
 		}
 		writeInColumns(output, fields)

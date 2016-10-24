@@ -3,6 +3,7 @@ package makecoe
 import (
 	"strconv"
 
+	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libcarina"
 )
 
@@ -25,9 +26,9 @@ func (cluster *Cluster) GetName() string {
 	return cluster.Name
 }
 
-// GetType returns the container orchestration engine used by the cluster
-func (cluster *Cluster) GetType() string {
-	return cluster.Type.COE
+// GetTemplate returns the template used to create the cluster
+func (cluster *Cluster) GetTemplate() common.ClusterTemplate {
+	return &ClusterTemplate{ClusterType: cluster.Type}
 }
 
 // GetFlavor returns the flavor of the nodes in the cluster
