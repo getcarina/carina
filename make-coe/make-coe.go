@@ -33,7 +33,12 @@ func (carina *MakeCOE) init() error {
 
 // GetQuotas retrieves the quotas set for the account
 func (carina *MakeCOE) GetQuotas() (common.Quotas, error) {
-	return nil, errors.New("Not implemented")
+	return &Quotas{
+		&libcarina.Quotas{
+			MaxClusters:        3,
+			MaxNodesPerCluster: 1,
+		},
+	}, nil
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
