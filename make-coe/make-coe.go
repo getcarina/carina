@@ -276,7 +276,7 @@ func (carina *MakeCOE) lookupClusterTypeByName(name string) (*libcarina.ClusterT
 	}
 
 	if clusterType == nil {
-		return nil, fmt.Errorf("Could not find cluster type named %s", name)
+		return nil, fmt.Errorf("Could not find template named %s", name)
 	}
 
 	return clusterType, nil

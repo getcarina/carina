@@ -381,7 +381,7 @@ func (magnum *Magnum) lookupBayModelByName(name string) (*baymodels.BayModel, er
 	}
 
 	if bayModel == nil {
-		return nil, fmt.Errorf("Could not find baymodel named %s", name)
+		return nil, fmt.Errorf("Could not find template named %s", name)
 	}
 
 	return bayModel, nil
