@@ -135,7 +135,7 @@ func (carina *MakeCOE) ListClusterTemplates() ([]common.ClusterTemplate, error) 
 
 // RebuildCluster destroys and recreates the cluster by its id or name (if unique)
 func (carina *MakeCOE) RebuildCluster(token string) (common.Cluster, error) {
-	return nil, errors.New("Not implemented")
+	return nil, errors.New("[make-coe] Rebuilding clusters from the carina cli is not supported yet")
 }
 
 // GetCluster prints out a cluster's information to the console by its id or name (if unique)
@@ -184,7 +184,7 @@ func (carina *MakeCOE) DeleteCluster(token string) (common.Cluster, error) {
 
 // GrowCluster adds nodes to a cluster by its id or name (if unique)
 func (carina *MakeCOE) GrowCluster(token string, nodes int) (common.Cluster, error) {
-	return nil, errors.New("Not implemented")
+	return nil, errors.New("[make-coe] Growing clusters from the carina cli is not supported yet")
 }
 
 // SetAutoScale is not supported

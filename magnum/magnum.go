@@ -39,7 +39,7 @@ func (magnum *Magnum) init() error {
 
 // GetQuotas retrieves the quotas set for the account
 func (magnum *Magnum) GetQuotas() (common.Quotas, error) {
-	return nil, errors.New("Not implemented yet")
+	return nil, errors.New("[magnum] Retrieving user quotas from the carina cli is not supported yet")
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
@@ -173,7 +173,7 @@ func (magnum *Magnum) GetCluster(token string) (common.Cluster, error) {
 
 // RebuildCluster destroys and recreates the cluster by its id or name (if unique)
 func (magnum *Magnum) RebuildCluster(token string) (common.Cluster, error) {
-	return nil, errors.New("Not implemented yet")
+	return nil, errors.New("[magnum] Rebuilding clusters from the carina cli is not supported yet")
 }
 
 // DeleteCluster permanently deletes a cluster by its id or name (if unique)
@@ -210,7 +210,7 @@ func (magnum *Magnum) DeleteCluster(token string) (common.Cluster, error) {
 
 // GrowCluster adds nodes to a cluster by its id or name (if unique)
 func (magnum *Magnum) GrowCluster(token string, nodes int) (common.Cluster, error) {
-	return nil, errors.New("Not implemented yet")
+	return nil, errors.New("[magnum] Growing clusters from the carina cli is not supported yet")
 }
 
 // SetAutoScale is not supported
