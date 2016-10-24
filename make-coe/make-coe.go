@@ -38,6 +38,10 @@ func (carina *MakeCOE) GetQuotas() (common.Quotas, error) {
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
+	if template == "" {
+		return nil, errors.New("--template is required")
+	}
+
 	if nodes > 1 {
 		common.Log.WriteWarning("Using --nodes=1. Multi-node cluster support is coming soon!")
 	}

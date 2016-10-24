@@ -44,6 +44,10 @@ func (magnum *Magnum) GetQuotas() (common.Quotas, error) {
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (magnum *Magnum) CreateCluster(name string, template string, nodes int) (common.Cluster, error) {
+	if template == "" {
+		return nil, errors.New("--template is required")
+	}
+
 	err := magnum.init()
 	if err != nil {
 		return nil, err
