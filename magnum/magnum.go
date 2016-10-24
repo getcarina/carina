@@ -248,8 +248,8 @@ func (magnum *Magnum) WaitUntilClusterIsActive(cluster common.Cluster) (common.C
 // WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
 func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 	isDone := func(cluster common.Cluster) bool {
-		status := strings.ToUpper(cluster.GetStatus())
-		return status == "DELETE_COMPLETE"
+		status := strings.ToLower(cluster.GetStatus())
+		return status == "delete_complete"
 	}
 
 	if isDone(cluster) {
