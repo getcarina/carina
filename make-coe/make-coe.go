@@ -199,7 +199,30 @@ func (carina *MakeCOE) SetAutoScale(token string, value bool) (common.Cluster, e
 
 // WaitUntilClusterIsActive waits until the prior cluster operation is completed
 func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.Cluster, error) {
-	return nil, errors.New("Not implemented")
+	isDone := func(cluster common.Cluster) bool {
+		status := strings.ToLower(cluster.GetStatus())
+		return status == "active"
+	}
+
+	if isDone(cluster) {
+		return cluster, nil
+	}
+
+	pollingInterval := 5 * time.Second
+	for {
+		cluster, err := carina.GetCluster(cluster.GetID())
+		if err != nil {
+			err = errors.Cause(err)
+			return nil, err
+		}
+
+		if isDone(cluster) {
+			return cluster, nil
+		}
+
+		common.Log.WriteDebug("[make-coe] Waiting until cluster (%s) is active, currently in %s", cluster.GetName(), cluster.GetStatus())
+		time.Sleep(pollingInterval)
+	}
 }
 
 // WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
@@ -216,7 +239,6 @@ func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 	pollingInterval := 5 * time.Second
 	for {
 		cluster, err := carina.GetCluster(cluster.GetID())
-
 		if err != nil {
 			err = errors.Cause(err)
 
