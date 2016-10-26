@@ -5,10 +5,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newListTemplatesCommand() *cobra.Command {
+func newTemplatesCommand() *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:     "list-templates",
-		Aliases: []string{"ls-templates"},
+		Use:     "templates",
 		Short:   "List cluster templates",
 		Long:    "List cluster templates",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -31,5 +30,5 @@ func newListTemplatesCommand() *cobra.Command {
 }
 
 func init() {
-	rootCmd.AddCommand(newListTemplatesCommand())
+	rootCmd.AddCommand(newTemplatesCommand())
 }

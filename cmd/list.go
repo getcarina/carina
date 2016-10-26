@@ -5,10 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newListCommand() *cobra.Command {
+func newClustersCommand() *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"ls"},
+		Use:     "clusters",
+		Aliases: []string{"list", "ls"},
 		Short:   "List clusters",
 		Long:    "List clusters",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -27,5 +27,5 @@ func newListCommand() *cobra.Command {
 }
 
 func init() {
-	rootCmd.AddCommand(newListCommand())
+	rootCmd.AddCommand(newClustersCommand())
 }
