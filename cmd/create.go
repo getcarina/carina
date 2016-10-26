@@ -24,7 +24,7 @@ func newCreateCommand() *cobra.Command {
 				return errors.New("--nodes must be >= 1")
 			}
 
-			return bindName(args, &options.name)
+			return bindClusterNameArg(args, &options.name)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cluster, err := cxt.Client.CreateCluster(cxt.Account, options.name, options.template, options.nodes, options.wait)
@@ -44,8 +44,4 @@ func newCreateCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&options.wait, "wait", false, "wait for the previous cluster operation to complete")
 
 	return cmd
-}
-
-func init() {
-	rootCmd.AddCommand(newCreateCommand())
 }

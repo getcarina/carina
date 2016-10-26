@@ -12,12 +12,12 @@ func newRebuildCommand() *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "rebuild <cluster-name>",
-		Short: "Rebuild a cluster",
-		Long:  "Rebuild a cluster. This rebuilds the cluster infrastructure only and does not affect existing containers or volumes.",
+		Use:    "rebuild <cluster-name>",
+		Short:  "Rebuild a cluster",
+		Long:   "Rebuild a cluster. This rebuilds the cluster infrastructure only and does not affect existing containers or volumes.",
 		Hidden: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return bindName(args, &options.name)
+			return bindClusterNameArg(args, &options.name)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cluster, err := cxt.Client.RebuildCluster(cxt.Account, options.name, options.wait)
@@ -35,8 +35,4 @@ func newRebuildCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&options.wait, "wait", false, "wait for the previous cluster operation to complete")
 
 	return cmd
-}
-
-func init() {
-	rootCmd.AddCommand(newRebuildCommand())
 }

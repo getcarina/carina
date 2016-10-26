@@ -16,7 +16,7 @@ func newAutoScaleCommand() *cobra.Command {
 		autoscale bool
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:    "autoscale <cluster-name> off/on",
 		Short:  "Change the autoscaling setting on a cluster",
 		Long:   "Change the autoscaling setting on a cluster",
@@ -35,7 +35,7 @@ func newAutoScaleCommand() *cobra.Command {
 				return fmt.Errorf("Invalid autoscale value: %s. Allowed values are off and on", args[1])
 			}
 
-			return bindName(args, &options.name)
+			return bindClusterNameArg(args, &options.name)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cluster, err := cxt.Client.SetAutoScale(cxt.Account, options.name, options.autoscale)
@@ -52,8 +52,4 @@ func newAutoScaleCommand() *cobra.Command {
 	cmd.ValidArgs = []string{"cluster-name"}
 
 	return cmd
-}
-
-func init() {
-	rootCmd.AddCommand(newAutoScaleCommand())
 }

@@ -2,7 +2,7 @@ package cmd
 
 import "errors"
 
-func bindName(args []string, name *string) error {
+func bindClusterNameArg(args []string, name *string) error {
 	if len(args) < 1 {
 		return errors.New("A cluster name is required")
 	}

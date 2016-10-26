@@ -18,7 +18,7 @@ func newDeleteCommand() *cobra.Command {
 		Short:   "Delete a cluster",
 		Long:    "Delete a cluster",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return bindName(args, &options.name)
+			return bindClusterNameArg(args, &options.name)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cxt.Client.DeleteCluster(cxt.Account, options.name, options.wait)
@@ -36,8 +36,4 @@ func newDeleteCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&options.wait, "wait", false, "wait for the previous cluster operation to complete")
 
 	return cmd
-}
-
-func init() {
-	rootCmd.AddCommand(newDeleteCommand())
 }

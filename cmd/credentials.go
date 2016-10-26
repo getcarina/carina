@@ -17,7 +17,7 @@ func newCredentialsCommand() *cobra.Command {
 		Short: "Download a cluster's credentials",
 		Long:  "Download a cluster's credentials",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return bindName(args, &options.name)
+			return bindClusterNameArg(args, &options.name)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			credentialsPath, err := cxt.Client.DownloadClusterCredentials(cxt.Account, options.name, options.path)
@@ -38,8 +38,4 @@ func newCredentialsCommand() *cobra.Command {
 	cmd.Flags().StringVar(&options.path, "path", "", "Full path to the directory where the credentials should be saved")
 
 	return cmd
-}
-
-func init() {
-	rootCmd.AddCommand(newCredentialsCommand())
 }

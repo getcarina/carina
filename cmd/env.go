@@ -34,7 +34,7 @@ func newEnvCommand() *cobra.Command {
 				common.Log.WriteDebug("Shell: --shell (%s)", options.shell)
 			}
 
-			return bindName(args, &options.name)
+			return bindClusterNameArg(args, &options.name)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			sourceText, err := cxt.Client.GetSourceCommand(cxt.Account, options.shell, options.name, options.path)
@@ -52,8 +52,4 @@ func newEnvCommand() *cobra.Command {
 	cmd.Flags().StringVar(&options.path, "path", "", "Full path to the directory from which the credentials should be loaded")
 
 	return cmd
-}
-
-func init() {
-	rootCmd.AddCommand(newEnvCommand())
 }

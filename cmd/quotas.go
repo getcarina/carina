@@ -33,7 +33,3 @@ func newQuotasCommand() *cobra.Command {
 
 	return cmd
 }
-
-func init() {
-	rootCmd.AddCommand(newQuotasCommand())
-}

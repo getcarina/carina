@@ -25,7 +25,3 @@ func newClustersCommand() *cobra.Command {
 
 	return cmd
 }
-
-func init() {
-	rootCmd.AddCommand(newClustersCommand())
-}
