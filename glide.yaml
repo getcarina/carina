@@ -17,7 +17,6 @@ import:
   version: make-swarm
 - package: github.com/gophercloud/gophercloud
   version: magnum
-  repo: git@github.com:carolynvs/gophercloud.git
   vcs: git
   subpackages:
   - openstack
