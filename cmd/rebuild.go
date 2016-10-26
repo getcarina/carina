@@ -15,6 +15,7 @@ func newRebuildCommand() *cobra.Command {
 		Use:   "rebuild <cluster-name>",
 		Short: "Rebuild a cluster",
 		Long:  "Rebuild a cluster. This rebuilds the cluster infrastructure only and does not affect existing containers or volumes.",
+		Hidden: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return bindName(args, &options.name)
 		},

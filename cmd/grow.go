@@ -19,6 +19,7 @@ func newGrowCommand() *cobra.Command {
 		Use:   "grow <cluster-name>",
 		Short: "Add nodes to a cluster",
 		Long:  "Add nodes to a cluster",
+		Hidden: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if options.nodes < 1 {
 				return errors.New("--nodes must be >= 1")
