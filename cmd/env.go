@@ -19,8 +19,8 @@ func newEnvCommand() *cobra.Command {
 
 	var cmd = &cobra.Command{
 		Use:   "env <cluster-name>",
-		Short: "Show the command to load a cluster's credentials",
-		Long:  "Show the command to load a cluster's credentials into the current shell session",
+		Short: "Show the command to connect docker/kubectl to a cluster",
+		Long:  "Show the command to connect docker/kubectl to a cluster by setting environment variables in the current shell session",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if options.shell == "" {
 				shell := os.Getenv("SHELL")
