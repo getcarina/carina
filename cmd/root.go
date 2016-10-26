@@ -18,8 +18,8 @@ var cxt *context
 
 var rootCmd = &cobra.Command{
 	Use:   "carina",
-	Short: "Create and interact with clusters on both Rackspace Public and Private Cloud",
-	Long:  "Create and interact with clusters on both Rackspace Public and Private Cloud",
+	Short: "Create and interact with clusters on both Rackspace Public and Private Clouds",
+	Long:  "Create and interact with clusters on both Rackspace Public and Private Clouds",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		err := cxt.initialize()
 		if err != nil {
@@ -108,12 +108,13 @@ See https://github.com/getcarina/carina for additional documentation, FAQ and ex
 	rootCmd.PersistentFlags().StringVar(&cxt.Project, "project", "", "Private Cloud Project Name [OS_PROJECT_NAME]")
 	rootCmd.PersistentFlags().StringVar(&cxt.Domain, "domain", "", "Private Cloud Domain Name [OS_DOMAIN_NAME]")
 	rootCmd.PersistentFlags().StringVar(&cxt.Region, "region", "", "Private Cloud Region Name [OS_REGION_NAME]")
-	// --auth-endpoint can also override the authentication endpoint for public Carina as well, but that's only helpful for local development
 	rootCmd.PersistentFlags().StringVar(&cxt.AuthEndpoint, "auth-endpoint", "", "Private Cloud Authentication endpoint [OS_AUTH_URL]")
 	rootCmd.PersistentFlags().StringVar(&cxt.Endpoint, "endpoint", "", "Custom API endpoint [CARINA_ENDPOINT/OS_ENDPOINT]")
 	rootCmd.PersistentFlags().StringVar(&cxt.CloudType, "cloud", "", "The cloud type: public or private")
 
-	// --endpoint can override the API endpoint for both Carina and Magnum, hidden since it's only helpful for local development
+	// Hide local development flags
+	rootCmd.PersistentFlags().MarkHidden("config")
+	rootCmd.PersistentFlags().MarkHidden("cache")
 	rootCmd.PersistentFlags().MarkHidden("endpoint")
 
 	// Don't show usage on errors
