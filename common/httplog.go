@@ -77,14 +77,6 @@ func (hl *HTTPLog) RoundTrip(request *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	// Log the request id, if present
-	for key, value := range response.Header {
-		if strings.Contains(strings.ToLower(key), "request-id") {
-			hl.Logger.Debugf("Request ID: %s", value)
-			break
-		}
-	}
-
 	responseBody, _ := hl.logResponseBody(response.Body, response.Header)
 	response.Body = responseBody
 
@@ -122,6 +114,14 @@ func (hl *HTTPLog) logRequestBody(original io.ReadCloser, headers http.Header) (
 
 func (hl *HTTPLog) logResponseBody(original io.ReadCloser, headers http.Header) (io.ReadCloser, error) {
 	defer original.Close()
+
+	// Log the request id, if present
+	for key, value := range headers {
+		if strings.Contains(strings.ToLower(key), "request-id") {
+			hl.Logger.Debugf("Request ID: %s", value[0])
+			break
+		}
+	}
 
 	var bs bytes.Buffer
 	_, err := io.Copy(&bs, original)
