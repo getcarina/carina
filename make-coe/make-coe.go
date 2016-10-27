@@ -196,7 +196,7 @@ func (carina *MakeCOE) SetAutoScale(token string, value bool) (common.Cluster, e
 func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.Cluster, error) {
 	isDone := func(cluster common.Cluster) bool {
 		status := strings.ToLower(cluster.GetStatus())
-		return status == "active"
+		return status == "active" || status == "error"
 	}
 
 	if isDone(cluster) {
