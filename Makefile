@@ -16,33 +16,30 @@ GOFILES_NOVENDOR = $(shell go list ./... | grep -v /vendor/)
 
 BINDIR = bin/carina/$(VERSION)
 
-default: validate carina
+default: get-deps validate local
 
 get-deps:
 	go get github.com/Masterminds/glide
 	glide install
 
-validate: get-deps
+validate:
 	go fmt $(GOFILES_NOVENDOR)
 	go vet $(GOFILES_NOVENDOR)
 	go list ./... | grep -v /vendor/ | xargs -L1 golint --set_exit_status
 	go test $(GOFILES_NOVENDOR)
 
-carina-linux: linux
-	cp bin/carina-linux-amd64 carina-linux
+local: $(GOFILES)
+	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
-test: carina
+test: local
 	eval "$( ./carina --bash-completion )"
 	./carina --version
 
-gocarina: $(GOFILES)
-	CGO_ENABLED=0 $(GOBUILD) -o ${GOPATH}/bin/carina .
+carina-linux: linux
+	cp bin/carina-linux-amd64 carina-linux
 
-cross-build: get-deps validate carina linux darwin windows
+cross-build: get-deps validate local linux darwin windows
 	cp -R $(BINDIR) bin/carina/latest
-
-carina: get-deps $(GOFILES)
-	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
 linux: $(GOFILES)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINDIR)/Linux/x86_64/carina .
