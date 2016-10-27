@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/getcarina/carina/client"
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/carina/version"
-	"github.com/Masterminds/semver"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
