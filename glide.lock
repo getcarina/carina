@@ -1,5 +1,5 @@
 hash: 96501d1044e2526384c14299f164ff5fc6ab084e5ce020f90f18ad050c5f12ef
-updated: 2016-10-27T09:18:41.73049447-05:00
+updated: 2016-10-27T10:22:30.835068048-05:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 6cf5744a041a0022271cefed95ba843f6d87fd51
@@ -8,7 +8,7 @@ imports:
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/getcarina/libcarina
-  version: 3ab2de323c56aafe5191d289c65cb534109dca5a
+  version: cc35a4546e9633c1c990686909d4f5b048b1d21f
   repo: git@github.com:rackerlabs/carina-cli-libcarina.git
   vcs: git
 - name: github.com/getcarina/libmakeswarm

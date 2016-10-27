@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Client is the multi-cloud Carina client, which coorindates communication with all Carina-esque clouds
+// Client is the multi-cloud Carina client, which coordinates communication with all Carina-esque clouds
 type Client struct {
 	Cache *Cache
 	Error error
