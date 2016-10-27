@@ -10,6 +10,7 @@ import (
 	"github.com/getcarina/carina/client"
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/carina/version"
+	"github.com/Masterminds/semver"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -198,20 +199,20 @@ func checkIsLatest() error {
 	}
 	common.Log.WriteDebug("Latest: %s", rel.TagName)
 
-	latest, err := version.ExtractSemver(rel.TagName)
+	latest, err := semver.NewVersion(rel.TagName)
 	if err != nil {
 		common.Log.WriteWarning("# Trouble parsing latest tag (%v): %s", rel.TagName, err)
 		return nil
 	}
 
-	current, err := version.ExtractSemver(version.Version)
+	current, err := semver.NewVersion(version.Version)
 	if err != nil {
 		common.Log.WriteWarning("# Trouble parsing current tag (%v): %s", version.Version, err)
 		return nil
 	}
 	common.Log.WriteDebug("Installed: %s", version.Version)
 
-	if latest.Greater(current) {
+	if latest.GreaterThan(current) {
 		common.Log.WriteWarning("# A new version of the Carina client is out, go get it!")
 		common.Log.WriteWarning("# You're on %v and the latest is %v", current, latest)
 		common.Log.WriteWarning("# https://github.com/getcarina/carina/releases")

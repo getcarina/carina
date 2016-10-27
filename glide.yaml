@@ -25,6 +25,8 @@ import:
   - openstack/containerorchestration/v1/certificates
   - openstack/containerorchestration/v1/common
   - pagination
+- package: github.com/Masterminds/semver
+  version: ^1.1.1
 - package: github.com/pkg/errors
   version: ^0.7.0
 - package: github.com/spf13/cobra

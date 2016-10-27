@@ -1,5 +1,5 @@
-hash: 96501d1044e2526384c14299f164ff5fc6ab084e5ce020f90f18ad050c5f12ef
-updated: 2016-10-27T10:22:30.835068048-05:00
+hash: e5cbc75e75aac109f878694244ad961249aa51cc244578ae460a2fc942324023
+updated: 2016-10-27T14:00:08.644749648-05:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 6cf5744a041a0022271cefed95ba843f6d87fd51
@@ -8,7 +8,7 @@ imports:
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/getcarina/libcarina
-  version: cc35a4546e9633c1c990686909d4f5b048b1d21f
+  version: acc7acb3207f43ae22fbd099ac38e554d9c48930
   repo: git@github.com:rackerlabs/carina-cli-libcarina.git
   vcs: git
 - name: github.com/getcarina/libmakeswarm
@@ -49,6 +49,8 @@ imports:
   version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/magiconair/properties
   version: 0723e352fa358f9322c938cc2dadda874e9151a9
+- name: github.com/Masterminds/semver
+  version: 8d0431362b544d1a3536cca26684828866a7de09
 - name: github.com/mitchellh/mapstructure
   version: ca63d7c062ee3c9f34db231e352b60012b4fd0c1
 - name: github.com/pelletier/go-buffruneio
