@@ -47,16 +47,16 @@ func sourceHelpString(credentialFile string, clusterName string, shell string) s
 	switch shell {
 	case "powershell":
 		s := fmt.Sprintf(". %s\n", credentialFile)
-		s += fmt.Sprintf("Run the command below to load environment variables for docker or kubectl:\n")
+		s += fmt.Sprintf("# Run the command below to load environment variables for docker or kubectl:\n")
 		s += fmt.Sprintf("# carina env %s --shell powershell | iex", clusterName) // PowerShell bombs if you have an empty line, leaving out
 		return s
 	case "cmd":
-		s := fmt.Sprintf("Run the command below to load environment variables for docker or kubectl:\n")
+		s := fmt.Sprintf("# Run the command below to load environment variables for docker or kubectl:\n")
 		s += fmt.Sprintf("CALL %s\n", credentialFile)
 		return s
 	default: // Windows Bash
 		s := fmt.Sprintf("source %s\n", forceUnixPath(credentialFile))
-		s += fmt.Sprintf("Run the command below to load environment variables for docker or kubectl:\n")
+		s += fmt.Sprintf("# Run the command below to load environment variables for docker or kubectl:\n")
 		s += fmt.Sprintf("# eval $(carina env %s)\n", clusterName)
 		return s
 	}
