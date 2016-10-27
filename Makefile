@@ -81,7 +81,7 @@ carina/cli: ca-certificates.crt carina-linux
 .PHONY: clean build-tagged-for-release checkout tagged-build
 
 clean:
-	 -rm -f bin/*
+	 -rm -fr bin/*
 	 -rm carina
 	 -rm carina-linux
 	 -rm ca-certificates.crt
