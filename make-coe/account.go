@@ -50,6 +50,16 @@ func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
 	// Cache the token
 	account.Token = carinaClient.Token
 
+	common.Log.WriteDebug("[make-coe] Checking server API version")
+	metadata, err := carinaClient.GetAPIMetadata()
+	if err != nil {
+		return nil, err
+	}
+	if !metadata.IsSupportedVersion() {
+		min, max := metadata.GetSupportedVersionRange()
+		return nil, fmt.Errorf("Unable to communicate with the Carina API because the client is out-of-date. The client supports ~%s while the server supports %s-%s. Update the carina client to the latest version. See https://getcarina.com/docs/tutorials/carina-cli#update for instructions.", libcarina.SupportedAPIVersion, min, max)
+	}
+
 	return carinaClient, nil
 }
 
