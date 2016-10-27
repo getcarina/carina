@@ -1,10 +1,7 @@
 language: go
 go:
-- 1.5
-install:
-- go get ./...
+- 1.6
 script:
-- make carina
 - make test
 - make cross-build
 before_deploy:

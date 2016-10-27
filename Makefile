@@ -26,19 +26,19 @@ validate:
 	go fmt $(GOFILES_NOVENDOR)
 	go vet $(GOFILES_NOVENDOR)
 	go list ./... | grep -v /vendor/ | xargs -L1 golint --set_exit_status
-	go test $(GOFILES_NOVENDOR)
 
 local: $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
 test: local
+	go test $(GOFILES_NOVENDOR)
 	eval "$( ./carina --bash-completion )"
 	./carina --version
 
 carina-linux: linux
 	cp bin/carina-linux-amd64 carina-linux
 
-cross-build: get-deps validate local linux darwin windows
+cross-build: get-deps local linux darwin windows
 	cp -R $(BINDIR) bin/carina/latest
 
 linux: $(GOFILES)
