@@ -1,6 +1,3 @@
-# !!!! PRIVATE RELEASE !!!!
-See the [GitHub releases](https://github.com/rackerlabs/carina-cli/releases) for the private binaries. You can't use curl easily to get them because the repo is private.
-
 # Carina™ client
 Create and interact with clusters on both Rackspace Public and Private Cloud.
 

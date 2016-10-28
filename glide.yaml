@@ -9,11 +9,11 @@ import:
   - spew
 - package: github.com/getcarina/libcarina
   version: make-coe
-  repo: git@github.com:rackerlabs/carina-cli-libcarina.git
+  repo: git@github.com:getcarina/libcarina.git
   vcs: git
 - package: github.com/getcarina/libmakeswarm
   vcs: git
-  repo: git@github.com:rackerlabs/carina-cli-libcarina.git
+  repo: git@github.com:getcarina/libcarina.git
   version: make-swarm
 - package: github.com/gophercloud/gophercloud
   version: magnum
