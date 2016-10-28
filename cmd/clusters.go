@@ -23,5 +23,7 @@ func newClustersCommand() *cobra.Command {
 		},
 	}
 
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
+
 	return cmd
 }

@@ -17,5 +17,7 @@ func newBashCompletionCmd() *cobra.Command {
 		},
 	}
 
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
+
 	return cmd
 }

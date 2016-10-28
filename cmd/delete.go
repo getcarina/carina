@@ -34,6 +34,7 @@ func newDeleteCommand() *cobra.Command {
 
 	cmd.ValidArgs = []string{"cluster-name"}
 	cmd.Flags().BoolVar(&options.wait, "wait", false, "Wait for the cluster to be deleted")
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
 
 	return cmd
 }

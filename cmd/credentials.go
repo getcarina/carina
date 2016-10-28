@@ -36,6 +36,7 @@ func newCredentialsCommand() *cobra.Command {
 
 	cmd.ValidArgs = []string{"cluster-name"}
 	cmd.Flags().StringVar(&options.path, "path", "", "Full path to the directory where the credentials should be saved")
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
 
 	return cmd
 }

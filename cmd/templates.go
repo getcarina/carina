@@ -26,5 +26,7 @@ func newTemplatesCommand() *cobra.Command {
 		},
 	}
 
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
+
 	return cmd
 }

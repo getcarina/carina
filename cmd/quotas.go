@@ -31,5 +31,7 @@ func newQuotasCommand() *cobra.Command {
 		},
 	}
 
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
+
 	return cmd
 }

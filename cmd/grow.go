@@ -42,6 +42,7 @@ func newGrowCommand() *cobra.Command {
 	cmd.ValidArgs = []string{"cluster-name"}
 	cmd.Flags().IntVar(&options.nodes, "nodes", 1, "Number of nodes to add to the cluster")
 	cmd.Flags().BoolVar(&options.wait, "wait", false, "Wait for the cluster to become active")
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
 
 	return cmd
 }

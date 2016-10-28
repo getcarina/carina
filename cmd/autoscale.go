@@ -50,6 +50,7 @@ func newAutoScaleCommand() *cobra.Command {
 	}
 
 	cmd.ValidArgs = []string{"cluster-name"}
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
 
 	return cmd
 }

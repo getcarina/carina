@@ -50,6 +50,7 @@ func newEnvCommand() *cobra.Command {
 	cmd.ValidArgs = []string{"cluster-name"}
 	cmd.Flags().StringVar(&options.shell, "shell", "", "The parent shell type. Allowed values: bash, fish, powershell, cmd [SHELL]")
 	cmd.Flags().StringVar(&options.path, "path", "", "Full path to the directory from which the credentials should be loaded")
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
 
 	return cmd
 }

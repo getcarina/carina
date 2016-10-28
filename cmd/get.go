@@ -32,6 +32,7 @@ func newGetCommand() *cobra.Command {
 
 	cmd.ValidArgs = []string{"cluster-name"}
 	cmd.Flags().BoolVar(&options.wait, "wait", false, "Wait for the cluster to become active")
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
 
 	return cmd
 }

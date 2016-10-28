@@ -16,6 +16,8 @@ func newVersionCommand() *cobra.Command {
 		},
 	}
 
+	cmd.SetUsageTemplate(cmd.UsageTemplate())
+
 	return cmd
 }
 
