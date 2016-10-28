@@ -11,7 +11,7 @@ and [full documentation](https://getcarina.com/docs/reference/carina-cli/).
 
 ## Building
 
-The build script assumes you're running go 1.5 or later. If not, upgrade or use
+The build script assumes you're running go 1.6 or later. If not, upgrade or use
 something like [gimme](https://github.com/travis-ci/gimme).
 
 ```bash
@@ -20,4 +20,5 @@ make
 
 This creates `carina` in the current directory (there is no `make install` currently).
 
-If you want to build without running validation or tests, use `make quick`.
+**Make Targets**
+
