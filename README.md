@@ -22,3 +22,8 @@ This creates `carina` in the current directory (there is no `make install` curre
 
 **Make Targets**
 
+* `make`: First run for newcomers.
+* `make validate`: Run tools like `fmt`.
+* `make test`: Run unit tests.
+* `make local`: Build for the current dev env, using whatever dependencies that happen to be on the local machine.
+* `make cross-build`: The official build.
