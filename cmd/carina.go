@@ -118,7 +118,7 @@ In the following example, the default profile is used because no other credentia
 In the following example, the dev profile is used:
     carina --profile dev ls
 
-See https://getcarina.com/docs/tutorials/carina-cli for additional documentation, FAQ and examples.
+See https://getcarina.com/docs/reference/carina-cli for additional documentation, FAQ and examples.
 `
 
 	baseDir, err := client.GetCredentialsDir()
