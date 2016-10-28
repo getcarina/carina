@@ -32,7 +32,7 @@ func newRebuildCommand() *cobra.Command {
 	}
 
 	cmd.ValidArgs = []string{"cluster-name"}
-	cmd.Flags().BoolVar(&options.wait, "wait", false, "wait for the previous cluster operation to complete")
+	cmd.Flags().BoolVar(&options.wait, "wait", false, "Wait for the cluster to become active")
 
 	return cmd
 }

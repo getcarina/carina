@@ -41,7 +41,7 @@ func newCreateCommand() *cobra.Command {
 	cmd.ValidArgs = []string{"cluster-name"}
 	cmd.Flags().StringVar(&options.template, "template", "", "Name of the template, defining the cluster topology and configuration")
 	cmd.Flags().IntVar(&options.nodes, "nodes", 1, "Number of nodes for the initial cluster")
-	cmd.Flags().BoolVar(&options.wait, "wait", false, "wait for the previous cluster operation to complete")
+	cmd.Flags().BoolVar(&options.wait, "wait", false, "Wait for the cluster to become active")
 
 	return cmd
 }
