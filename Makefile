@@ -32,8 +32,8 @@ local: $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
 
 test: local
-	go test $(GOFILES_NOVENDOR)
-	eval "$( ./carina --bash-completion )"
+	go test -v $(GOFILES_NOVENDOR)
+	eval "$( ./carina bash-completion )"
 	./carina --version
 
 carina-linux: linux
