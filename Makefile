@@ -19,6 +19,7 @@ BINDIR = bin/carina/$(VERSION)
 default: get-deps validate local
 
 get-deps:
+	go get github.com/golang/lint/golint
 	go get github.com/Masterminds/glide
 	glide install
 
