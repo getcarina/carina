@@ -31,7 +31,7 @@ func Write(format string, a ...interface{}) {
 // WriteTable prints rows of tabular data to the console
 func WriteTable(fields [][]string) {
 	output := new(tabwriter.Writer)
-	output.Init(os.Stdout, 0, 8, 1, ' ', 0)
+	output.Init(os.Stdout, 5, 8, 2, ' ', 0)
 
 	for _, row := range fields {
 		writeInColumns(output, row)
@@ -42,7 +42,7 @@ func WriteTable(fields [][]string) {
 // WriteCluster prints the cluster data to the console
 func WriteCluster(cluster common.Cluster) {
 	output := new(tabwriter.Writer)
-	output.Init(os.Stdout, 0, 8, 2, ' ', 0)
+	output.Init(os.Stdout, 5, 8, 2, ' ', 0)
 
 	fields := []tuple{
 		tuple{"ID", cluster.GetID()},
@@ -59,7 +59,7 @@ func WriteCluster(cluster common.Cluster) {
 // WriteClusters prints the clusters data to the console
 func WriteClusters(clusters []common.Cluster) {
 	output := new(tabwriter.Writer)
-	output.Init(os.Stdout, 0, 8, 1, ' ', 0)
+	output.Init(os.Stdout, 5, 8, 2, ' ', 0)
 
 	headerFields := []string{
 		"ID",
