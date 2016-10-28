@@ -1,19 +1,19 @@
-hash: d885eb12d96a3e62c717df0e573e95f9eb6149b756e4081d5e7ad3b2688f18c7
-updated: 2016-10-28T15:50:54.09059726-05:00
+hash: 543dfeb5991b4e8942a92d17aa1cc0c54c3bd7d53ac3de254434f40fab49d953
+updated: 2016-10-28T16:43:04.236298571-05:00
 imports:
 - name: github.com/davecgh/go-spew
-  version: 6cf5744a041a0022271cefed95ba843f6d87fd51
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/fsnotify/fsnotify
-  version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
+  version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
 - name: github.com/getcarina/libcarina
   version: 0adbb72d11bbe56450ccc3f8be28d78811b8a953
-  repo: git@github.com:getcarina/libcarina.git
+  repo: https://github.com/getcarina/libcarina.git
   vcs: git
 - name: github.com/getcarina/libmakeswarm
   version: d0906762e0cc6218a6d7255567a6911121a70a83
-  repo: git@github.com:getcarina/libcarina.git
+  repo: https://github.com/getcarina/libcarina.git
   vcs: git
 - name: github.com/gophercloud/gophercloud
   version: b267f2372f44b2479bb598d4e333804b667b80e5
@@ -33,7 +33,7 @@ imports:
   - openstack/identity/v2/tenants
   - testhelper
 - name: github.com/hashicorp/hcl
-  version: ef8133da8cda503718a74741312bf50821e6de79
+  version: 99ce73d4fe576449f7a689d4fc2b2ad09a86bdaa
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -52,7 +52,7 @@ imports:
 - name: github.com/Masterminds/semver
   version: 8d0431362b544d1a3536cca26684828866a7de09
 - name: github.com/mitchellh/mapstructure
-  version: ca63d7c062ee3c9f34db231e352b60012b4fd0c1
+  version: f3009df150dadf309fdee4a54ed65c124afad715
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
@@ -60,9 +60,9 @@ imports:
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/pkg/sftp
-  version: 8197a2e580736b78d704be0fc47b2324c0591a32
+  version: 4d0e916071f68db74f8a73926335f809396d6b42
 - name: github.com/rackspace/gophercloud
-  version: 0d8599924d296da0f172489ecddf51e4066c329a
+  version: e00690e87603abe613e9f02c816c7c4bef82e063
   subpackages:
   - rackspace
   - openstack
@@ -76,7 +76,7 @@ imports:
   - pagination
 - name: github.com/Sirupsen/logrus
   version: 98b74aac5b7a98855050754bab2631a4a8ea92e3
-  repo: git@github.com:carolynvs/logrus.git
+  repo: https://github.com/carolynvs/logrus.git
   vcs: git
 - name: github.com/spf13/afero
   version: 52e4a6cfac46163658bd4f123c49b6ee7dc75f78
@@ -90,22 +90,22 @@ imports:
 - name: github.com/spf13/jwalterweatherman
   version: 33c24e77fb80341fe7130ee7c594256ff08ccc46
 - name: github.com/spf13/pflag
-  version: c7e63cf4530bcd3ba943729cee0efeff2ebea63f
+  version: 5ccb023bc27df288a957c5e994cd44fd19619465
 - name: github.com/spf13/viper
-  version: 382f87b929b84ce13e9c8a375a4b217f224e6c65
+  version: 80ab6657f9ec7e5761f6603320d3d58dfe6970f6
 - name: golang.org/x/crypto
-  version: a20de3fa94e069ec699987416679230d72e030a3
+  version: b2fa06b6af4b7c9bfeb8569ab7b17f04550717bf
   subpackages:
   - ssh
   - curve25519
   - ed25519
   - ed25519/internal/edwards25519
 - name: golang.org/x/sys
-  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  version: c200b10b5d5e122be351b67af224adc6128af5bf
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: a7c023693a94aedd6b6df43ae7526bfe9d2b7d22
+  version: a8b38433e35b65ba247bb267317037dee1b70cea
   subpackages:
   - transform
   - unicode/norm
