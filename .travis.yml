@@ -3,6 +3,10 @@ go:
 - 1.6
 install:
 - make get-deps
+- curl -L https://github.com/Masterminds/glide/releases/download/v0.11.1/glide-v0.11.1-linux-amd64.tar.gz | tar -xzv
+- mv linux-amd64/glide $GOPATH/bin/glide
+- chmod +x $GOPATH/bin/glide
+- glide install --force --update-vendored
 script:
 - make test
 - make cross-build
