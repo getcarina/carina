@@ -39,7 +39,7 @@ test: local
 carina-linux: linux
 	cp bin/carina-linux-amd64 carina-linux
 
-cross-build: get-deps local linux darwin windows
+cross-build: linux darwin windows
 	cp -R $(BINDIR) bin/carina/latest
 
 linux: $(GOFILES)
