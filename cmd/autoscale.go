@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-
 	"fmt"
 	"strings"
 
@@ -17,10 +16,11 @@ func newAutoScaleCommand() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:    "autoscale <cluster-name> off/on",
-		Short:  "Change the autoscaling setting on a cluster",
-		Long:   "Change the autoscaling setting on a cluster",
-		Hidden: true,
+		Use:               "autoscale <cluster-name> off/on",
+		Short:             "Change the autoscaling setting on a cluster",
+		Long:              "Change the autoscaling setting on a cluster",
+		Hidden:            true,
+		PersistentPreRunE: authenticatedPreRunE,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 2 {
 				return errors.New("A cluster name and the autoscale value (off/on) is required")

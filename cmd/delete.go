@@ -13,10 +13,11 @@ func newDeleteCommand() *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:     "delete <cluster-name>",
-		Aliases: []string{"rm"},
-		Short:   "Delete a cluster",
-		Long:    "Delete a cluster",
+		Use:               "delete <cluster-name>",
+		Aliases:           []string{"rm"},
+		Short:             "Delete a cluster",
+		Long:              "Delete a cluster",
+		PersistentPreRunE: authenticatedPreRunE,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return bindClusterNameArg(args, &options.name)
 		},

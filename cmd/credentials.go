@@ -13,9 +13,10 @@ func newCredentialsCommand() *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "credentials <cluster-name>",
-		Short: "Download a cluster's credentials",
-		Long:  "Download a cluster's credentials",
+		Use:               "credentials <cluster-name>",
+		Short:             "Download a cluster's credentials",
+		Long:              "Download a cluster's credentials",
+		PersistentPreRunE: authenticatedPreRunE,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return bindClusterNameArg(args, &options.name)
 		},

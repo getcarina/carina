@@ -8,10 +8,11 @@ import (
 
 func newBashCompletionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "bash-completion",
-		Short:  "Generate a bash completion file for the carina cli",
-		Long:   "Generate a bash completion file for the carina cli",
-		Hidden: true,
+		Use:               "bash-completion",
+		Short:             "Generate a bash completion file for the carina cli",
+		Long:              "Generate a bash completion file for the carina cli",
+		Hidden:            true,
+		PersistentPreRunE: unauthenticatedPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Parent().GenBashCompletion(os.Stdout)
 		},

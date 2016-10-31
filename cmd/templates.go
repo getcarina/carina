@@ -7,9 +7,10 @@ import (
 
 func newTemplatesCommand() *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "templates",
-		Short: "List cluster templates",
-		Long:  "List cluster templates",
+		Use:               "templates",
+		Short:             "List cluster templates",
+		Long:              "List cluster templates",
+		PersistentPreRunE: authenticatedPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			templates, err := cxt.Client.ListClusterTemplates(cxt.Account)
 			if err != nil {

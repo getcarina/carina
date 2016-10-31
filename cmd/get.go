@@ -12,9 +12,10 @@ func newGetCommand() *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "get <cluster-name>",
-		Short: "Show information about a cluster",
-		Long:  "Show information about a cluster",
+		Use:               "get <cluster-name>",
+		Short:             "Show information about a cluster",
+		Long:              "Show information about a cluster",
+		PersistentPreRunE: authenticatedPreRunE,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return bindClusterNameArg(args, &options.name)
 		},

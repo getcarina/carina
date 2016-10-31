@@ -16,9 +16,10 @@ func newCreateCommand() *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "create <cluster-name>",
-		Short: "Create a cluster",
-		Long:  "Create a cluster",
+		Use:               "create <cluster-name>",
+		Short:             "Create a cluster",
+		Long:              "Create a cluster",
+		PersistentPreRunE: authenticatedPreRunE,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if options.nodes < 1 {
 				return errors.New("--nodes must be >= 1")

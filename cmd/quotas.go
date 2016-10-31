@@ -9,9 +9,10 @@ import (
 
 func newQuotasCommand() *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "quotas",
-		Short: "Show the user's quotas",
-		Long:  "Show the user's quotas",
+		Use:               "quotas",
+		Short:             "Show the user's quotas",
+		Long:              "Show the user's quotas",
+		PersistentPreRunE: authenticatedPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			quotas, err := cxt.Client.GetQuotas(cxt.Account)
 			if err != nil {
