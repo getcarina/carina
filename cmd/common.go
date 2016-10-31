@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver"
+	"github.com/getcarina/carina/client"
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/carina/version"
 	"github.com/spf13/cobra"
@@ -30,6 +31,8 @@ func authenticatedPreRunE(cmd *cobra.Command, args []string) error {
 }
 
 func unauthenticatedPreRunE(cmd *cobra.Command, args []string) error {
+	cxt.Client = client.NewClient(cxt.CacheEnabled)
+
 	return checkIsLatest()
 }
 
