@@ -17,7 +17,7 @@ func newTemplatesCommand() *cobra.Command {
 				return err
 			}
 
-			data := [][]string{[]string{"Name", "COE", "Host Type"}}
+			data := [][]string{[]string{"Name", "COE", "Host"}}
 			for _, template := range templates {
 				data = append(data, []string{template.GetName(), template.GetCOE(), template.GetHostType()})
 			}
