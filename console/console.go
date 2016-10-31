@@ -10,9 +10,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-type tuple struct {
-	key   string
-	value interface{}
+type Tuple struct {
+	Key   string
+	Value interface{}
 }
 
 // Write prints text to the console
@@ -29,31 +29,36 @@ func Write(format string, a ...interface{}) {
 }
 
 // WriteTable prints rows of tabular data to the console
-func WriteTable(fields [][]string) {
+func WriteTable(rows [][]string) {
 	output := new(tabwriter.Writer)
 	output.Init(os.Stdout, 5, 8, 2, ' ', 0)
 
-	for _, row := range fields {
+	for _, row := range rows {
 		writeInColumns(output, row)
 	}
 	output.Flush()
 }
 
-// WriteCluster prints the cluster data to the console
-func WriteCluster(cluster common.Cluster) {
+// WriteMap prints the cluster data to the console
+func WriteMap(items []Tuple) {
 	output := new(tabwriter.Writer)
 	output.Init(os.Stdout, 5, 8, 2, ' ', 0)
 
-	fields := []tuple{
-		tuple{"ID", cluster.GetID()},
-		tuple{"Name", cluster.GetName()},
-		tuple{"Status", cluster.GetStatus()},
-		tuple{"Template", cluster.GetTemplate().GetName()},
-		tuple{"Nodes", cluster.GetNodes()},
-		tuple{"Details", cluster.GetStatusDetails()},
-	}
-	writeInRows(output, fields)
+	writeInRows(output, items)
 	output.Flush()
+}
+
+// WriteCluster prints the cluster data to the console
+func WriteCluster(cluster common.Cluster) {
+	items := []Tuple{
+		{"ID", cluster.GetID()},
+		{"Name", cluster.GetName()},
+		{"Status", cluster.GetStatus()},
+		{"Template", cluster.GetTemplate().GetName()},
+		{"Nodes", cluster.GetNodes()},
+		{"Details", cluster.GetStatusDetails()},
+	}
+	WriteMap(items)
 }
 
 // WriteClusters prints the clusters data to the console
@@ -94,15 +99,15 @@ func writeInColumns(output *tabwriter.Writer, columns []string) {
 	}
 }
 
-func writeInRows(output *tabwriter.Writer, rows []tuple) {
-	for _, row := range rows {
+func writeInRows(output *tabwriter.Writer, items []Tuple) {
+	for _, item := range items {
 		// Use the default string conversion when displaying the value
-		val := fmt.Sprint(row.value)
+		val := fmt.Sprint(item.Value)
 
 		// Indent multi-line values
 		val = strings.Replace(val, "\n", "\n\t", -1)
 
-		_, err := fmt.Fprintf(output, "%s\t%s\n", row.key, val)
+		_, err := fmt.Fprintf(output, "%s\t%s\n", item.Key, val)
 		if err != nil {
 			err = errors.Wrap(err, "Unable to write to console.")
 			fmt.Println(err.Error())
