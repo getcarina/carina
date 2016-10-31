@@ -1,6 +1,8 @@
 language: go
 go:
 - 1.6
+git:
+  depth: 9999999
 install:
 - make get-deps
 - curl -L https://github.com/Masterminds/glide/releases/download/v0.11.1/glide-v0.11.1-linux-amd64.tar.gz | tar -xzv
