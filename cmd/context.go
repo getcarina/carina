@@ -184,7 +184,7 @@ func (cxt *context) loadProfile() (ok bool, err error) {
 	}
 
 	profile := viper.GetStringMapString(cxt.Profile)
-	if profile == nil {
+	if len(profile) == 0 {
 		return false, fmt.Errorf("Profile, %s, not found in %s", cxt.Profile, configFile)
 	}
 	common.Log.WriteDebug("Reading %s profile from %s", cxt.Profile, configFile)
