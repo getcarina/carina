@@ -2,7 +2,7 @@
 set -eo pipefail
 set +H
 
-if [ -s "$1" ]; then
+if [ -z "$1" ]; then
     echo "No cloud specified"
     exit 1
 fi
