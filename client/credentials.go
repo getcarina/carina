@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,15 +12,11 @@ const clusterDirName = "clusters"
 const defaultDotDir = ".carina"
 const defaultNonDotDir = "carina"
 const xdgDataHomeEnvVar = "XDG_DATA_HOME"
-const credentialsBaseDirEnvVar = "CARINA_CREDENTIALS_DIR"
 
-// GetCredentialsDir get the current base directory for carina credentials
+// GetCredentialsDir gets the carina home directory, e.g. ~/.carina
 func GetCredentialsDir() (string, error) {
 	if os.Getenv(CarinaHomeDirEnvVar) != "" {
 		return os.Getenv(CarinaHomeDirEnvVar), nil
-	}
-	if os.Getenv(credentialsBaseDirEnvVar) != "" {
-		return os.Getenv(credentialsBaseDirEnvVar), nil
 	}
 
 	// Support XDG
@@ -29,7 +26,7 @@ func GetCredentialsDir() (string, error) {
 
 	homeDir, err := userHomeDir()
 	if err != nil {
-		return "", err
+		return "", errors.New("Unable to default CARINA_HOME to ~/.carina. Set the CARINA_HOME environment variable")
 	}
 	return filepath.Join(homeDir, defaultDotDir), nil
 }

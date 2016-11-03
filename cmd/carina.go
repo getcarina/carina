@@ -108,15 +108,15 @@ In the following example, the dev profile is used:
 See https://getcarina.com/docs/reference/carina-cli for additional documentation, FAQ and examples.
 `
 
-	baseDir, err := client.GetCredentialsDir()
+	carinaHome, err := client.GetCredentialsDir()
 	if err != nil {
-		panic(err)
+		carinaHome = err.Error()
 	}
 	envHelp := fmt.Sprintf(`Environment Variables:
   CARINA_HOME
     directory that stores your cluster tokens and credentials
     current setting: %s
-`, baseDir)
+`, carinaHome)
 	cmd.SetUsageTemplate(fmt.Sprintf("%s\n%s\n\n%s", cmd.UsageTemplate(), envHelp, authHelp))
 
 	cobra.OnInitialize(initConfig)

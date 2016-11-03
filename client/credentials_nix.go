@@ -3,12 +3,10 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"os/user"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 // CredentialsNextStepsString returns instructions to load the cluster credentials
@@ -42,12 +40,10 @@ func sourceHelpString(credentialFile string, clusterName string, shell string) s
 }
 
 func userHomeDir() (string, error) {
-	if os.Getenv("HOME") != "" {
-		return os.Getenv("HOME"), nil
+	home := os.Getenv("HOME")
+	if home != "" {
+		return home, nil
 	}
-	currentUser, err := user.Current()
-	if err != nil {
-		return "", errors.Wrap(err, "Unable to retrieve the current user")
-	}
-	return currentUser.HomeDir, nil
+
+	return "", errors.New("Unable to locate home directory")
 }

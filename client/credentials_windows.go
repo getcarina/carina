@@ -63,11 +63,20 @@ func sourceHelpString(credentialFile string, clusterName string, shell string) s
 }
 
 func userHomeDir() (string, error) {
-	if os.Getenv("HOMEDRIVE") != "" && os.Getenv("HOMEPATH") != "" {
-		return filepath.Join(os.Getenv("HOMEDRIVE"), os.Getenv("HOMEPATH")), nil
+	home := os.Getenv("HOME")
+	if home != "" {
+		return home, nil
 	}
-	if os.Getenv("HOME") != "" {
-		return os.Getenv("HOME"), nil
+
+	homedrive := os.Getenv("HOMEDRIVE")
+	homepath := os.Getenv("HOMEPATH")
+	if homedrive != "" && homepath != "" {
+		return filepath.Join(homedrive, homepath), nil
+	}
+
+	userprofile := os.Getenv("USERPROFILE")
+	if userprofile != "" {
+		return userprofile, nil
 	}
 
 	return "", errors.New("Unable to locate home directory")
