@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"runtime"
+
 	"github.com/getcarina/carina/common"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +31,12 @@ func newEnvCommand() *cobra.Command {
 					options.shell = filepath.Base(shell)
 					common.Log.WriteDebug("Shell: SHELL (%s)", options.shell)
 				} else {
-					return errors.New("Shell was not specified. Either use --shell or set SHELL")
+					options.shell = detectShell()
+					if options.shell != "" {
+						common.Log.WriteDebug("Shell: detected (%s)", options.shell)
+					} else {
+						return errors.New("Shell was not specified. Either use --shell or set SHELL")
+					}
 				}
 			} else {
 				common.Log.WriteDebug("Shell: --shell (%s)", options.shell)
@@ -54,4 +61,18 @@ func newEnvCommand() *cobra.Command {
 	cmd.SetUsageTemplate(cmd.UsageTemplate())
 
 	return cmd
+}
+
+func detectShell() string {
+	if runtime.GOOS != "windows" {
+		return ""
+	}
+
+	common.Log.WriteDebug("Detecting --shell")
+	// Dirty hack: CMD seems to have PROMPT set, while PowerShell doesn't
+	if os.Getenv("PROMPT") != "" {
+		return "cmd"
+	}
+
+	return "powershell"
 }
