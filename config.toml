@@ -15,7 +15,7 @@
 # [prod]
 # cloud="public"
 # username="alicia"
-# api-key="abc123"
+# apikey="abc123"
 #
 # The following profile retrieves its credentials from environment variables
 # defined in your openrc

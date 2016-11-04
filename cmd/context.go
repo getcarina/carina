@@ -267,20 +267,20 @@ func (cxt *context) initCarinaFlags() error {
 		common.Log.WriteDebug("UserName: --username")
 	}
 
-	// api-key = --api-key -> CARINA_APIKEY -> RS_API_KEY
+	// apikey = --apikey -> CARINA_APIKEY -> RS_API_KEY
 	if cxt.APIKey == "" {
 		cxt.APIKey = os.Getenv(CarinaAPIKeyEnvVar)
 		if cxt.APIKey == "" {
 			cxt.APIKey = os.Getenv(RackspaceAPIKeyEnvVar)
 			if cxt.APIKey == "" {
-				return fmt.Errorf("API Key was not specified. Either use --api-key or set %s or %s", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
+				return fmt.Errorf("API Key was not specified. Either use --apikey or set %s or %s", CarinaAPIKeyEnvVar, RackspaceAPIKeyEnvVar)
 			}
 			common.Log.WriteDebug("API Key: %s", RackspaceAPIKeyEnvVar)
 		} else {
 			common.Log.WriteDebug("API Key: %s", CarinaAPIKeyEnvVar)
 		}
 	} else {
-		common.Log.WriteDebug("API Key: --api-key")
+		common.Log.WriteDebug("API Key: --apikey")
 	}
 
 	return nil

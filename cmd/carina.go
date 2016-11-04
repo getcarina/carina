@@ -51,7 +51,8 @@ func newCarinaCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&cxt.Profile, "profile", "", "Use saved credentials from a profile")
 	cmd.PersistentFlags().BoolVar(&cxt.ProfileDisabled, "no-profile", false, "Ignore profiles and use flags and/or environment variables only")
 	cmd.PersistentFlags().StringVar(&cxt.Username, "username", "", "Username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]")
-	cmd.PersistentFlags().StringVar(&cxt.APIKey, "api-key", "", "Public Cloud API Key [CARINA_APIKEY/RS_API_KEY]")
+	cmd.PersistentFlags().StringVar(&cxt.APIKey, "apikey", "", "Public Cloud API Key [CARINA_APIKEY/RS_API_KEY]")
+	cmd.PersistentFlags().StringVar(&cxt.APIKey, "api-key", "", "OBSOLETE. Use --apikey")
 	cmd.PersistentFlags().StringVar(&cxt.Password, "password", "", "Private Cloud Password [OS_PASSWORD]")
 	cmd.PersistentFlags().StringVar(&cxt.Project, "project", "", "Private Cloud Project Name [OS_PROJECT_NAME]")
 	cmd.PersistentFlags().StringVar(&cxt.Domain, "domain", "", "Private Cloud Domain Name [OS_DOMAIN_NAME]")
@@ -61,6 +62,7 @@ func newCarinaCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&cxt.CloudType, "cloud", "", "The cloud type: public or private")
 
 	// Hide local development flags
+	cmd.PersistentFlags().MarkHidden("api-key")
 	cmd.PersistentFlags().MarkHidden("config")
 	cmd.PersistentFlags().MarkHidden("cache")
 	cmd.PersistentFlags().MarkHidden("endpoint")
