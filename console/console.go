@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Tuple is used to create ordered key-value pairs
 type Tuple struct {
 	Key   string
 	Value interface{}
