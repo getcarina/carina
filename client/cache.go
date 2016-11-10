@@ -80,10 +80,14 @@ func (cache *Cache) save() error {
 		return errors.Wrap(err, "Cannot open on-disk cache")
 	}
 
-	err = json.NewEncoder(f).Encode(cache)
+	contents, err := json.MarshalIndent(cache, "", "  ")
 	if err != nil {
-		_ = f.Close()
 		return errors.Wrap(err, "Cannot serialize in-memory cache")
+	}
+
+	_, err = f.Write(contents)
+	if err != nil {
+		return errors.Wrap(err, "Cannot write to on-disk cache")
 	}
 
 	return nil
