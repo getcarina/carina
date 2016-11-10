@@ -92,15 +92,21 @@ type context struct {
 
 func (cxt *context) shouldTryProfile() bool {
 	if cxt.ProfileDisabled {
+		common.Log.WriteDebug("Profiles are disabled with --no-profile")
 		return false
 	}
 
 	if cxt.userSpecifiedAuthFlagsExist() {
+		common.Log.WriteDebug("Profiles are disabled, auth flags are present")
 		return false
 	}
 
-	configFile := viper.ConfigFileUsed()
-	return configFile != ""
+	configExists := viper.ConfigFileUsed() != ""
+	if !configExists {
+		common.Log.WriteDebug("Profiles are disabled, no config file found")
+	}
+
+	return configExists
 }
 
 func (cxt *context) userSpecifiedAuthFlagsExist() bool {
@@ -156,6 +162,8 @@ func (cxt *context) initialize() error {
 		if err != nil {
 			return err
 		}
+	} else {
+		common.Log.WriteDebug("Ignoring profiles")
 	}
 
 	// Build-up to the authentication information from flags and environment variables
@@ -185,6 +193,7 @@ func (cxt *context) initialize() error {
 }
 
 func (cxt *context) loadProfile() (ok bool, err error) {
+	common.Log.WriteDebug("Loading profiles")
 	configFile := viper.ConfigFileUsed()
 
 	// Try to use the default profile
