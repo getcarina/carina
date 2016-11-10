@@ -41,7 +41,12 @@ func buildClusterCredentialsPath(account Account, clusterName string, customPath
 		if err != nil {
 			return "", err
 		}
-		credentialsPath = filepath.Join(baseDir, clusterDirName, account.GetID(), clusterName)
+
+		clusterPrefix, err := account.GetClusterPrefix()
+		if err != nil {
+			return "", err
+		}
+		credentialsPath = filepath.Join(baseDir, clusterDirName, clusterPrefix, clusterName)
 	}
 
 	credentialsPath = filepath.Clean(credentialsPath)

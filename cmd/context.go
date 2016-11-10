@@ -87,7 +87,7 @@ type context struct {
 	Domain           string
 	Region           string
 	AuthEndpoint     string
-	Endpoint        string
+	EndpointOverride string
 }
 
 func (cxt *context) shouldTryProfile() bool {
@@ -117,21 +117,21 @@ func (cxt *context) buildAccount() client.Account {
 	switch cxt.CloudType {
 	case client.CloudMakeCOE:
 		return &makecoe.Account{
-			Endpoint: cxt.Endpoint,
+			EndpointOverride: cxt.EndpointOverride,
 			UserName:         cxt.Username,
 			APIKey:           cxt.APIKey,
 			Region:           cxt.Region,
 		}
 	case client.CloudMakeSwarm:
 		return &makeswarm.Account{
-			Endpoint: cxt.Endpoint,
+			Endpoint: cxt.EndpointOverride,
 			UserName: cxt.Username,
 			APIKey:   cxt.APIKey,
 		}
 	case client.CloudMagnum:
 		return &magnum.Account{
 			AuthEndpoint: cxt.AuthEndpoint,
-			Endpoint:     cxt.Endpoint,
+			Endpoint:     cxt.EndpointOverride,
 			UserName:     cxt.Username,
 			Password:     cxt.Password,
 			Project:      cxt.Project,
@@ -254,10 +254,10 @@ func (cxt *context) initCarinaFlags() error {
 		common.Log.WriteDebug("AuthEndpoint: --auth-endpoint")
 	}
 
-	// endpoint = --endpoint -> public carina endpoint
-	if cxt.Endpoint == "" {
-		cxt.Endpoint = os.Getenv(CarinaEndpointEnvVar)
-		if cxt.Endpoint == "" {
+	// endpoint = --endpoint -> CARINA_ENDPOINT
+	if cxt.EndpointOverride == "" {
+		cxt.EndpointOverride = os.Getenv(CarinaEndpointEnvVar)
+		if cxt.EndpointOverride == "" {
 			common.Log.WriteDebug("Endpoint: default")
 		} else {
 			common.Log.WriteDebug("Endpoint: %s", CarinaEndpointEnvVar)
@@ -331,9 +331,9 @@ func (cxt *context) initMagnumFlags() error {
 	}
 
 	// endpoint = --endpoint -> OS_ENDPOINT -> service catalog endpoint
-	if cxt.Endpoint == "" {
-		cxt.Endpoint = os.Getenv(OpenStackEndpointEnvVar)
-		if cxt.Endpoint == "" {
+	if cxt.EndpointOverride == "" {
+		cxt.EndpointOverride = os.Getenv(OpenStackEndpointEnvVar)
+		if cxt.EndpointOverride == "" {
 			common.Log.WriteDebug("Endpoint: default")
 		} else {
 			common.Log.WriteDebug("Endpoint: %s", OpenStackEndpointEnvVar)
@@ -421,7 +421,7 @@ func (cxt *context) loadCarinaProfile(profile map[string]string) (err error) {
 		return err
 	}
 
-	cxt.Endpoint, err = cxt.getProfileSetting(profile, "endpoint", "", false)
+	cxt.EndpointOverride, err = cxt.getProfileSetting(profile, "endpoint", "", false)
 	if err != nil {
 		return err
 	}
@@ -450,7 +450,7 @@ func (cxt *context) loadMagnumProfile(profile map[string]string) (err error) {
 		return err
 	}
 
-	cxt.Endpoint, err = cxt.getProfileSetting(profile, "endpoint", "", false)
+	cxt.EndpointOverride, err = cxt.getProfileSetting(profile, "endpoint", "", false)
 	if err != nil {
 		return err
 	}

@@ -58,7 +58,7 @@ func newCarinaCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&cxt.Domain, "domain", "", "Private Cloud Domain Name [OS_DOMAIN_NAME]")
 	cmd.PersistentFlags().StringVar(&cxt.Region, "region", "", "Region [CARINA_REGION/RS_REGION_NAME/OS_REGION_NAME]")
 	cmd.PersistentFlags().StringVar(&cxt.AuthEndpoint, "auth-endpoint", "", "Private Cloud Authentication endpoint [OS_AUTH_URL]")
-	cmd.PersistentFlags().StringVar(&cxt.Endpoint, "endpoint", "", "Custom API endpoint [CARINA_ENDPOINT/OS_ENDPOINT]")
+	cmd.PersistentFlags().StringVar(&cxt.EndpointOverride, "endpoint", "", "Custom API endpoint [CARINA_ENDPOINT/OS_ENDPOINT]")
 	cmd.PersistentFlags().StringVar(&cxt.CloudType, "cloud", "", "The cloud type: public or private")
 
 	// Hide local development flags

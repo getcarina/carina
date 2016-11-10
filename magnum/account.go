@@ -29,6 +29,16 @@ func (account *Account) GetID() string {
 	return fmt.Sprintf("private-%x-%s", hash[:4], account.UserName)
 }
 
+// GetClusterPrefix returns a unique string to identity the account's clusters, e.g. private-[endpoint hash]-[username]
+func (account *Account) GetClusterPrefix() (string, error) {
+	if account.Endpoint == "" {
+		return "", errors.New("Cannot call account.GetClusterPrefix before authenticating and setting account.Endpoint")
+	}
+
+	hash := sha1.Sum([]byte(account.Endpoint))
+	return fmt.Sprintf("private-%x-%s", hash[:4], account.UserName), nil
+}
+
 // Authenticate creates an authenticated client, ready to use to communicate with the OpenStack Magnum API
 func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 	var magnumClient *gophercloud.ServiceClient

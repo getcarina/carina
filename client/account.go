@@ -4,6 +4,9 @@ package client
 type Account interface {
 	Cacheable
 
-	// GetID returns a unique string to identity for the account
+	// GetID returns a unique string to identity to the account's credentials
 	GetID() string
+
+	// GetClusterPrefix returns a unique string to identity the account's clusters
+	GetClusterPrefix() (string, error)
 }

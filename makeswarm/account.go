@@ -1,7 +1,6 @@
 package makeswarm
 
 import (
-	"crypto/sha1"
 	"fmt"
 	"net/http"
 
@@ -26,14 +25,14 @@ func (account *Account) getEndpoint() string {
 	return libcarina.BetaEndpoint
 }
 
-// GetID returns a unique id for the account, e.g. public[-custom endpoint hash]-[username]
+// GetID returns a unique id for the account, e.g. public-[username]
 func (account *Account) GetID() string {
-	if account.Endpoint == "" {
-		return fmt.Sprintf("public-%s", account.UserName)
-	}
+	return fmt.Sprintf("public-%s", account.UserName)
+}
 
-	hash := sha1.Sum([]byte(account.Endpoint))
-	return fmt.Sprintf("public-%x-%s", hash[:4], account.UserName)
+// GetClusterPrefix returns a unique string to identity the account's clusters, e.g. makeswarm-[username]
+func (account *Account) GetClusterPrefix() (string, error) {
+	return fmt.Sprintf("makeswarm-%s", account.UserName), nil
 }
 
 // Authenticate creates an authenticated client, ready to use to communicate with the Carina API
