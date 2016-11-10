@@ -56,7 +56,7 @@ func newCarinaCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&cxt.Password, "password", "", "Private Cloud Password [OS_PASSWORD]")
 	cmd.PersistentFlags().StringVar(&cxt.Project, "project", "", "Private Cloud Project Name [OS_PROJECT_NAME]")
 	cmd.PersistentFlags().StringVar(&cxt.Domain, "domain", "", "Private Cloud Domain Name [OS_DOMAIN_NAME]")
-	cmd.PersistentFlags().StringVar(&cxt.Region, "region", "", "Private Cloud Region Name [OS_REGION_NAME]")
+	cmd.PersistentFlags().StringVar(&cxt.Region, "region", "", "Region [CARINA_REGION/RS_REGION_NAME/OS_REGION_NAME]")
 	cmd.PersistentFlags().StringVar(&cxt.AuthEndpoint, "auth-endpoint", "", "Private Cloud Authentication endpoint [OS_AUTH_URL]")
 	cmd.PersistentFlags().StringVar(&cxt.Endpoint, "endpoint", "", "Custom API endpoint [CARINA_ENDPOINT/OS_ENDPOINT]")
 	cmd.PersistentFlags().StringVar(&cxt.CloudType, "cloud", "", "The cloud type: public or private")

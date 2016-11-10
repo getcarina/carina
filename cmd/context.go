@@ -32,6 +32,9 @@ const RackspaceAPIKeyEnvVar = "RS_API_KEY"
 // OpenStackPasswordEnvVar is OpenStack password environment variable
 const OpenStackPasswordEnvVar = "OS_PASSWORD"
 
+// RackspaceAuthURLEnvVar is the Rackspace Identity URL
+const RackspaceAuthURLEnvVar = "RS_AUTH_URL"
+
 // OpenStackAuthURLEnvVar is the OpenStack Identity URL (v2 and v3 supported)
 const OpenStackAuthURLEnvVar = "OS_AUTH_URL"
 
@@ -53,7 +56,13 @@ const OpenStackUserDomainEnvVar = "OS_USER_DOMAIN_NAME"
 // OpenStackDomainEnvVar is the OpenStack domain name, optional for identity v3
 const OpenStackDomainEnvVar = "OS_DOMAIN_NAME"
 
-// OpenStackRegionEnvVar is the OpenStack domain name, optional for identity v3
+// CarinaRegionEnvVar is the Carina region name
+const CarinaRegionEnvVar = "CARINA_REGION"
+
+// RackspaceRegionEnvVar is the Rackspace region name
+const RackspaceRegionEnvVar = "RS_REGION_NAME"
+
+// OpenStackRegionEnvVar is the OpenStack region name
 const OpenStackRegionEnvVar = "OS_REGION_NAME"
 
 type context struct {
@@ -68,16 +77,16 @@ type context struct {
 	Silent       bool
 
 	// Account Flags
-	Profile         string
-	ProfileDisabled bool
-	CloudType       string
-	Username        string
-	APIKey          string
-	Password        string
-	Project         string
-	Domain          string
-	Region          string
-	AuthEndpoint    string
+	Profile          string
+	ProfileDisabled  bool
+	CloudType        string
+	Username         string
+	APIKey           string
+	Password         string
+	Project          string
+	Domain           string
+	Region           string
+	AuthEndpoint     string
 	Endpoint        string
 }
 
@@ -109,8 +118,9 @@ func (cxt *context) buildAccount() client.Account {
 	case client.CloudMakeCOE:
 		return &makecoe.Account{
 			Endpoint: cxt.Endpoint,
-			UserName: cxt.Username,
-			APIKey:   cxt.APIKey,
+			UserName:         cxt.Username,
+			APIKey:           cxt.APIKey,
+			Region:           cxt.Region,
 		}
 	case client.CloudMakeSwarm:
 		return &makeswarm.Account{
@@ -232,9 +242,14 @@ func (cxt *context) detectCloud() error {
 }
 
 func (cxt *context) initCarinaFlags() error {
-	// auth-endpoint = --auth-endpoint -> rackspace identity endpoint
+	// auth-endpoint = --auth-endpoint -> RS_AUTH_URL -> rackspace identity endpoint
 	if cxt.AuthEndpoint == "" {
-		common.Log.WriteDebug("AuthEndpoint: default")
+		cxt.AuthEndpoint = os.Getenv(RackspaceAuthURLEnvVar)
+		if cxt.AuthEndpoint == "" {
+			common.Log.WriteDebug("AuthEndpoint: %s", RackspaceAuthURLEnvVar)
+		} else {
+			common.Log.WriteDebug("AuthEndpoint: default")
+		}
 	} else {
 		common.Log.WriteDebug("AuthEndpoint: --auth-endpoint")
 	}
@@ -281,6 +296,23 @@ func (cxt *context) initCarinaFlags() error {
 		}
 	} else {
 		common.Log.WriteDebug("API Key: --apikey")
+	}
+
+	// region = --region -> CARINA_REGION -> RS_REGION_NAME
+	if cxt.Region == "" {
+		cxt.Region = os.Getenv(CarinaRegionEnvVar)
+		if cxt.Region == "" {
+			cxt.Region = os.Getenv(RackspaceRegionEnvVar)
+			if cxt.Region == "" {
+				common.Log.WriteDebug("Region: not specified. Either use --region, or set %s or %s.", CarinaRegionEnvVar, RackspaceRegionEnvVar)
+			} else {
+				common.Log.WriteDebug("Region: %s", RackspaceRegionEnvVar)
+			}
+		} else {
+			common.Log.WriteDebug("Region: %s", CarinaRegionEnvVar)
+		}
+	} else {
+		common.Log.WriteDebug("Region: --region")
 	}
 
 	return nil
@@ -400,6 +432,11 @@ func (cxt *context) loadCarinaProfile(profile map[string]string) (err error) {
 	}
 
 	cxt.APIKey, err = cxt.getProfileSetting(profile, "apikey", "", true)
+	if err != nil {
+		return err
+	}
+
+	cxt.Region, err = cxt.getProfileSetting(profile, "region", "", false)
 	if err != nil {
 		return err
 	}
