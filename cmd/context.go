@@ -135,12 +135,12 @@ func (cxt *context) buildAccount() client.Account {
 		}
 	case client.CloudMagnum:
 		return &magnum.Account{
-			AuthEndpoint: cxt.AuthEndpoint,
-			Endpoint:     cxt.EndpointOverride,
-			UserName:     cxt.Username,
-			Password:     cxt.Password,
-			Project:      cxt.Project,
-			Domain:       cxt.Domain,
+			AuthEndpoint:     cxt.AuthEndpoint,
+			EndpointOverride: cxt.EndpointOverride,
+			UserName:         cxt.Username,
+			Password:         cxt.Password,
+			Project:          cxt.Project,
+			Domain:           cxt.Domain,
 		}
 	default:
 		panic(fmt.Sprintf("Unsupported cloud type: %s", cxt.CloudType))
