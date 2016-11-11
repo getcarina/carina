@@ -21,7 +21,7 @@ default: get-deps validate local
 get-deps:
 	go get github.com/golang/lint/golint
 	go get github.com/Masterminds/glide
-	glide install
+	glide install --force --update-vendored
 
 validate:
 	go fmt $(GOFILES_NOVENDOR)
@@ -84,7 +84,8 @@ carina/cli: ca-certificates.crt carina-linux
 .PHONY: clean build-tagged-for-release checkout tagged-build
 
 clean:
-	 -rm -fr bin/*
-	 -rm carina
-	 -rm carina-linux
-	 -rm ca-certificates.crt
+	-rm -fr vendor
+	-rm -fr bin
+	-rm carina
+	-rm carina-linux
+	-rm ca-certificates.crt
