@@ -1,8 +1,9 @@
 COMMIT = $(shell git rev-parse --verify HEAD)
 VERSION = $(shell git describe --tags --dirty='-dev' 2> /dev/null)
+PERMALINK = $(shell if [[ ${VERSION} =~ [^-]*-([^.]+).* ]]; then echo $${BASH_REMATCH[1]}; else echo "latest"; fi)
+
 GITHUB_ORG = getcarina
 GITHUB_REPO = carina
-
 REPO_PATH = ${GOPATH}/src/github.com/${GITHUB_ORG}/${GITHUB_REPO}
 
 XFLAG_PRE = -X github.com/${GITHUB_ORG}/${GITHUB_REPO}
@@ -40,7 +41,7 @@ carina-linux: linux
 	cp bin/carina-linux-amd64 carina-linux
 
 cross-build: linux darwin windows
-	cp -R $(BINDIR) bin/carina/latest
+	cp -R $(BINDIR) bin/carina/${PERMALINK}
 
 linux: $(GOFILES)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINDIR)/Linux/x86_64/carina .
