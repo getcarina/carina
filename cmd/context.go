@@ -130,7 +130,6 @@ func (cxt *context) buildAccount() client.Account {
 		}
 	case client.CloudMakeSwarm:
 		return &makeswarm.Account{
-			Endpoint: cxt.EndpointOverride,
 			UserName: cxt.Username,
 			APIKey:   cxt.APIKey,
 		}
