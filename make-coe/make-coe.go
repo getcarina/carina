@@ -42,10 +42,6 @@ func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (c
 		return nil, errors.New("--template is required")
 	}
 
-	if nodes > 1 {
-		common.Log.WriteWarning("Using --nodes=1. Multi-node cluster support is coming soon!")
-	}
-
 	err := carina.init()
 	if err != nil {
 		return nil, err
