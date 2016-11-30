@@ -19,11 +19,13 @@ var Log = &consoleLogger{
 		Hooks: make(logrus.LevelHooks),
 		Level: logrus.WarnLevel,
 	},
+	ErrorContext: make(map[string]interface{}),
 }
 
 type consoleLogger struct {
 	*logrus.Logger
 	IsSilent bool
+	ErrorContext map[string]interface{}
 }
 
 func (log *consoleLogger) SetDebug() {

@@ -118,7 +118,9 @@ func (hl *HTTPLog) logResponseBody(original io.ReadCloser, headers http.Header) 
 	// Log the request id, if present
 	for key, value := range headers {
 		if strings.Contains(strings.ToLower(key), "request-id") {
-			hl.Logger.Debugf("Request ID: %s", value[0])
+			requestID := value[0]
+			hl.Logger.Debugf("Request ID: %s", requestID)
+			Log.ErrorContext["Request ID"] = requestID
 			break
 		}
 	}
