@@ -39,6 +39,14 @@ func NewClient(cacheEnabled bool) *Client {
 	return client
 }
 
+func wrapClientError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	return newClientError(err)
+}
+
 func (client *Client) initCache(cacheEnabled bool) {
 	disableCache := func(err error) {
 		common.Log.WriteWarning("Unable to initialize cache. Starting fresh!")
@@ -95,34 +103,31 @@ func (client *Client) buildContainerService(account Account) (common.ClusterServ
 
 // GetQuotas retrieves the quotas set for the account
 func (client *Client) GetQuotas(account Account) (common.Quotas, error) {
-	var quotas common.Quotas
-
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
-		return quotas, err
+		return nil, err
 	}
 
-	return svc.GetQuotas()
+	quotas, err := svc.GetQuotas()
+	return quotas, wrapClientError(err)
 }
 
 // CreateCluster creates a new cluster and prints the cluster information
 func (client *Client) CreateCluster(account Account, name string, template string, nodes int, waitUntilActive bool) (common.Cluster, error) {
-	var cluster common.Cluster
-
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
-	cluster, err = svc.CreateCluster(name, template, nodes)
+	cluster, err := svc.CreateCluster(name, template, nodes)
 
 	if waitUntilActive && err == nil {
 		cluster, err = svc.WaitUntilClusterIsActive(cluster)
 	}
 
-	return cluster, err
+	return cluster, wrapClientError(err)
 }
 
 // DownloadClusterCredentials downloads the TLS certificates and configuration scripts for a cluster
@@ -135,7 +140,7 @@ func (client *Client) DownloadClusterCredentials(account Account, name string, c
 
 	creds, err := svc.GetClusterCredentials(name)
 	if err != nil {
-		return "", err
+		return "", wrapClientError(err)
 	}
 
 	credentialsPath, err = buildClusterCredentialsPath(account, name, customPath)
@@ -197,7 +202,8 @@ func (client *Client) ListClusters(account Account) ([]common.Cluster, error) {
 		return nil, err
 	}
 
-	return svc.ListClusters()
+	clusters, err := svc.ListClusters()
+	return clusters, wrapClientError(err)
 }
 
 // ListClusterTemplates retrieves available templates for creating a new cluster
@@ -208,77 +214,71 @@ func (client *Client) ListClusterTemplates(account Account) ([]common.ClusterTem
 		return nil, err
 	}
 
-	return svc.ListClusterTemplates()
+	templates, err := svc.ListClusterTemplates()
+	return templates, wrapClientError(err)
 }
 
 // GetCluster retrieves a cluster
 func (client *Client) GetCluster(account Account, name string, waitUntilActive bool) (common.Cluster, error) {
-	var cluster common.Cluster
-
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
-	cluster, err = svc.GetCluster(name)
+	cluster, err := svc.GetCluster(name)
 
 	if waitUntilActive && err == nil {
 		cluster, err = svc.WaitUntilClusterIsActive(cluster)
 	}
 
-	return cluster, err
+	return cluster, wrapClientError(err)
 }
 
 // GrowCluster adds nodes to a cluster
 func (client *Client) GrowCluster(account Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
-	var cluster common.Cluster
-
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
-	cluster, err = svc.GrowCluster(name, nodes)
+	cluster, err := svc.GrowCluster(name, nodes)
 
 	if waitUntilActive && err == nil {
 		cluster, err = svc.WaitUntilClusterIsActive(cluster)
 	}
 
-	return cluster, err
+	return cluster, wrapClientError(err)
 }
 
 // RebuildCluster destroys and recreates the cluster
 func (client *Client) RebuildCluster(account Account, name string, waitUntilActive bool) (common.Cluster, error) {
-	var cluster common.Cluster
-
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
-	cluster, err = svc.RebuildCluster(name)
+	cluster, err := svc.RebuildCluster(name)
 
 	if waitUntilActive && err == nil {
 		cluster, err = svc.WaitUntilClusterIsActive(cluster)
 	}
 
-	return cluster, err
+	return cluster, wrapClientError(err)
 }
 
 // SetAutoScale adds nodes to a cluster
 func (client *Client) SetAutoScale(account Account, name string, value bool) (common.Cluster, error) {
-	var cluster common.Cluster
-
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
-		return cluster, err
+		return nil, err
 	}
 
-	return svc.SetAutoScale(name, value)
+	cluster, err := svc.SetAutoScale(name, value)
+	return cluster, wrapClientError(err)
 }
 
 // DeleteCluster deletes a cluster
@@ -299,7 +299,7 @@ func (client *Client) DeleteCluster(account Account, name string, waitUntilDelet
 		err = client.DeleteClusterCredentials(account, name, "")
 	}
 
-	return err
+	return wrapClientError(err)
 }
 
 // DeleteClusterCredentials removes a cluster's downloaded credentials
