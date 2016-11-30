@@ -24,7 +24,7 @@ var Log = &consoleLogger{
 
 type consoleLogger struct {
 	*logrus.Logger
-	IsSilent bool
+	IsSilent     bool
 	ErrorContext map[string]interface{}
 }
 
@@ -39,11 +39,21 @@ func (log *consoleLogger) SetSilent() {
 
 // Dump does a deep debug dump of a variable
 func (log *consoleLogger) Dump(a ...interface{}) {
-	dumpper := getDumpper()
-	dump := dumpper.Sdump(a...)
+	dump := log.SDump(a...)
 	log.Debug(dump)
 }
 
+// SDump returns a string formatted exactly the same as Dump
+func (log *consoleLogger) SDump(a ...interface{}) string {
+	dumpper := spew.ConfigState{
+		ContinueOnMethod: true,
+		Indent:           "  ",
+		MaxDepth:         2,
+	}
+	return dumpper.Sdump(a...)
+}
+
+// WriteSetting dumps a client setting to stdout
 func (log *consoleLogger) WriteSetting(setting string, source string, value string) {
 	s := strings.ToLower(setting)
 	if strings.Contains(s, "password") || strings.Contains(s, "key") {
@@ -73,16 +83,7 @@ func (log *consoleLogger) WriteError(format string, err error, a ...interface{})
 	log.Errorf(format, a...)
 
 	if err != nil {
-		dumpper := getDumpper()
-		dump := dumpper.Sdump(err)
+		dump := log.SDump(err)
 		log.Error(dump)
-	}
-}
-
-func getDumpper() spew.ConfigState {
-	return spew.ConfigState{
-		ContinueOnMethod: true,
-		Indent:           "  ",
-		MaxDepth:         2,
 	}
 }
