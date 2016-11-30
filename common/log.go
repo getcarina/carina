@@ -28,10 +28,17 @@ type consoleLogger struct {
 	ErrorContext map[string]interface{}
 }
 
+// SetDebug sends debug messages to stdout
 func (log *consoleLogger) SetDebug() {
 	log.Level = logrus.DebugLevel
 }
 
+// HasDebug returns if the Debug flag is enabled
+func (log *consoleLogger) DebugEnabled() bool {
+	return log.Level == logrus.DebugLevel
+}
+
+// SetSilent disables writing to stdout
 func (log *consoleLogger) SetSilent() {
 	log.IsSilent = true
 	log.Out = ioutil.Discard
