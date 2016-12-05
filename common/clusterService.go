@@ -24,6 +24,9 @@ type ClusterService interface {
 	// GetClusterCredentials retrieves the TLS certificates and configuration scripts for a cluster by its id or name (if unique)
 	GetClusterCredentials(token string) (*libcarina.CredentialsBundle, error)
 
+	// ResizeCluster resizes the cluster to the specified number of nodes
+	ResizeCluster(token string, nodes int) (Cluster, error)
+
 	// RebuildCluster destroys and recreates the cluster by its id or name (if unique)
 	RebuildCluster(token string) (Cluster, error)
 

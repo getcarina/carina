@@ -132,6 +132,7 @@ See https://getcarina.com/docs/reference/carina-cli for additional documentation
 		newEnvCommand(),
 		newGetCommand(),
 		newGrowCommand(),
+		newResizeCommand(),
 		newClustersCommand(),
 		newTemplatesCommand(),
 		newQuotasCommand(),
