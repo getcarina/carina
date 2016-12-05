@@ -199,6 +199,11 @@ func (carina *MakeSwarm) GrowCluster(name string, nodes int) (common.Cluster, er
 	return cluster, nil
 }
 
+// ResizeCluster resizes a cluster to the specified number of nodes by its id or name (if unique)
+func (carina *MakeSwarm) ResizeCluster(token string, nodes int) (common.Cluster, error) {
+	return nil, errors.New("[make-swarm] Resizing clusters from the carina cli is not supported. Please use 'grow'.")
+}
+
 // SetAutoScale enables or disables autoscaling on a cluster
 func (carina *MakeSwarm) SetAutoScale(name string, value bool) (common.Cluster, error) {
 	err := carina.init()

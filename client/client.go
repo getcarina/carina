@@ -252,6 +252,23 @@ func (client *Client) GrowCluster(account Account, name string, nodes int, waitU
 	return cluster, wrapClientError(err)
 }
 
+// ResizeCluster resizes the cluster to the specified number of nodes
+func (client *Client) ResizeCluster(account Account, name string, nodes int, waitUntilActive bool) (common.Cluster, error) {
+	defer client.Cache.SaveAccount(account)
+	svc, err := client.buildContainerService(account)
+	if err != nil {
+		return nil, err
+	}
+
+	cluster, err := svc.ResizeCluster(name, nodes)
+
+	if waitUntilActive && err == nil {
+		cluster, err = svc.WaitUntilClusterIsActive(cluster)
+	}
+
+	return cluster, wrapClientError(err)
+}
+
 // RebuildCluster destroys and recreates the cluster
 func (client *Client) RebuildCluster(account Account, name string, waitUntilActive bool) (common.Cluster, error) {
 	defer client.Cache.SaveAccount(account)

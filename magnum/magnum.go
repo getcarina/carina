@@ -213,6 +213,11 @@ func (magnum *Magnum) GrowCluster(token string, nodes int) (common.Cluster, erro
 	return nil, errors.New("[magnum] Growing clusters from the carina cli is not supported yet")
 }
 
+// ResizeCluster resizes a cluster to the specified number of nodes by its id or name (if unique)
+func (magnum *Magnum) ResizeCluster(token string, nodes int) (common.Cluster, error) {
+	return nil, errors.New("[magnum] Resizing clusters from the carina cli is not supported yet")
+}
+
 // SetAutoScale is not supported
 func (magnum *Magnum) SetAutoScale(token string, value bool) (common.Cluster, error) {
 	return nil, errors.New("Magnum does not support autoscaling.")

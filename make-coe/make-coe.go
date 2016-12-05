@@ -180,7 +180,26 @@ func (carina *MakeCOE) DeleteCluster(token string) (common.Cluster, error) {
 
 // GrowCluster adds nodes to a cluster by its id or name (if unique)
 func (carina *MakeCOE) GrowCluster(token string, nodes int) (common.Cluster, error) {
-	return nil, errors.New("[make-coe] Growing clusters from the carina cli is not supported yet")
+	return nil, errors.New("[make-coe] Grow command not supported. Please use 'resize'.")
+}
+
+// ResizeCluster resizes the cluster to the specified number of nodes
+func (carina *MakeCOE) ResizeCluster(token string, nodes int) (common.Cluster, error) {
+	err := carina.init()
+	if err != nil {
+		return nil, err
+	}
+
+	common.Log.WriteDebug("[make-coe] Resizing cluster (%s) to %d nodes", token, nodes)
+
+	result, err := carina.client.Resize(token, nodes)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to resize cluster (%s)", token))
+	}
+
+	cluster := &Cluster{Cluster: result}
+
+	return cluster, nil
 }
 
 // SetAutoScale is not supported
