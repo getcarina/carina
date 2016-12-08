@@ -22,14 +22,14 @@ BINDIR = bin/carina/$(VERSION)
 default: get-deps validate local
 
 get-deps:
-	go get github.com/golang/lint/golint
+	@#go get github.com/golang/lint/golint
 	go get github.com/Masterminds/glide
 	glide install --force --update-vendored
 
 validate:
 	go fmt $(GOFILES_NOVENDOR)
 	go vet $(GOFILES_NOVENDOR)
-	go list ./... | grep -v /vendor/ | xargs -L1 golint --set_exit_status
+	@#go list ./... | grep -v /vendor/ | xargs -L1 golint --set_exit_status
 
 local: $(GOFILES)
 	CGO_ENABLED=0 $(GOBUILD) -o carina .
