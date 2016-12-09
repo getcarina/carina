@@ -92,7 +92,7 @@ func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
 	common.Log.WriteDebug("[make-coe] Checking server API version")
 	metadata, err := carinaClient.GetAPIMetadata()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Unable to parse API version response")
 	}
 	if !metadata.IsSupportedVersion() {
 		min, max := metadata.GetSupportedVersionRange()
