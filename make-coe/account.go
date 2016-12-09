@@ -21,6 +21,9 @@ type Account struct {
 	APIKey           string
 	Region           string
 
+	// Testing only, not used by the cli
+	AuthEndpointOverride string
+
 	// The endpoint from the service catalog
 	endpoint string
 	token    string
@@ -72,7 +75,7 @@ func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
 	} else {
 		common.Log.WriteDebug("[make-coe] Attempting to authenticate with a username and apikey")
 	}
-	carinaClient, err := libcarina.NewClient(account.UserName, account.APIKey, account.Region, account.token, account.endpoint)
+	carinaClient, err := libcarina.NewClient(account.UserName, account.APIKey, account.Region, account.AuthEndpointOverride, account.token, account.endpoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "[make-coe] Authentication failed")
 	}
