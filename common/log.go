@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"testing"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/davecgh/go-spew/spew"
@@ -93,4 +94,31 @@ func (log *consoleLogger) WriteError(format string, err error, a ...interface{})
 		dump := log.SDump(err)
 		log.Error(dump)
 	}
+}
+
+/*
+   Test Helpers
+*/
+type testingLogHook struct {
+	t *testing.T
+}
+
+func (hook *testingLogHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
+
+func (hook *testingLogHook) Fire(event *logrus.Entry) error {
+	hook.t.Log(event.Message)
+	return nil
+}
+
+func (log *consoleLogger) RegisterTestLogger(t *testing.T) {
+	// Log to the test logger
+	Log.Hooks.Add(&testingLogHook{t: t})
+
+	// Log all levels
+	Log.SetDebug()
+
+	// Don't print to the console so that we abide by the go  test -v flag
+	Log.Out = ioutil.Discard
 }

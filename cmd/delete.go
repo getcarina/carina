@@ -27,7 +27,11 @@ func newDeleteCommand() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Deleting cluster (%s)\n", options.name)
+			if options.wait {
+				fmt.Printf("Deleted cluster (%s)\n", options.name)
+			} else {
+				fmt.Printf("Deleting cluster (%s)\n", options.name)
+			}
 
 			return nil
 		},

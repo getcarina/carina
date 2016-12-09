@@ -222,7 +222,6 @@ func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.
 	for {
 		cluster, err := carina.GetCluster(cluster.GetID())
 		if err != nil {
-			err = errors.Cause(err)
 			return nil, err
 		}
 
@@ -237,23 +236,26 @@ func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.
 
 // WaitUntilClusterIsDeleted polls the cluster status until either the cluster is gone or an error state is hit
 func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
-	isDone := func(cluster common.Cluster) bool {
-		status := strings.ToUpper(cluster.GetStatus())
-		return status == "deleted"
+	isDone := func(cluster common.Cluster) (bool, error) {
+		status := strings.ToLower(cluster.GetStatus())
+		if status == "error" {
+			return true, errors.New("Unable to delete cluster, an error occured while deleting.")
+		}
+		return status == "deleted", nil
 	}
 
-	if isDone(cluster) {
-		return nil
+	if done, err := isDone(cluster); done {
+		return err
 	}
 
 	pollingInterval := 5 * time.Second
 	for {
 		cluster, err := carina.GetCluster(cluster.GetID())
 		if err != nil {
-			err = errors.Cause(err)
+			cause := errors.Cause(err)
 
 			// Gracefully handle a 404 Not Found when the cluster is deleted quickly
-			if httpErr, ok := err.(libcarina.HTTPErr); ok {
+			if httpErr, ok := cause.(libcarina.HTTPErr); ok {
 				if httpErr.StatusCode == http.StatusNotFound {
 					return nil
 				}
@@ -262,8 +264,8 @@ func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 			return err
 		}
 
-		if isDone(cluster) {
-			return nil
+		if done, err := isDone(cluster); done {
+			return err
 		}
 
 		common.Log.WriteDebug("[make-coe] Waiting until cluster (%s) is deleted, currently in %s", cluster.GetName(), cluster.GetStatus())
