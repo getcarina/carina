@@ -191,10 +191,10 @@ func (magnum *Magnum) DeleteCluster(token string) (common.Cluster, error) {
 
 	cluster, err := magnum.waitForTaskInitiated(token, "DELETE")
 	if err != nil {
-		err = errors.Cause(err)
+		cause := errors.Cause(err)
 
 		// Gracefully handle a 404 Not Found when the cluster is deleted quickly
-		if httpErr, ok := err.(*coe.ErrorResponse); ok {
+		if httpErr, ok := cause.(*coe.ErrorResponse); ok {
 			if httpErr.Actual == http.StatusNotFound {
 				cluster = newCluster()
 				cluster.Status = "DELETE_COMPLETE"
@@ -266,10 +266,10 @@ func (magnum *Magnum) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 		cluster, err := magnum.GetCluster(cluster.GetID())
 
 		if err != nil {
-			err = errors.Cause(err)
+			cause := errors.Cause(err)
 
 			// Gracefully handle a 404 Not Found when the cluster is deleted quickly
-			if httpErr, ok := err.(*coe.ErrorResponse); ok {
+			if httpErr, ok := cause.(*coe.ErrorResponse); ok {
 				if httpErr.Actual == http.StatusNotFound {
 					return nil
 				}

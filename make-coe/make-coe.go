@@ -222,7 +222,6 @@ func (carina *MakeCOE) WaitUntilClusterIsActive(cluster common.Cluster) (common.
 	for {
 		cluster, err := carina.GetCluster(cluster.GetID())
 		if err != nil {
-			err = errors.Cause(err)
 			return nil, err
 		}
 
@@ -253,10 +252,10 @@ func (carina *MakeCOE) WaitUntilClusterIsDeleted(cluster common.Cluster) error {
 	for {
 		cluster, err := carina.GetCluster(cluster.GetID())
 		if err != nil {
-			err = errors.Cause(err)
+			cause := errors.Cause(err)
 
 			// Gracefully handle a 404 Not Found when the cluster is deleted quickly
-			if httpErr, ok := err.(libcarina.HTTPErr); ok {
+			if httpErr, ok := cause.(libcarina.HTTPErr); ok {
 				if httpErr.StatusCode == http.StatusNotFound {
 					return nil
 				}
