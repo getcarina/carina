@@ -20,6 +20,27 @@ type MakeCOE struct {
 	Account          *Account
 }
 
+func handleNotAcceptable(err libcarina.HTTPErr) error {
+	return errors.Wrap(err, "Unable to communicate with the Carina API because the client is out-of-date. Update the carina client to the latest version. See https://getcarina.com/docs/tutorials/carina-cli#update for instructions.")
+}
+
+func handleHTTPError(err libcarina.HTTPErr) error {
+	switch err.StatusCode {
+	default:
+		return err
+	case 406:
+		return handleNotAcceptable(err)
+	}
+}
+
+func handleLibcarinaError(err error) error {
+	cause := errors.Cause(err)
+	if httpErr, ok := cause.(libcarina.HTTPErr); ok {
+		return handleHTTPError(httpErr)
+	}
+	return err
+}
+
 func (carina *MakeCOE) init() error {
 	if carina.client == nil {
 		carinaClient, err := carina.Account.Authenticate()
@@ -61,7 +82,7 @@ func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (c
 
 	result, err := carina.client.Create(createOpts)
 	if err != nil {
-		return nil, errors.Wrap(err, "[make-coe] Unable to create cluster")
+		return nil, handleLibcarinaError(errors.Wrap(err, "[make-coe] Unable to create cluster"))
 	}
 
 	cluster := &Cluster{Cluster: result}
@@ -79,7 +100,7 @@ func (carina *MakeCOE) GetClusterCredentials(token string) (*libcarina.Credentia
 	common.Log.WriteDebug("[make-coe] Retrieving cluster credentials (%s)", token)
 	creds, err := carina.client.GetCredentials(token)
 	if err != nil {
-		return nil, errors.Wrap(err, "[make-coe] Unable to retrieve the cluster credentials")
+		return nil, handleLibcarinaError(errors.Wrap(err, "[make-coe] Unable to retrieve the cluster credentials"))
 	}
 
 	return creds, nil
@@ -97,7 +118,7 @@ func (carina *MakeCOE) ListClusters() ([]common.Cluster, error) {
 	common.Log.WriteDebug("[make-coe] Listing clusters")
 	results, err := carina.client.List()
 	if err != nil {
-		return clusters, errors.Wrap(err, "[make-coe] Unable to list clusters")
+		return clusters, handleLibcarinaError(errors.Wrap(err, "[make-coe] Unable to list clusters"))
 	}
 
 	for _, result := range results {
@@ -117,7 +138,7 @@ func (carina *MakeCOE) ListClusterTemplates() ([]common.ClusterTemplate, error) 
 
 	results, err := carina.listClusterTypes()
 	if err != nil {
-		return nil, err
+		return nil, handleLibcarinaError(err)
 	}
 
 	var templates []common.ClusterTemplate
@@ -144,7 +165,7 @@ func (carina *MakeCOE) GetCluster(token string) (common.Cluster, error) {
 	common.Log.WriteDebug("[make-coe] Retrieving cluster (%s)", token)
 	result, err := carina.client.Get(token)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to retrieve cluster (%s)", token))
+		return nil, handleLibcarinaError(errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to retrieve cluster (%s)", token)))
 	}
 	cluster := &Cluster{Cluster: result}
 
@@ -170,7 +191,7 @@ func (carina *MakeCOE) DeleteCluster(token string) (common.Cluster, error) {
 			}
 		}
 
-		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", token))
+		return nil, handleLibcarinaError(errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", token)))
 	}
 
 	cluster := &Cluster{Cluster: result}
@@ -194,7 +215,7 @@ func (carina *MakeCOE) ResizeCluster(token string, nodes int) (common.Cluster, e
 
 	result, err := carina.client.Resize(token, nodes)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to resize cluster (%s)", token))
+		return nil, handleLibcarinaError(errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to resize cluster (%s)", token)))
 	}
 
 	cluster := &Cluster{Cluster: result}
@@ -277,7 +298,7 @@ func (carina *MakeCOE) listClusterTypes() ([]*libcarina.ClusterType, error) {
 	common.Log.WriteDebug("[make-coe] Listing cluster types")
 	clusterTypes, err := carina.client.ListClusterTypes()
 	if err != nil {
-		return nil, errors.Wrap(err, "[make-coe] Unabe to list cluster types")
+		return nil, handleLibcarinaError(errors.Wrap(err, "[make-coe] Unabe to list cluster types"))
 	}
 
 	return clusterTypes, err
