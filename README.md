@@ -49,7 +49,7 @@ Here's how to release a beta build:
 1. Validate the uploaded binary
 
     ```
-    https://download.getcarina.com/carina/beta/$(uname -s)/$(uname -m)/carina -o carina
+    curl -sL https://download.getcarina.com/carina/beta/$(uname -s)/$(uname -m)/carina -o carina
     chmod +x carina
     ./carina --version
     # Should print the new version
