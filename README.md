@@ -34,5 +34,24 @@ Here's how to work on libcarina and the cli at the same time locally:
 1. In `$GOPATH/src/github.com/getcarina/carina`, run `rm $GOPATH/src/github.com/getcarina/carina/vendor/github.com/getcarina/libcarina` so that Go will pickup your local edits, and not use the vendored version. Use `make local` to build. Don't use `make` as it will restore the vendored copy of libcarina, overriding your local changes.
 1. When everything is looking good, run `make` in `$GOPATH/src/github.com/getcarina/libcarina` to validate and format your changes.
 1. Submit a PR to libcarina and once it is merged to master, note the commit hash.
-4. In `$GOPATH/src/github.com/getcarina/carina/glide.lock` update the commit hash for libcarina. Make sure you are editing the libcarina package and not libmakeswarm. They are same repository, but represent different branches.
-5. In `$GOPATH/src/github.com/getcarina/carina`, run `make` and verify that libcarina is restored the right vendored commit hash and everything still works.
+1. In `$GOPATH/src/github.com/getcarina/carina/glide.lock` update the commit hash for libcarina. Make sure you are editing the libcarina package and not libmakeswarm. They are same repository, but represent different branches.
+1. In `$GOPATH/src/github.com/getcarina/carina`, run `make` and verify that libcarina is restored the right vendored commit hash and everything still works.
+
+## Releasing
+
+### Beta Builds
+Here's how to release a beta build. Beta builds are available for download from
+`https://download.getcarina.com/carina/beta/$(uname -s)/$(uname -m)/carina -o carina`
+
+1. Checkout the release branch: `git checkout release/v2.0.0`
+1. Create a tag for the beta release: `git tag v2.0.0-beta.8`
+1. Push the tag: `git push --follow-tags`
+1. Watch the Travis CI build, and wait for a successful deploy.
+1. Validate the uploaded binary
+
+    ```
+    https://download.getcarina.com/carina/beta/$(uname -s)/$(uname -m)/carina -o carina
+    chmod +x carina
+    ./carina --version
+    # Should print the new version
+    ```
