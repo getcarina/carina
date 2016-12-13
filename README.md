@@ -40,11 +40,10 @@ Here's how to work on libcarina and the cli at the same time locally:
 ## Releasing
 
 ### Beta Builds
-Here's how to release a beta build. Beta builds are available for download from
-`https://download.getcarina.com/carina/beta/$(uname -s)/$(uname -m)/carina -o carina`
+Here's how to release a beta build:
 
 1. Checkout the release branch: `git checkout release/v2.0.0`
-1. Create a tag for the beta release: `git tag v2.0.0-beta.8`
+1. Create a tag for the beta release: `git tag v2.0.0-beta.8 -a -m ""`
 1. Push the tag: `git push --follow-tags`
 1. Watch the Travis CI build, and wait for a successful deploy.
 1. Validate the uploaded binary
