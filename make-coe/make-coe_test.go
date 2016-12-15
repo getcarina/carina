@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 	"regexp"
+	"strings"
 
 	"fmt"
 	"net/http/httptest"
@@ -12,6 +13,8 @@ import (
 )
 
 const identityAPIVersion = "/v2.0/"
+
+const microversionUnsupportedJSON = `{"errors":[{"code":"make-coe-api.microverion-unsupported","detail":"If the api-version header is sent, it must be in the format 'rax:container X.Y' where 1.0 <= X.Y <= 1.0","links":[{"href":"https://getcarina.com/docs/","rel":"help"}],"max_version":"1.6","min_version":"1.5","request_id":"620c8d81-b8f9-4bb0-952b-6d08ae42eda0","status":406,"title":"Microversion unsupported"}]}`
 
 var anyClusterRegexp = regexp.MustCompile("^/clusters/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
@@ -41,6 +44,12 @@ func clusterInErrorHandler(w http.ResponseWriter, r *http.Request) {
 		}
 }
 
+func microversionUnsupportedHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(406)
+	fmt.Fprintln(w, microversionUnsupportedJSON)
+}
+
 func createMockCarina(h handler) (*httptest.Server, *httptest.Server) {
 	return httptest.NewServer(http.HandlerFunc(h)), httptest.NewServer(http.HandlerFunc(identityHandler))
 }
@@ -55,6 +64,21 @@ func createMakeCOEService(identityServer *httptest.Server, carinaServer *httptes
 	}
 
 	return &MakeCOE{Account: acct}
+}
+
+func assertMicroversionUnsupportedMessaging(t *testing.T, err error) {
+	microversionUnsupportedUpdateClientSubstring := "Unable to communicate with the Carina API because the client is out-of-date. Update the carina client to the latest version. See https://getcarina.com/docs/tutorials/carina-cli#update for instructions."
+	microversionUnsupportedErrorMessageSubstring := "Message: Microversion unsupported - The client supports 1.0 while the server supports 1.5 - 1.6."
+
+	actualError := err.Error()
+
+	if ! strings.Contains(actualError, microversionUnsupportedUpdateClientSubstring) {
+		t.Errorf("\nExpected error with:\n\"%s\",\nInstead got:\n\"%s\"\n", microversionUnsupportedUpdateClientSubstring, err)
+	}
+
+	if ! strings.Contains(actualError, microversionUnsupportedErrorMessageSubstring) {
+		t.Errorf("\nExpected error with:\n\"%s\",\nInstead got:\n\"%s\"\n", microversionUnsupportedErrorMessageSubstring, err)
+	}
 }
 
 func TestDeleteClusterThenErrorOutHaltsWait(t *testing.T) {
@@ -79,5 +103,125 @@ func TestDeleteClusterThenErrorOutHaltsWait(t *testing.T) {
 			t.Errorf("Expected error: %s\nActual Error: %+v", expectedError, err)
 
 		}
+	}
+}
+
+func TestMicroversionUnsupportedListClusters(t *testing.T) {
+	common.Log.RegisterTestLogger(t)
+
+	mockCarina, mockIdentity := createMockCarina(microversionUnsupportedHandler)
+	defer mockCarina.Close()
+	defer mockIdentity.Close()
+
+	svc := createMakeCOEService(mockIdentity, mockCarina)
+
+	clusters, err := svc.ListClusters()
+	if err == nil {
+		t.Error("ListClusters expected to return error")
+	} else {
+		assertMicroversionUnsupportedMessaging(t, err)
+	}
+	if clusters != nil {
+		t.Error("Expected clusters to be nil, got: ", clusters)
+	}
+}
+
+func TestMicroversionUnsupportedGetCluster(t *testing.T) {
+	common.Log.RegisterTestLogger(t)
+
+	mockCarina, mockIdentity := createMockCarina(microversionUnsupportedHandler)
+	defer mockCarina.Close()
+	defer mockIdentity.Close()
+
+	svc := createMakeCOEService(mockIdentity, mockCarina)
+
+	cluster, err := svc.GetCluster("99999999-9999-9999-9999-999999999999")
+	if err == nil {
+		t.Error("GetCluster expected to return error")
+	} else {
+		assertMicroversionUnsupportedMessaging(t, err)
+	}
+	if cluster != nil {
+		t.Error("Expected cluster to be nil, got: ", cluster)
+	}
+}
+
+func TestMicroversionUnsupportedGetClusterCredentials(t *testing.T) {
+	common.Log.RegisterTestLogger(t)
+
+	mockCarina, mockIdentity := createMockCarina(microversionUnsupportedHandler)
+	defer mockCarina.Close()
+	defer mockIdentity.Close()
+
+	svc := createMakeCOEService(mockIdentity, mockCarina)
+
+	credentials, err := svc.GetClusterCredentials("99999999-9999-9999-9999-999999999999")
+	if err == nil {
+		t.Error("GetClusterCredentials expected to return error")
+	} else {
+		assertMicroversionUnsupportedMessaging(t, err)
+	}
+	if credentials != nil {
+		t.Error("Expected credentials to be nil, got: ", credentials)
+	}
+}
+
+func TestMicroversionUnsupportedResizeCluster(t *testing.T) {
+	common.Log.RegisterTestLogger(t)
+
+	mockCarina, mockIdentity := createMockCarina(microversionUnsupportedHandler)
+	defer mockCarina.Close()
+	defer mockIdentity.Close()
+
+	svc := createMakeCOEService(mockIdentity, mockCarina)
+
+	cluster, err := svc.ResizeCluster("99999999-9999-9999-9999-999999999999", 2)
+	if err == nil {
+		t.Error("ResizeCluster expected to return error")
+	} else {
+		assertMicroversionUnsupportedMessaging(t, err)
+	}
+	if cluster != nil {
+		t.Error("Expected cluster to be nil, got: ", cluster)
+	}
+}
+
+func TestMicroversionUnsupportedDeleteCluster(t *testing.T) {
+	common.Log.RegisterTestLogger(t)
+
+	mockCarina, mockIdentity := createMockCarina(microversionUnsupportedHandler)
+	defer mockCarina.Close()
+	defer mockIdentity.Close()
+
+	svc := createMakeCOEService(mockIdentity, mockCarina)
+
+	cluster, err := svc.DeleteCluster("99999999-9999-9999-9999-999999999999")
+	if err == nil {
+		t.Error("DeleteCluster expected to return error")
+	} else {
+		assertMicroversionUnsupportedMessaging(t, err)
+	}
+	if cluster != nil {
+		t.Error("Expected cluster to be nil, got: ", cluster)
+	}
+}
+
+func TestMicroversionUnsupportedCreateCluster(t *testing.T) {
+	common.Log.RegisterTestLogger(t)
+
+	mockCarina, mockIdentity := createMockCarina(microversionUnsupportedHandler)
+	defer mockCarina.Close()
+	defer mockIdentity.Close()
+
+	svc := createMakeCOEService(mockIdentity, mockCarina)
+
+	cluster, err := svc.CreateCluster("test-cluster", "test-template", 3)
+	if err == nil {
+		t.Error("CreateCluster expected to return error")
+	} else {
+		assertMicroversionUnsupportedMessaging(t, err)
+	}
+	if cluster != nil {
+		t.Error("Expected cluster to be nil, got: ", cluster)
 	}
 }
