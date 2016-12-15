@@ -138,7 +138,7 @@ func (carina *MakeCOE) ListClusterTemplates() ([]common.ClusterTemplate, error) 
 
 	results, err := carina.listClusterTypes()
 	if err != nil {
-		return nil, handleLibcarinaError(err)
+		return nil, err
 	}
 
 	var templates []common.ClusterTemplate
@@ -182,7 +182,8 @@ func (carina *MakeCOE) DeleteCluster(token string) (common.Cluster, error) {
 	common.Log.WriteDebug("[make-coe] Deleting cluster (%s)", token)
 	result, err := carina.client.Delete(token)
 	if err != nil {
-		if httpErr, ok := err.(libcarina.HTTPErr); ok {
+		cause := errors.Cause(err)
+		if httpErr, ok := cause.(libcarina.HTTPErr); ok {
 			if httpErr.StatusCode == http.StatusNotFound {
 				common.Log.WriteWarning("Could not find the cluster (%s) to delete", token)
 				cluster := newCluster()
@@ -191,7 +192,7 @@ func (carina *MakeCOE) DeleteCluster(token string) (common.Cluster, error) {
 			}
 		}
 
-		return nil, handleLibcarinaError(errors.Wrap(err, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", token)))
+		return nil, handleLibcarinaError(errors.Wrap(cause, fmt.Sprintf("[make-coe] Unable to delete cluster (%s)", token)))
 	}
 
 	cluster := &Cluster{Cluster: result}
