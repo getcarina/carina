@@ -8,7 +8,7 @@ imports:
 - name: github.com/fsnotify/fsnotify
   version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
 - name: github.com/getcarina/libcarina
-  version: c41d044bf97dc12d155de0d828829b500ed49cd6
+  version: 55205564d7e5f72310589a47eb2cd1b4f0e82e6f
   repo: https://github.com/getcarina/libcarina.git
   vcs: git
 - name: github.com/getcarina/libmakeswarm

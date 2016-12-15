@@ -92,16 +92,6 @@ func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
 	// Override the endpoint from the service catalog
 	carinaClient.Endpoint = account.getEndpoint()
 
-	common.Log.WriteDebug("[make-coe] Checking server API version")
-	metadata, err := carinaClient.GetAPIMetadata()
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to parse API version response")
-	}
-	if !metadata.IsSupportedVersion() {
-		min, max := metadata.GetSupportedVersionRange()
-		return nil, fmt.Errorf("Unable to communicate with the Carina API because the client is out-of-date. The client supports ~%s while the server supports %s-%s. Update the carina client to the latest version. See https://getcarina.com/docs/tutorials/carina-cli#update for instructions.", libcarina.SupportedAPIVersion, min, max)
-	}
-
 	return carinaClient, nil
 }
 
