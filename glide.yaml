@@ -8,7 +8,7 @@ import:
   subpackages:
   - spew
 - package: github.com/getcarina/libcarina
-  version: make-coe
+  version: 2.0.0-beta.2
   repo: https://github.com/getcarina/libcarina.git
   vcs: git
 - package: github.com/getcarina/libmakeswarm
