@@ -14,6 +14,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// CarinaProfileEnvVar is the name of the Carina profile to use
+const CarinaProfileEnvVar = "CARINA_PROFILE"
+
 // CarinaUserNameEnvVar is the Carina username environment variable (1st)
 const CarinaUserNameEnvVar = "CARINA_USERNAME"
 
@@ -195,10 +198,18 @@ func (cxt *context) loadProfile() (ok bool, err error) {
 	common.Log.WriteDebug("Loading profiles")
 	configFile := viper.ConfigFileUsed()
 
-	// Try to use the default profile
-	if cxt.Profile == "" && viper.InConfig("default") {
-		cxt.Profile = "default"
-		return cxt.loadProfile()
+	if cxt.Profile == "" {
+		cxt.Profile = os.Getenv(CarinaProfileEnvVar)
+		if cxt.Profile != "" {
+			common.Log.WriteDebug("Profile: %s", CarinaProfileEnvVar)
+		}
+	}
+	if cxt.Profile == "" {
+		// Try to use the default profile
+		if viper.InConfig("default") {
+			cxt.Profile = "default"
+			common.Log.WriteDebug("Profile: default")
+		}
 	}
 
 	profile := viper.GetStringMapString(cxt.Profile)
