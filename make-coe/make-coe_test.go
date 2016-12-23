@@ -2,9 +2,9 @@ package makecoe
 
 import (
 	"net/http"
-	"testing"
 	"regexp"
 	"strings"
+	"testing"
 
 	"fmt"
 	"net/http/httptest"
@@ -33,15 +33,15 @@ func identityHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func clusterInErrorHandler(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
-		switch {
-		case anyClusterRegexp.MatchString(r.RequestURI):
-			fmt.Fprintln(w, `{ "status": "error" }`)
-		default:
-			fmt.Fprintln(w, "unexpected request: "+r.RequestURI)
-			w.WriteHeader(404)
-		}
+	switch {
+	case anyClusterRegexp.MatchString(r.RequestURI):
+		fmt.Fprintln(w, `{ "status": "error" }`)
+	default:
+		fmt.Fprintln(w, "unexpected request: "+r.RequestURI)
+		w.WriteHeader(404)
+	}
 }
 
 func microversionUnsupportedHandler(w http.ResponseWriter, r *http.Request) {
@@ -72,11 +72,11 @@ func assertMicroversionUnsupportedMessaging(t *testing.T, err error) {
 
 	actualError := err.Error()
 
-	if ! strings.Contains(actualError, microversionUnsupportedUpdateClientSubstring) {
+	if !strings.Contains(actualError, microversionUnsupportedUpdateClientSubstring) {
 		t.Errorf("\nExpected error with:\n\"%s\",\nInstead got:\n\"%s\"\n", microversionUnsupportedUpdateClientSubstring, err)
 	}
 
-	if ! strings.Contains(actualError, microversionUnsupportedErrorMessageSubstring) {
+	if !strings.Contains(actualError, microversionUnsupportedErrorMessageSubstring) {
 		t.Errorf("\nExpected error with:\n\"%s\",\nInstead got:\n\"%s\"\n", microversionUnsupportedErrorMessageSubstring, err)
 	}
 }

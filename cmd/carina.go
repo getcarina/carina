@@ -48,7 +48,7 @@ func newCarinaCommand() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&cxt.Silent, "silent", false, "Do not print to stdout")
 
 	// Account flags
-	cmd.PersistentFlags().StringVar(&cxt.Profile, "profile", "", "Use saved credentials from a profile")
+	cmd.PersistentFlags().StringVar(&cxt.Profile, "profile", "", "Use saved credentials from a profile [CARINA_PROFILE]")
 	cmd.PersistentFlags().BoolVar(&cxt.ProfileDisabled, "no-profile", false, "Ignore profiles and use flags and/or environment variables only")
 	cmd.PersistentFlags().StringVar(&cxt.Username, "username", "", "Username [CARINA_USERNAME/RS_USERNAME/OS_USERNAME]")
 	cmd.PersistentFlags().StringVar(&cxt.APIKey, "apikey", "", "Public Cloud API Key [CARINA_APIKEY/RS_API_KEY]")
