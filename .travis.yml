@@ -1,6 +1,6 @@
 language: go
 go:
-- 1.6
+- 1.7
 git:
   depth: 9999999
 install:
