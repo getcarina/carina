@@ -70,7 +70,7 @@ func checkIsLatest() error {
 	if latest.GreaterThan(current) {
 		common.Log.WriteWarning("# A new version of the Carina client is out, go get it!")
 		common.Log.WriteWarning("# You're on %v and the latest is %v", current, latest)
-		common.Log.WriteWarning("# https://github.com/getcarina/carina/releases")
+		common.Log.WriteWarning("# https://getcarina.com/betadocs/docs/reference/carina-cli#upgrade")
 	}
 
 	return nil
