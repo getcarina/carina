@@ -23,7 +23,7 @@ default: get-deps validate local
 
 get-deps:
 	@#go get github.com/golang/lint/golint
-	go get github.com/Masterminds/glide
+	script/install-glide.sh
 	glide install --force --update-vendored
 
 validate:
