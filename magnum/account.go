@@ -104,10 +104,11 @@ func (account *Account) Authenticate() (*gophercloud.ServiceClient, error) {
 			}
 		}
 
-		// Otherwise we fall through and authenticate with the password
+		// Clear cache and authenticate with the password
 		common.Log.WriteDebug("[magnum] Discarding expired cached token and endpoint")
 		account.token = ""
 		account.endpoint = ""
+		return account.Authenticate()
 	} else {
 		common.Log.WriteDebug("[magnum] Attempting to authenticate with a password")
 		identity, err := openstack.AuthenticatedClient(*authOptions)
