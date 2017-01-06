@@ -3,9 +3,8 @@ go:
 - 1.7
 git:
   depth: 9999999
-sudo: required
 install:
-- sudo -E PATH=$PATH make get-deps
+- make get-deps
 script:
 - make test
 - make cross-build
