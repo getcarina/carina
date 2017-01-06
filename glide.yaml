@@ -1,9 +1,6 @@
 package: github.com/getcarina/carina
 import:
 - package: github.com/Sirupsen/logrus
-  version: disable-color-timestamp
-  repo: https://github.com/carolynvs/logrus.git
-  vcs: git
 - package: github.com/davecgh/go-spew
   subpackages:
   - spew
