@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/getcarina/carina/common"
 )
 
 var rand uint32
@@ -29,38 +31,40 @@ func randomName() string {
 }
 
 func TestLoadCache(t *testing.T) {
-
 	filename := fmt.Sprintf("carina-temp-cache-%s.json", randomName())
 
 	// Try to clean up as best we can
 	defer func() {
 		err := os.Remove(filename)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to remove temporary cache: %v\n", err)
+			common.Log.WriteError("Unable to remove temporary cache: %v", err)
 		}
 	}()
 
-	cache, err := LoadCache(filename)
+	cache := newCache(filename)
+	err := cache.load()
 
 	if err != nil {
 		t.Errorf("Expected nil, got %v\n", err)
 	}
-	if filename != cache.filename {
-		t.Errorf("Expected %v, got %v\n", filename, cache.filename)
+	if filename != cache.path {
+		t.Errorf("Expected %v, got %v\n", filename, cache.path)
 	}
 
 	updateTime := time.Now()
 
-	err = cache.UpdateLastCheck(updateTime)
+	err = cache.SaveLastUpdateCheck(updateTime)
 	if err != nil {
 		t.Fail()
 	}
-	newCache, err := LoadCache(filename)
+
+	cache = newCache(filename)
+	err = cache.load()
 	if err != nil {
 		t.Fail()
 	}
-	if !updateTime.Equal(newCache.LastUpdateCheck) {
-		t.Errorf("Expected %v, got %v\n", updateTime, newCache.LastUpdateCheck)
+	if !updateTime.Equal(cache.LastUpdateCheck) {
+		t.Errorf("Expected %v, got %v\n", updateTime, cache.LastUpdateCheck)
 	}
 
 }

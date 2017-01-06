@@ -1,0 +1,36 @@
+# This is the carina cli configuration file
+# Define profiles in this file to quickly switch
+# between multiple accounts.
+#
+# Environment variables can be used by appending `-var`
+# to the setting name, such as apikey-var or password-var.
+#
+# Example Usage:
+# carina --profile prod ls
+# carina --profile dev ls
+#
+# Example Configurations:
+#
+# The following profile stores its credentials in plain text
+# [prod]
+# cloud="public"
+# username="alicia"
+# apikey="abc123"
+#
+# The following profile retrieves its credentials from environment variables
+# defined in your openrc
+#[dev]
+#cloud="private"
+#username-var="OS_USERNAME"
+#password-var="OS_PASSWORD"
+#auth-endpoint-var="OS_AUTH_URL"
+#tenant-var="OS_TENANT_NAME"
+#project-var="OS_PROJECT_NAME"
+#domain-var="OS_PROJECT_DOMAIN_NAME"
+#
+# The following profile is used when no --profile is specified
+# The default profile takes precedence over auto-discovered environment variables
+# [default]
+# cloud="public"
+# username-var="RS_USERNAME"
+# apikey-var="RS_API_KEY"

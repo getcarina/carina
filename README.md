@@ -1,145 +1,18 @@
 # Carina™ client
-
 [![Travis Build Status](https://travis-ci.org/getcarina/carina.svg)](https://travis-ci.org/getcarina/carina)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/8qjckvi0cvfgf1qr?svg=true)](https://ci.appveyor.com/project/rgbkrk/carina)
-
-Command line client for [Carina by Rackspace](https://getcarina.com), a container service that's currently in Beta.
+Create and interact with clusters on both Rackspace Public and Private Cloud.
 
 ![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
 
-## Installation
+See the [getting started tutorial](https://getcarina.com/docs/getting-started/getting-started-carina-cli/),
+and [full documentation](https://getcarina.com/docs/reference/carina-cli/).
 
-To download and install the `carina` CLI, use the appropriate instructions for your operating system.
 
-#### OS X with Homebrew
 
-If you're using [Homebrew](http://brew.sh/), run the following commands:
 
-```bash
-$ brew update
-$ brew install carina
-```
 
-#### Linux and OS X (without Homebrew)
-
-Downloads for the latest release of `carina` are available in [releases](https://github.com/getcarina/carina/releases/latest) for 64-bit Linux and OS X. You can use `curl` to download the binary, move it to a directory on your `$PATH`, and make it executable:
-
-```bash
-$ curl -L https://download.getcarina.com/carina/latest/$(uname -s)/$(uname -m)/carina -o carina
-$ mv carina ~/bin/carina
-$ chmod u+x ~/bin/carina
-```
-
-#### Windows with Chocolatey
-
-If you are using [Chocolatey](http://chocolatey.org/), run the following command:
-
-```powershell
-> choco install carina
-```
-
-#### Windows (without Chocolatey)
-
-Downloads for the latest release of `carina` are available in [releases](https://github.com/getcarina/carina/releases/latest). For quick installation, open PowerShell and run the following command:
-
-```powershell
-> wget 'https://download.getcarina.com/carina/latest/Windows/x86_64/carina.exe' -OutFile carina.exe
-```
-
-Be sure to move `carina.exe` to a directory on your `%PATH%`.
-
-## Getting started
-
-```
-$ export CARINA_USERNAME=trythingsout
-$ export CARINA_APIKEY=$RACKSPACE_APIKEY
-
-$ carina list
-ClusterName Flavor        Nodes AutoScale Status
-mycluster   container1-4G 1     false     active
-
-$ carina create newone
-newone      container1-4G 1     false     new
-$ carina create another --wait --autoscale
-another     container1-4G 1     true      active
-
-$ carina list
-ClusterName Flavor        Nodes AutoScale Status
-mycluster   container1-4G 1     false     active
-newone      container1-4G 1     false     active
-another     container1-4G 1     true      active
-
-$ carina credentials another
-#
-# Credentials written to "/Users/rgbkrk/.carina/clusters/trythingsout/another"
-#
-source "/Users/rgbkrk/.carina/clusters/trythingsout/another/docker.env"
-# Run the command above to get your Docker environment variables set
-
-$ eval "$( carina env another )"
+$ eval "$( carina credentials another )"
 $ echo Conencted to: $CARINA_CLUSTER_NAME
-
-$ docker ps
-CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
-$ docker run -d --name whoa -p 8080:8080 whoa/tiny
-0e857826144194fd089310279915b1a052de9fb878d6d4f61420a0c64ee06c53
-$ curl $( docker port whoa 8080 )
-👊  I know kung fu  👊
-```
-
-
-## Usage
-
-```
-usage: carina [<flags>] <command> [<args> ...]
-
-command line interface to launch and work with Docker Swarm clusters
-
-Flags:
-  --help               Show context-sensitive help (also try --help-long and --help-man).
-  --version            Show application version.
-  --username=USERNAME  Carina username - can also set env var CARINA_USERNAME
-  --api-key=CARINA_APIKEY
-                       Carina API Key - can also set env var CARINA_APIKEY
-  --endpoint="https://app.getcarina.com"
-                       Carina API endpoint
-
-Commands:
-  help [<command>...]
-    Show help.
-
-  create [<flags>] <cluster-name>
-    Create a swarm cluster
-
-    --wait       wait for swarm cluster to come online (or error)
-    --nodes=1    number of nodes for the initial cluster
-    --autoscale  whether autoscale is on or off
-
-  get <cluster-name>
-    Get information about a swarm cluster
-
-  list
-    List swarm clusters
-
-  grow --nodes=NODES <cluster-name>
-    Grow a cluster by the requested number of nodes
-
-    --nodes=NODES  number of nodes to increase the cluster by
-
-  credentials [<flags>] <cluster-name>
-    download credentials
-
-    --path=<cluster-name>
-      path to write credentials out to
-
-  rebuild [<flags>] <cluster-name>
-    Rebuild a swarm cluster
-
-    --wait  wait for swarm cluster to come online (or error)
-
-  delete <cluster-name>
-    Delete a swarm cluster
-```
 
 ## Environment Variables
 When you source the result of `carina env` a few helpful environment variables are set for you:
@@ -150,44 +23,49 @@ When you source the result of `carina env` a few helpful environment variables a
 
 ## Building
 
-The build script assumes you're running go 1.5 or later. If not, upgrade or use
+The build script assumes you're running go 1.7 or later. If not, upgrade or use
 something like [gimme](https://github.com/travis-ci/gimme).
 
 ```bash
-make carina
+make
 ```
 
 This creates `carina` in the current directory (there is no `make install` currently).
 
-If you want it to build on prior releases of go, we'd need a PR to change up how
-the `Makefile` sets the `LDFLAGS` conditionally based on Go version.
+**Make Targets**
+
+* `make`: First run for newcomers.
+* `make get-deps`: Retrieves dependencies into the `vendor/` directory using glide.
+* `make validate`: Run tools like `fmt`.
+* `make test`: Run unit tests.
+* `make local`: Build for the current dev env, using whatever dependencies that happen to be on the local machine.
+* `make cross-build`: The official build.
+
+### Editing libcarina
+Here's how to work on libcarina and the cli at the same time locally:
+
+1. Run `go get github.com/getcarina/libcarina`.
+1. Make required changes to libcarina in `$GOPATH/src/github.com/getcarina/libcarina`.
+1. In `$GOPATH/src/github.com/getcarina/carina`, run `rm $GOPATH/src/github.com/getcarina/carina/vendor/github.com/getcarina/libcarina` so that Go will pickup your local edits, and not use the vendored version. Use `make local` to build. Don't use `make` as it will restore the vendored copy of libcarina, overriding your local changes.
+1. When everything is looking good, run `make` in `$GOPATH/src/github.com/getcarina/libcarina` to validate and format your changes.
+1. Submit a PR to libcarina and once it is merged to master, note the commit hash.
+1. In `$GOPATH/src/github.com/getcarina/carina/glide.lock` update the commit hash for libcarina. Make sure you are editing the libcarina package and not libmakeswarm. They are same repository, but represent different branches.
+1. In `$GOPATH/src/github.com/getcarina/carina`, run `make` and verify that libcarina is restored the right vendored commit hash and everything still works.
 
 ## Releasing
 
-### Prerequisites
+### Beta Builds
+Here's how to release a beta build:
 
-The release script relies on [github-release](https://github.com/aktau/github-release). Get it, configure it.
+1. Checkout the release branch: `git checkout release/v2.0.0`
+1. Create a tag for the beta release: `git tag v2.0.0-beta.8 -a -m ""`
+1. Push the tag: `git push --follow-tags`
+1. Watch the Travis CI build, and wait for a successful deploy.
+1. Validate the uploaded binary
 
-This script assumes you have pulled down this repository via `go get github.com/getcarina/carina`
-and are currently working out of the `${GOPATH}/src/github.com/getcarina/carina` directory.
-
-It's also important that you have a "release" remote set up to point at the main repository.
-
-```
-git remote add release git@github.com:getcarina/carina.git
-```
-
-Make sure you're on `master` then run `release.sh` with the next tag and release name.
-
-```bash
-./release.sh v0.2.0 "Acute Aquarius"
-```
-
-How do you pick the release name?
-
-### Naming things
-
-The hardest problem in computer science is picking names. For releases, we take
-an adjective combined with the next constellation from an
-[alphabetical list of constellations](http://www.astro.wisc.edu/~dolan/constellations/constellation_list.html).
-It can be alliterative if you like.
+    ```
+    curl -sL https://download.getcarina.com/carina/beta/$(uname -s)/$(uname -m)/carina -o carina
+    chmod +x carina
+    ./carina --version
+    # Should print the new version
+    ```

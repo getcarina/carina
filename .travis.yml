@@ -1,10 +1,12 @@
 language: go
 go:
-- 1.5
+- 1.7
+git:
+  depth: 9999999
+sudo: required
 install:
-- go get ./...
+- sudo -E PATH=$PATH make get-deps
 script:
-- make carina
 - make test
 - make cross-build
 before_deploy:
