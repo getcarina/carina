@@ -4,22 +4,7 @@ Create and interact with clusters on both Rackspace Public and Private Cloud.
 
 ![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
 
-See the [getting started tutorial](https://getcarina.com/docs/getting-started/getting-started-carina-cli/),
-and [full documentation](https://getcarina.com/docs/reference/carina-cli/).
-
-
-
-
-
-$ eval "$( carina credentials another )"
-$ echo Conencted to: $CARINA_CLUSTER_NAME
-
-## Environment Variables
-When you source the result of `carina env` a few helpful environment variables are set for you:
-
- * `DOCKER_HOST`, `DOCKER_CERT_PATH` and `DOCKER_TLS_VERIFY` are used by the Docker client to connect to your cluster.
- * `DOCKER_VERSION` is designed to work with the Docker Version Manager (dvm). Run `dvm use` and it will use that environment variable to load the right Docker client binary into the current session.
- * `CARINA_CLUSTER_NAME` helps you remember which cluster is currently connected
+See the [official documentation](https://getcarina.com/docs/reference/carina-cli/) and an [overview of Carina](https://getcarina.com/docs/overview-of-carina/).
 
 ## Building
 
