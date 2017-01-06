@@ -13,15 +13,17 @@ if type glide &> /dev/null ; then
 fi
 
 echo "Installing glide v0.11.1..."
-git clone https://github.com/Masterminds/glide.git $GOPATH/src/github.com/Masterminds/glide
+if [ ! -d "$GOPATH/src/github.com/Masterminds/glide" ]; then
+  git clone https://github.com/Masterminds/glide.git $GOPATH/src/github.com/Masterminds/glide
+fi
 cd $GOPATH/src/github.com/Masterminds/glide
 git checkout v0.11.1
-make install
+go install --ldflags="-X main.version=v0.11.1" github.com/Masterminds/glide
 
 if type glide &> /dev/null ; then
     echo "Done!"
     exit 0
 else
-    echo "Could not find glide after installing it. Aborting..."
+    echo "Could not find glide after installing it. Make sure GOPATH/bin is in PATH. Aborting..."
     exit 1
 fi
