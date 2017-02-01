@@ -39,9 +39,6 @@ test: local
 	eval "$( ./carina bash-completion )"
 	./carina --version
 
-carina-linux: linux
-	cp bin/carina-linux-amd64 carina-linux
-
 cross-build: linux darwin windows
 	cp -R $(BINDIR) bin/carina/${PERMALINK}
 
@@ -56,39 +53,14 @@ windows: $(GOFILES)
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o $(BINDIR)/Windows/x86_64/carina.exe .
 	CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GOBUILD) -o $(BINDIR)/Windows/i686/carina.exe .
 
-############################ RELEASE TARGETS ############################
-
-build-tagged-for-release: clean
-	-docker rm -fv carina-build
-	docker build -f Dockerfile.build -t carina-cli-build --no-cache=true .
-	docker run --name carina-build carina-cli-build make tagged-build TAG=$(TAG)
-	mkdir -p bin/
-	docker cp carina-build:/built/bin .
-
-checkout-tag:
-	git checkout $(TAG)
-
-# This one is intended to be run inside the accompanying Docker container
-tagged-build: checkout-tag cross-build
-	./carina --version
-	mkdir -p /built/
-	cp -r bin /built/bin
-
-############################## DOCKER IMAGE ###############################
-
-ca-certificates.crt:
-	-docker rm -fv carina-cert-grab
-	docker run --name carina-cert-grab ubuntu:15.04 sh -c "apt-get update -y && apt-get install ca-certificates -y"
-	docker cp carina-cert-grab:/etc/ssl/certs/ca-certificates.crt .
-
-carina/cli: ca-certificates.crt carina-linux
-	docker build -t carina/cli .
-
-.PHONY: clean build-tagged-for-release checkout tagged-build
+.PHONY: clean deploy
 
 clean:
 	-rm -fr vendor
 	-rm -fr bin
 	-rm carina
-	-rm carina-linux
-	-rm ca-certificates.crt
+
+deploy:
+	curl -O https://ec4a542dbf90c03b9f75-b342aba65414ad802720b41e8159cf45.ssl.cf5.rackcdn.com/1.2/Linux/amd64/rack
+	chmod +x rack
+	./rack files object upload-dir --recurse --container carina-downloads --dir bin
