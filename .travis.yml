@@ -15,4 +15,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: getcarina/carina
-    tags: true
+    branch: secure-deploy-with-pull-requests
