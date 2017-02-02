@@ -11,6 +11,7 @@ import (
 	"github.com/getcarina/carina/magnum"
 	"github.com/getcarina/carina/make-coe"
 	"github.com/getcarina/carina/makeswarm"
+	"github.com/getcarina/carina/version"
 	"github.com/spf13/viper"
 )
 
@@ -155,6 +156,7 @@ func (cxt *context) initialize() error {
 		common.Log.SetSilent()
 	} else if cxt.Debug {
 		common.Log.SetDebug()
+		common.Log.WriteDebug("Version: %s (%s)", version.Version, version.Commit)
 	}
 
 	var profileLoaded bool
