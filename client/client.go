@@ -208,7 +208,7 @@ func (client *Client) ListClusterTemplates(account Account, nameFilter string) (
 		common.Log.WriteDebug("Filtering templates by pattern '%s'", nameFilter)
 		var filteredTemplates []common.ClusterTemplate
 		for _, template := range templates {
-			if glob.Glob(nameFilter, template.GetName()) {
+			if glob.GlobI(nameFilter, template.GetName()) {
 				filteredTemplates = append(filteredTemplates, template)
 			}
 		}

@@ -29,3 +29,22 @@ func TestFilterTemplatesByName(t *testing.T) {
 
 	assert.Len(t, templates, 1)
 }
+
+func TestFilterTemplatesByNameIsCaseInsensitive(t *testing.T) {
+
+	service := new(commontest.MockClusterService)
+	service.On("ListClusterTemplates").Return([]common.ClusterTemplate{
+		&commontest.StubClusterTemplate{Name: "LOUD NOISES"},
+	})
+	account := new(clienttest.MockAccount)
+	account.On("NewClusterService").Return(service, nil)
+
+	client := client.NewClient(false)
+	templates, err := client.ListClusterTemplates(account, "*noises")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Len(t, templates, 1)
+}
