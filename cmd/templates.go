@@ -7,7 +7,7 @@ import (
 
 func newTemplatesCommand() *cobra.Command {
 	var options struct {
-		name  string
+		name string
 	}
 
 	var cmd = &cobra.Command{
