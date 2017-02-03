@@ -211,6 +211,9 @@ func (cxt *context) loadProfile() (ok bool, err error) {
 		if viper.InConfig("default") {
 			cxt.Profile = "default"
 			common.Log.WriteDebug("Profile: default")
+		} else {
+			common.Log.WriteDebug("Profile: none")
+			return false, nil
 		}
 	}
 

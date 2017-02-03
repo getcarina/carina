@@ -23,8 +23,8 @@ func newQuotasCommand() *cobra.Command {
 			maxNodesPerCluster := strconv.Itoa(quotas.GetMaxNodesPerCluster())
 
 			data := []console.Tuple{
-				{"Max Clusters", maxClusters},
-				{"Max Nodes per Cluster", maxNodesPerCluster},
+				{Key: "Max Clusters", Value: maxClusters},
+				{Key: "Max Nodes per Cluster", Value: maxNodesPerCluster},
 			}
 			console.WriteMap(data)
 
