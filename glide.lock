@@ -1,5 +1,5 @@
-hash: 5fc70e87335b22f604eba3adaa3ce9a9b7e2839503a8dbd332d9bc509deea4aa
-updated: 2017-02-03T09:50:15.520088645-06:00
+hash: f75f1921b31933c92a271d15a7a80a6ceed1a71a9c9deb3009898891bf8633fb
+updated: 2017-02-03T10:34:03.651359382-06:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
@@ -50,7 +50,7 @@ imports:
 - name: github.com/magiconair/properties
   version: 0723e352fa358f9322c938cc2dadda874e9151a9
 - name: github.com/Masterminds/semver
-  version: 8d0431362b544d1a3536cca26684828866a7de09
+  version: 59c29afe1a994eacb71c833025ca7acf874bb1da
 - name: github.com/mitchellh/mapstructure
   version: f3009df150dadf309fdee4a54ed65c124afad715
 - name: github.com/pelletier/go-buffruneio
@@ -93,6 +93,8 @@ imports:
   version: 5ccb023bc27df288a957c5e994cd44fd19619465
 - name: github.com/spf13/viper
   version: 80ab6657f9ec7e5761f6603320d3d58dfe6970f6
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
 - name: golang.org/x/crypto
   version: b2fa06b6af4b7c9bfeb8569ab7b17f04550717bf
   subpackages:
