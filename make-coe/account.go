@@ -29,6 +29,11 @@ type Account struct {
 	token    string
 }
 
+// NewClusterService create the appropriate ClusterService for the account
+func (account *Account) NewClusterService() common.ClusterService {
+	return &MakeCOE{Account: account}
+}
+
 // GetID returns a unique id for the account, e.g. public-[username]
 func (account *Account) GetID() string {
 	return fmt.Sprintf("public-%s", account.UserName)

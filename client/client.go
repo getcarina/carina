@@ -1,15 +1,11 @@
 package client
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/getcarina/carina/common"
-	"github.com/getcarina/carina/magnum"
-	"github.com/getcarina/carina/make-coe"
-	"github.com/getcarina/carina/makeswarm"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
 	"github.com/ryanuber/go-glob"
@@ -89,17 +85,7 @@ func (client *Client) initCache(cacheEnabled bool) {
 
 func (client *Client) buildContainerService(account Account) (common.ClusterService, error) {
 	client.Cache.apply(account)
-
-	switch a := account.(type) {
-	case *makecoe.Account:
-		return &makecoe.MakeCOE{Account: a}, nil
-	case *makeswarm.Account:
-		return &makeswarm.MakeSwarm{Account: a}, nil
-	case *magnum.Account:
-		return &magnum.Magnum{Account: a}, nil
-	default:
-		return nil, fmt.Errorf("Invalid account type: %T", a)
-	}
+	return account.NewClusterService(), nil
 }
 
 // GetQuotas retrieves the quotas set for the account

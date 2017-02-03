@@ -24,6 +24,11 @@ type Account struct {
 	endpoint         string
 }
 
+// NewClusterService create the appropriate ClusterService for the account
+func (account *Account) NewClusterService() common.ClusterService {
+	return &Magnum{Account: account}
+}
+
 // GetID returns a unique id for the account, e.g. private-[authendpoint hash]-[username]
 func (account *Account) GetID() string {
 	hash := sha1.Sum([]byte(account.AuthEndpoint))
