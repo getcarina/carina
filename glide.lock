@@ -1,5 +1,5 @@
-hash: 2a997a9db8ff58b55e77c4bf1c711c8f4d73e198a88bf5a4a9822ccd939eb828
-updated: 2017-01-06T16:25:06.727990651-06:00
+hash: 5fc70e87335b22f604eba3adaa3ce9a9b7e2839503a8dbd332d9bc509deea4aa
+updated: 2017-02-03T09:50:15.520088645-06:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
@@ -74,6 +74,8 @@ imports:
   - testhelper
   - testhelper/client
   - pagination
+- name: github.com/ryanuber/go-glob
+  version: 572520ed46dbddaed19ea3d9541bdd0494163693
 - name: github.com/Sirupsen/logrus
   version: 9b48ece7fc373043054858f8c0d362665e866004
 - name: github.com/spf13/afero
