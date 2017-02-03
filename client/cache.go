@@ -129,13 +129,12 @@ func (cache *Cache) SaveLastUpdateCheck(timestamp time.Time) error {
 
 // SaveAccount caches transient account data, such as the auth token
 func (cache *Cache) SaveAccount(account Account) error {
-	accountCache := account.BuildCache()
-	if account == nil {
-		common.Log.WriteDebug("Skipping updating the account cache because it is empty")
-		return nil
-	}
-
 	return cache.safeUpdate(func(c *Cache) {
+		accountCache := account.BuildCache()
+		if account == nil {
+			common.Log.WriteDebug("Skipping updating the account cache because it is empty")
+		}
+
 		c.Accounts[account.GetID()] = accountCache
 	})
 }
