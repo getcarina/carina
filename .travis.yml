@@ -11,7 +11,8 @@ script:
 deploy:
 - provider: script
   script:
-    secure: "JBZYCGMBclZtwR4KGL//fvlSbZeDodZQnee9G60VMBp0LcEw1Xidq0xUGjEKNLLyju/q8Zp+oasiQBzj9MUFRmYHBMxaKCiLdp2CjY/EUsv5qQNaZZ8bJ1Z121Z5PBAYKDAme4lbnXxpmVlnXgh+4CGIkhHd6VlOMuQwMo7ibN/ZGHJXGg92D3rlNr5zKSz4NToFxkS+Jn9MjOO0L9x/E9l1b8LM8C8wYN8nwooHMK4mGVWgh5fkF4aaqSm/kG5WBGg6Rxfe24H7+EqTjyza0iqJHfFeW5xl0paSHkz+yV/Rsf8A5JwIjOd7XeqSZhSMGAb+MYMVA/0hXNVYjISXCyTTd2q1UFu4ntu3XRXVFVBG+uiOBJsLCv0eifu9wKUbU77uCxKpu4CrKZUqQrAskvC/ZmkvlefgizrR9hySMRjlj9KUp5u+B6dXipphvxsSfcXaC4+8oBTBObOvMlhAHjmCj6SNxVijM+ZLUW0JnBlpM36g9Oc56YQ4lyL5pnUSveqinh6r8aQH6YD6Q86Wq9dx4n+KYEDVuQWG20/Uptb/pGS2NZM4KqaHEmy+ohEo22kilcq2kiO2EaD4VtT4X1BXxE+DWkDcQbobf0XijOSRsRkCP5lIBUPA+xhzSlW0YNpr7HeR33C0XXUj7aAUpvbIVgeMi+eM77T6w2E0Vpk="
+    - echo hi
+    - echo bye
   skip_cleanup: true
   on:
     repo: getcarina/carina
