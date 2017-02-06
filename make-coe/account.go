@@ -88,7 +88,7 @@ func (account *Account) Authenticate() (*libcarina.CarinaClient, error) {
 
 	// Apply our http client customizations
 	carinaClient.Client = common.NewHTTPClient()
-	carinaClient.UserAgent = common.BuildUserAgent()
+	carinaClient.UserAgent += common.BuildUserAgent()
 
 	// Cache data looked up from the service catalog
 	account.token = carinaClient.Token
