@@ -1,5 +1,5 @@
-hash: 2a997a9db8ff58b55e77c4bf1c711c8f4d73e198a88bf5a4a9822ccd939eb828
-updated: 2017-01-06T16:25:06.727990651-06:00
+hash: 0dfd5276e4f5a8ae227bd72efba9b39fb57f4814b2b7b2f7fc19f4f4e0dc7c4e
+updated: 2017-02-03T10:34:03.651359382-06:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
@@ -50,7 +50,7 @@ imports:
 - name: github.com/magiconair/properties
   version: 0723e352fa358f9322c938cc2dadda874e9151a9
 - name: github.com/Masterminds/semver
-  version: 8d0431362b544d1a3536cca26684828866a7de09
+  version: 59c29afe1a994eacb71c833025ca7acf874bb1da
 - name: github.com/mitchellh/mapstructure
   version: f3009df150dadf309fdee4a54ed65c124afad715
 - name: github.com/pelletier/go-buffruneio
@@ -74,6 +74,10 @@ imports:
   - testhelper
   - testhelper/client
   - pagination
+- name: github.com/ryanuber/go-glob
+  version: 7489272ba2820e4333764c1f25bafeaf6756a726
+  repo: https://github.com/carolynvs/go-glob.git
+  vcs: git
 - name: github.com/Sirupsen/logrus
   version: 9b48ece7fc373043054858f8c0d362665e866004
 - name: github.com/spf13/afero
@@ -91,6 +95,8 @@ imports:
   version: 5ccb023bc27df288a957c5e994cd44fd19619465
 - name: github.com/spf13/viper
   version: 80ab6657f9ec7e5761f6603320d3d58dfe6970f6
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
 - name: golang.org/x/crypto
   version: b2fa06b6af4b7c9bfeb8569ab7b17f04550717bf
   subpackages:

@@ -9,9 +9,9 @@ import:
   repo: https://github.com/getcarina/libcarina.git
   vcs: git
 - package: github.com/getcarina/libmakeswarm
-  vcs: git
-  repo: https://github.com/getcarina/libcarina.git
   version: make-swarm
+  repo: https://github.com/getcarina/libcarina.git
+  vcs: git
 - package: github.com/gophercloud/gophercloud
   version: magnum
   vcs: git
@@ -28,3 +28,9 @@ import:
   version: ^0.7.0
 - package: github.com/spf13/cobra
   version: 9c28e4bbd74e5c3ed7aacbc552b2cab7cfdfe744
+- package: github.com/ryanuber/go-glob
+  version: case-insensitive
+  repo: https://github.com/carolynvs/go-glob.git
+  vcs: git
+- package: github.com/stretchr/testify
+  version: ^1.1.4

@@ -18,6 +18,11 @@ type Account struct {
 	endpoint string
 }
 
+// NewClusterService create the appropriate ClusterService for the account
+func (account *Account) NewClusterService() common.ClusterService {
+	return &MakeSwarm{Account: account}
+}
+
 // GetID returns a unique id for the account, e.g. public-[username]
 func (account *Account) GetID() string {
 	return fmt.Sprintf("public-%s", account.UserName)

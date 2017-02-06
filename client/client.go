@@ -1,17 +1,14 @@
 package client
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/getcarina/carina/common"
-	"github.com/getcarina/carina/magnum"
-	"github.com/getcarina/carina/make-coe"
-	"github.com/getcarina/carina/makeswarm"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
+	"github.com/ryanuber/go-glob"
 )
 
 // Client is the multi-cloud Carina client, which coordinates communication with all Carina-esque clouds
@@ -88,17 +85,7 @@ func (client *Client) initCache(cacheEnabled bool) {
 
 func (client *Client) buildContainerService(account Account) (common.ClusterService, error) {
 	client.Cache.apply(account)
-
-	switch a := account.(type) {
-	case *makecoe.Account:
-		return &makecoe.MakeCOE{Account: a}, nil
-	case *makeswarm.Account:
-		return &makeswarm.MakeSwarm{Account: a}, nil
-	case *magnum.Account:
-		return &magnum.Magnum{Account: a}, nil
-	default:
-		return nil, fmt.Errorf("Invalid account type: %T", a)
-	}
+	return account.NewClusterService(), nil
 }
 
 // GetQuotas retrieves the quotas set for the account
@@ -207,7 +194,7 @@ func (client *Client) ListClusters(account Account) ([]common.Cluster, error) {
 }
 
 // ListClusterTemplates retrieves available templates for creating a new cluster
-func (client *Client) ListClusterTemplates(account Account) ([]common.ClusterTemplate, error) {
+func (client *Client) ListClusterTemplates(account Account, nameFilter string) ([]common.ClusterTemplate, error) {
 	defer client.Cache.SaveAccount(account)
 	svc, err := client.buildContainerService(account)
 	if err != nil {
@@ -215,6 +202,19 @@ func (client *Client) ListClusterTemplates(account Account) ([]common.ClusterTem
 	}
 
 	templates, err := svc.ListClusterTemplates()
+
+	// Filter the templates by name, e.g. Kubernetes*
+	if err == nil && nameFilter != "" {
+		common.Log.WriteDebug("Filtering templates by pattern '%s'", nameFilter)
+		var filteredTemplates []common.ClusterTemplate
+		for _, template := range templates {
+			if glob.GlobI(nameFilter, template.GetName()) {
+				filteredTemplates = append(filteredTemplates, template)
+			}
+		}
+		templates = filteredTemplates
+	}
+
 	return templates, wrapClientError(err)
 }
 

@@ -6,13 +6,17 @@ import (
 )
 
 func newTemplatesCommand() *cobra.Command {
+	var options struct {
+		name string
+	}
+
 	var cmd = &cobra.Command{
 		Use:               "templates",
 		Short:             "List cluster templates",
 		Long:              "List cluster templates",
 		PersistentPreRunE: authenticatedPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			templates, err := cxt.Client.ListClusterTemplates(cxt.Account)
+			templates, err := cxt.Client.ListClusterTemplates(cxt.Account, options.name)
 			if err != nil {
 				return err
 			}
@@ -27,6 +31,7 @@ func newTemplatesCommand() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVar(&options.name, "name", "", "Filter by name, e.g. Kubernetes*")
 	cmd.SetUsageTemplate(cmd.UsageTemplate())
 
 	return cmd

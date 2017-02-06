@@ -3,14 +3,13 @@ package makecoe
 import (
 	"fmt"
 	"net/http"
-
 	"strings"
-
 	"time"
 
 	"github.com/getcarina/carina/common"
 	"github.com/getcarina/libcarina"
 	"github.com/pkg/errors"
+	"github.com/ryanuber/go-glob"
 )
 
 // MakeCOE is an adapter between the cli and Carina (make-coe)
@@ -68,6 +67,7 @@ func (carina *MakeCOE) CreateCluster(name string, template string, nodes int) (c
 		return nil, err
 	}
 
+	common.Log.WriteDebug("[make-coe] Looking up a template matching '%s'", template)
 	clusterType, err := carina.lookupClusterTypeByName(template)
 	if err != nil {
 		return nil, err
@@ -321,23 +321,28 @@ func (carina *MakeCOE) getClusterTypeCache() (map[int]*libcarina.ClusterType, er
 	return carina.clusterTypeCache, nil
 }
 
-func (carina *MakeCOE) lookupClusterTypeByName(name string) (*libcarina.ClusterType, error) {
+func (carina *MakeCOE) lookupClusterTypeByName(pattern string) (*libcarina.ClusterType, error) {
 	cache, err := carina.getClusterTypeCache()
 	if err != nil {
 		return nil, err
 	}
 
-	name = strings.ToLower(name)
 	var clusterType *libcarina.ClusterType
 	for _, m := range cache {
-		if strings.ToLower(m.Name) == name {
+		if !glob.GlobI(pattern, m.Name) {
+			continue
+		}
+
+		common.Log.WriteDebug("Matched template '%s' to pattern '%s'", m.Name, pattern)
+		if clusterType == nil {
 			clusterType = m
-			break
+		} else {
+			return nil, &common.MultipleMatchingTemplatesError{TemplatePattern: pattern}
 		}
 	}
 
 	if clusterType == nil {
-		return nil, fmt.Errorf("Could not find template named %s", name)
+		return nil, fmt.Errorf("Could not find template named %s", pattern)
 	}
 
 	return clusterType, nil

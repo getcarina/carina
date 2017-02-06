@@ -1,15 +1,15 @@
 package makecoe
 
 import (
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
 
-	"fmt"
-	"net/http/httptest"
-
 	"github.com/getcarina/carina/common"
+	"github.com/stretchr/testify/assert"
 )
 
 const identityAPIVersion = "/v2.0/"
@@ -224,4 +224,27 @@ func TestMicroversionUnsupportedCreateCluster(t *testing.T) {
 	if cluster != nil {
 		t.Error("Expected cluster to be nil, got: ", cluster)
 	}
+}
+
+func TestCreateClusterWithWildcardTemplate(t *testing.T) {
+	common.Log.RegisterTestLogger(t)
+
+	listTemplatesHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, `{"cluster_types": [{"active": true, "coe": "swarm", "host_type": "lxc", "name": "Swarm 1.11.2 on LXC", "id": 21}, {"active": true, "coe": "kubernetes", "host_type": "lxc", "name": "Kubernetes 1.5.2 on LXC", "id": 22}]}`)
+	}
+
+	mockCarina, mockIdentity := createMockCarina(listTemplatesHandler)
+	defer mockCarina.Close()
+	defer mockIdentity.Close()
+
+	svc := createMakeCOEService(mockIdentity, mockCarina)
+
+	_, err := svc.CreateCluster("mycluster", "*LXC", 1)
+	if err == nil {
+		t.Error("CreateCluster expected to return error")
+		return
+	}
+
+	assert.IsType(t, &common.MultipleMatchingTemplatesError{}, err, err.Error())
 }

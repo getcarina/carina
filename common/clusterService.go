@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+
 	"github.com/getcarina/libcarina"
 )
 
@@ -90,4 +92,14 @@ type Quotas interface {
 
 	// GetMaxNodesPerCluster returns the maximum number of nodes allowed in a cluster on the account
 	GetMaxNodesPerCluster() int
+}
+
+// MultipleMatchingTemplatesError indicates when a template search was too broad and matched multiple templates
+type MultipleMatchingTemplatesError struct {
+	TemplatePattern string
+}
+
+// Error returns the underlying error message
+func (error MultipleMatchingTemplatesError) Error() string {
+	return fmt.Sprintf("Multiple matching templates found for '%s'. Run carina templates --name %s to refine the search pattern to only match a single template.", error.TemplatePattern, error.TemplatePattern)
 }
