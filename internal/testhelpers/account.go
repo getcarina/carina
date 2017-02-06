@@ -1,4 +1,4 @@
-package clienttest
+package testhelpers
 
 import (
 	"github.com/getcarina/carina/client"

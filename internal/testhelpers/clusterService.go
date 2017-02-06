@@ -1,4 +1,4 @@
-package commontest
+package testhelpers
 
 import (
 	"github.com/getcarina/carina/common"

@@ -5,19 +5,18 @@ import (
 
 	"github.com/getcarina/carina/client"
 	"github.com/getcarina/carina/common"
-	"github.com/getcarina/carina/internal/clienttest"
-	"github.com/getcarina/carina/internal/commontest"
+	"github.com/getcarina/carina/internal/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFilterTemplatesByName(t *testing.T) {
 
-	service := new(commontest.MockClusterService)
+	service := new(testhelpers.MockClusterService)
 	service.On("ListClusterTemplates").Return([]common.ClusterTemplate{
-		&commontest.StubClusterTemplate{Name: "Kubernetes 1.4.5 on LXC"},
-		&commontest.StubClusterTemplate{Name: "Swarm 1.11.2 on LXC"},
+		&testhelpers.StubClusterTemplate{Name: "Kubernetes 1.4.5 on LXC"},
+		&testhelpers.StubClusterTemplate{Name: "Swarm 1.11.2 on LXC"},
 	})
-	account := new(clienttest.MockAccount)
+	account := new(testhelpers.MockAccount)
 	account.On("NewClusterService").Return(service, nil)
 
 	client := client.NewClient(false)
@@ -32,11 +31,11 @@ func TestFilterTemplatesByName(t *testing.T) {
 
 func TestFilterTemplatesByNameIsCaseInsensitive(t *testing.T) {
 
-	service := new(commontest.MockClusterService)
+	service := new(testhelpers.MockClusterService)
 	service.On("ListClusterTemplates").Return([]common.ClusterTemplate{
-		&commontest.StubClusterTemplate{Name: "LOUD NOISES"},
+		&testhelpers.StubClusterTemplate{Name: "LOUD NOISES"},
 	})
-	account := new(clienttest.MockAccount)
+	account := new(testhelpers.MockAccount)
 	account.On("NewClusterService").Return(service, nil)
 
 	client := client.NewClient(false)
