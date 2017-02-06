@@ -37,3 +37,4 @@ docker.cmd
 docker.ps1
 
 ca-certificates.crt
+*.nupkg
