@@ -1,5 +1,7 @@
 # Carina™ client
 [![Travis Build Status](https://travis-ci.org/getcarina/carina.svg)](https://travis-ci.org/getcarina/carina)
+[![MyGet Build Status](https://www.myget.org/BuildSource/Badge/rackspace?identifier=0f9b4abd-6ec9-4b29-aab5-541967d4d260)](https://www.myget.org/)
+
 Create and interact with clusters on both Rackspace Public and Private Cloud.
 
 ![Carina Constellation](https://cloud.githubusercontent.com/assets/836375/10503963/e5bcca8c-72c0-11e5-8e14-2c1697297d7e.png)
