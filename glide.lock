@@ -1,4 +1,4 @@
-hash: c257c7fd57c183f96ddb0b95e65f9b736246bdfda08465fa1f5f8cccee7bac56
+hash: 21808762abe2c2931a10471c6824047d3b3944fa2964ef87fd94b67a0c4bea11
 updated: 2017-02-06T10:34:03.651359382-06:00
 imports:
 - name: github.com/davecgh/go-spew
@@ -115,4 +115,6 @@ imports:
   - unicode/norm
 - name: gopkg.in/yaml.v2
   version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+  repo: https://github.com/go-yaml/yaml.git
+  vcs: git
 testImports: []
