@@ -1,5 +1,5 @@
-hash: 21808762abe2c2931a10471c6824047d3b3944fa2964ef87fd94b67a0c4bea11
-updated: 2017-02-06T10:34:03.651359382-06:00
+hash: 5fa0d1131570ebcb88e2771c4b5f83a77585dd15ab25e6da5dcc03da17355651
+updated: 2017-02-07T10:34:03.651359382-06:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
@@ -16,7 +16,8 @@ imports:
   repo: https://github.com/getcarina/libcarina.git
   vcs: git
 - name: github.com/gophercloud/gophercloud
-  version: b267f2372f44b2479bb598d4e333804b667b80e5
+  version: 40d34bc60a8c44769fd3de9eda6a9c918512c667
+  repo: https://github.com/carolynvs/gophercloud.git
   vcs: git
   subpackages:
   - openstack
