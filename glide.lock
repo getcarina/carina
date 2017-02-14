@@ -16,9 +16,7 @@ imports:
   repo: https://github.com/getcarina/libcarina.git
   vcs: git
 - name: github.com/gophercloud/gophercloud
-  version: 40d34bc60a8c44769fd3de9eda6a9c918512c667
-  repo: https://github.com/carolynvs/gophercloud.git
-  vcs: git
+  version: 712cf24c6fba3d233cd7b2801a66967649dcec42
   subpackages:
   - openstack
   - openstack/containerorchestration/v1/baymodels

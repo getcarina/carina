@@ -13,8 +13,7 @@ import:
   repo: https://github.com/getcarina/libcarina.git
   vcs: git
 - package: github.com/gophercloud/gophercloud
-  version: preserve-token-conn-error
-  repo: https://github.com/carolynvs/gophercloud.git
+  version: magnum
   vcs: git
   subpackages:
   - openstack
