@@ -18,7 +18,7 @@
     <copyright>Copyright © 2015 Rackspace, Inc.</copyright>
     <licenseUrl>https://github.com/getcarina/carina/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <iconUrl>http://cdn.rawgit.com/getcarina/carina/master/script/chocolatey/rackspace-logo.png</iconUrl>
+    <iconUrl>http://cdn.combinatronics.com/getcarina/carina/master/script/chocolatey/rackspace-logo.png</iconUrl>
     <releaseNotes>https://github.com/getcarina/carina/releases</releaseNotes>
   </metadata>
   <files>
